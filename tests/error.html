@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WebGL 错误恢复验证</title>
+  </head>
+  <body>
+    <button
+      id="restore"
+      style="position: fixed; right: 20px; top: 20px; z-index: 100"
+    >
+      恢复测试 WebGL
+    </button>
+    <div id="root"></div>
+    <script type="module">
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+        return type.startsWith("webgl") || type === "experimental-webgl"
+          ? null
+          : original.call(this, type, ...args);
+      };
+      document.querySelector("#restore").onclick = () => {
+        HTMLCanvasElement.prototype.getContext = original;
+      };
+      await import("/src/main.tsx");
+    </script>
+  </body>
+</html>

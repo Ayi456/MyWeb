@@ -1,0 +1,44 @@
+[
+  {
+    "path": "/assets/createScene-CjOTRBAx.js",
+    "status": 200,
+    "contentType": "text/javascript",
+    "bytes": 40419,
+    "matchesDist": true
+  },
+  {
+    "path": "/assets/index-DiuZgQaj.js",
+    "status": 200,
+    "contentType": "text/javascript",
+    "bytes": 233719,
+    "matchesDist": true
+  },
+  {
+    "path": "/assets/index-ewuBs0pu.css",
+    "status": 200,
+    "contentType": "text/css",
+    "bytes": 13219,
+    "matchesDist": true
+  },
+  {
+    "path": "/assets/three-Ct5e_Dre.js",
+    "status": 200,
+    "contentType": "text/javascript",
+    "bytes": 488668,
+    "matchesDist": true
+  },
+  {
+    "path": "/favicon.svg",
+    "status": 200,
+    "contentType": "image/svg+xml",
+    "bytes": 299,
+    "matchesDist": true
+  },
+  {
+    "path": "/",
+    "status": 200,
+    "contentType": "text/html",
+    "bytes": 1263,
+    "matchesDist": true
+  }
+]

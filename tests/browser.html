@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>春日邮局 · 场景验证</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        font: 14px system-ui;
+        background: #f4e7df;
+        color: #594952;
+      }
+      canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #report {
+        position: relative;
+        margin: 18px;
+        padding: 20px;
+        background: #fff8eee8;
+        max-width: 560px;
+        max-height: 85vh;
+        overflow: auto;
+        white-space: pre-wrap;
+        z-index: 2;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="world"></canvas>
+    <pre id="report">正在准备真实 WebGL 验证…</pre>
+    <script type="module" src="/tests/browser.ts"></script>
+  </body>
+</html>
