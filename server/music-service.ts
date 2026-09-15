@@ -126,7 +126,11 @@ export function createMusicService(
     pending = (async () => {
       try {
         const value = normalizePlaylist(
-          await call("playlist_detail", { ...options, id: playlistId }),
+          await call("playlist_detail", {
+            ...options,
+            id: playlistId,
+            limit: 200,
+          }),
           playlistId,
         );
         cached = { value, until: now() + 5 * 60_000 };
