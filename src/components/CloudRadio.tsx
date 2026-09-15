@@ -290,7 +290,7 @@ export function CloudRadio({
                   <span>{formatTime(duration || track?.duration || 0)}</span>
                 </div>
                 <div className="radio-controls">
-                  <button aria-label="上一首" onClick={() => move(-1)}>
+                  <button aria-label="上一首" onClick={() => move(-1, true)}>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M6 5v14M18 5L8 12l10 7Z" />
                     </svg>
@@ -317,7 +317,7 @@ export function CloudRadio({
                       )}
                     </svg>
                   </button>
-                  <button aria-label="下一首" onClick={() => move(1)}>
+                  <button aria-label="下一首" onClick={() => move(1, true)}>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18 5v14M6 5l10 7-10 7Z" />
                     </svg>
