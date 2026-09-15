@@ -38,6 +38,58 @@ textarea {
   min-width: 44px;
   min-height: 36px;
 }
+.time-panel {
+  position: relative;
+}
+.time-top {
+  padding-right: 30px;
+}
+.time-toggle {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  background: transparent;
+}
+.time-toggle:hover {
+  background: #e9d7d54d;
+}
+.time-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.time-panel.time-panel-collapsed {
+  flex: 0 0 44px;
+  width: 44px;
+  max-width: none;
+  padding: 0;
+  margin-inline: auto;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.time-panel-collapsed .time-toggle {
+  position: static;
+  border: 1px solid #a8859028;
+  background: #fffbf0b8;
+  backdrop-filter: blur(7px);
+}
+.time-panel-collapsed .time-toggle:hover {
+  background: #fff9f2;
+}
 .time-panel input[type="range"] {
   height: 20px;
   margin: 2px 0 0;
@@ -205,6 +257,13 @@ textarea {
   }
   .time-top {
     margin-bottom: 3px;
+    padding-right: 34px;
+    flex-wrap: wrap;
+    min-height: 34px;
+  }
+  .time-toggle {
+    top: 2px;
+    right: 0;
   }
   .speeds {
     gap: 0;
@@ -258,6 +317,11 @@ textarea {
     margin-top: 15px;
   }
 }
+@media (max-width: 360px) {
+  .time-top .phase-icon {
+    display: none;
+  }
+}
 @media (max-height: 540px) and (orientation: landscape) {
   .masthead {
     top: max(14px, env(safe-area-inset-top));
@@ -303,6 +367,10 @@ textarea {
   }
   .time-top {
     margin-bottom: 0;
+    min-height: 38px;
+  }
+  .time-toggle {
+    top: 0;
   }
   .speeds button {
     min-height: 30px;

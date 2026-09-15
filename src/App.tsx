@@ -15,6 +15,15 @@ export default function App() {
   const [attempt, setAttempt] = useState(0),
     [mailOpen, setMailOpen] = useState(false),
     [hidden, setHidden] = useState(false),
+    [timeCollapsed, setTimeCollapsed] = useState(() => {
+      try {
+        return (
+          localStorage.getItem("spring-post-office:time-collapsed") === "true"
+        );
+      } catch {
+        return false;
+      }
+    }),
     [helpOpen, setHelpOpen] = useState(false),
     [notice, setNotice] = useState("");
   const openMail = useCallback(() => setMailOpen(true), []);
@@ -28,6 +37,16 @@ export default function App() {
     mailOpen || !snapshot?.ready || !!error,
   );
   const closeMail = useCallback(() => setMailOpen(false), []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "spring-post-office:time-collapsed",
+        String(timeCollapsed),
+      );
+    } catch {
+      // Keep the toggle usable when browser storage is unavailable.
+    }
+  }, [timeCollapsed]);
   useEffect(() => {
     controller.current?.setInteractionBlocked(mailOpen || helpOpen);
   }, [controller, mailOpen, helpOpen]);
@@ -92,6 +111,8 @@ export default function App() {
           </div>
           <TimeControls
             snapshot={snapshot}
+            collapsed={timeCollapsed}
+            onToggle={() => setTimeCollapsed((v) => !v)}
             onSpeed={(v) => controller.current?.setSpeed(v)}
             onHour={(v) => controller.current?.setTimeOfDay(v)}
           />
