@@ -39,7 +39,9 @@ npm run dev
 
 ## 数据与隐私
 
-这是虚拟邮局，**文字不会发送到外部服务**。不调用邮件、AI 或分析 API，不收集姓名、邮箱、联系方式。输入只在当前页面内存中存在；提交后清空输入，不保留历史、不写 localStorage / URL / 控制台，不用 innerHTML 渲染用户文字。页面刷新或重试后计数清空。所有模型和纹理由程序生成，图标在仓库内。
+这是虚拟邮局，**信件文字不会发送到外部服务**。不调用邮件或 AI API，不收集姓名、邮箱、联系方式。信件输入只在当前页面内存中存在；提交后清空输入，不保留历史、不写 localStorage / URL / 控制台，不用 innerHTML 渲染用户文字。页面刷新或重试后计数清空。所有模型和纹理由程序生成，图标在仓库内。
+
+项目已接入 Vercel Web Analytics，通过 `src/main.tsx` 中的 `<Analytics />` 统计访客和页面浏览量。未添加自定义事件，不向 Analytics 传递信件内容。开发模式不采集访问数据。
 
 ## 生产构建与 Vercel
 
@@ -70,6 +72,10 @@ npm run preview
 | 环境变量         | 默认不需要      |
 
 `vercel.json` 已包含四项静态构建设置。单页面不需要路由或全量 rewrite。没有添加其他托管平台适配器。
+
+### 访问统计
+
+依赖 `@vercel/analytics` 和 React 组件已接入。手动部署前，在 Vercel 项目的 Analytics 页面确认 Web Analytics 已启用；部署完成后访问线上网站，再回到 Analytics 查看数据。详见 [Vercel 官方接入指南](https://vercel.com/docs/analytics/quickstart)。
 
 Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。上线后可在 `index.html` 中补充真实 canonical、`og:url`，并将 `og:image` 设置为实际域名下的场景截图 URL。真实场景测试截图位于 `docs/screenshots/`。
 

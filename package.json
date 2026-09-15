@@ -16,6 +16,7 @@
     "format": "prettier --write src tests *.json *.ts *.js index.html README.md"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "three": "0.160.0"
