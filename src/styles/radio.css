@@ -1,0 +1,338 @@
+.cloud-radio {
+  position: fixed;
+  z-index: 2;
+  top: clamp(207px, calc(11.64vw + 91px), 240px);
+  left: max(42px, env(safe-area-inset-left));
+  color: #745561;
+  width: min(290px, calc(100vw - 82px));
+}
+.cloud-radio[hidden] {
+  display: none;
+}
+.cloud-radio button,
+.cloud-radio a,
+.cloud-radio input {
+  touch-action: manipulation;
+}
+.radio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  border-radius: 24px;
+  padding: 0 14px;
+  border: 1px solid #a8859033;
+  background: #fffbf0b8;
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.radio-toggle:hover {
+  background: #fff9f2;
+}
+.radio-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+.cloud-radio svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.radio-chevron {
+  font:
+    16px Arial,
+    sans-serif;
+  opacity: 0.6;
+  margin-left: 3px;
+}
+.radio-on-air {
+  font-size: 9px;
+  opacity: 0.7;
+  letter-spacing: 0;
+}
+.radio-waves.is-playing {
+  animation: radio-breathe 2.4s ease-in-out infinite;
+}
+.radio-panel {
+  margin-top: 9px;
+  padding: 16px 17px 12px;
+  border: 1px solid #fff9f4b8;
+  border-radius: 16px;
+  background: #fff9eff0;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 35px #775a6b1a;
+  max-height: calc(100dvh - 325px);
+  overflow-y: auto;
+}
+.radio-kicker {
+  font:
+    8px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 1.8px;
+  opacity: 0.65;
+  margin-bottom: 14px;
+}
+.radio-track {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.radio-record {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: repeating-radial-gradient(#806270 0 2px, #907783 3px 4px);
+  box-shadow: inset 0 0 0 1px #6f546a33;
+  animation: radio-turn 12s linear infinite;
+  animation-play-state: paused;
+}
+.radio-record.is-playing {
+  animation-play-state: running;
+}
+.radio-record span {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #efd0cb;
+  color: #9b687b;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+}
+.radio-track-copy {
+  min-width: 0;
+  flex: 1;
+}
+.radio-track h2 {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  margin: 0 0 2px;
+}
+.radio-track p {
+  font-size: 10px;
+  opacity: 0.75;
+  margin: 0;
+  line-height: 1.6;
+}
+.radio-track h2,
+.radio-track p {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.radio-trial {
+  font-size: 9px;
+  border: 1px solid #ba8c9966;
+  border-radius: 4px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+.radio-status {
+  font-size: 10px;
+  line-height: 1.8;
+  margin: 13px 0 5px;
+  min-height: 18px;
+}
+.radio-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font:
+    9px Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.radio-progress input {
+  min-width: 0;
+  width: 100%;
+}
+.cloud-radio input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  accent-color: #b88192;
+  height: 24px;
+  margin: 0;
+  cursor: pointer;
+}
+.cloud-radio input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: #d9bdc6;
+  border-radius: 2px;
+}
+.cloud-radio input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -4.5px;
+  background: #b88192;
+  border: 0;
+  border-radius: 50%;
+}
+.cloud-radio input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: #d9bdc6;
+}
+.cloud-radio input[type="range"]::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: 0;
+  border-radius: 50%;
+  background: #b88192;
+}
+.cloud-radio input:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.radio-controls {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 4px 0 8px;
+}
+.radio-controls button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  flex-shrink: 0;
+}
+.radio-controls button:hover {
+  background: #ead2d74d;
+}
+.radio-controls svg {
+  width: 17px;
+  height: 17px;
+}
+.radio-controls .radio-play {
+  background: #b88091;
+  color: #fffaf4;
+}
+.radio-controls .radio-play:hover {
+  background: #a87284;
+}
+.radio-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 9px;
+}
+.cloud-radio .radio-volume input {
+  width: 51px;
+}
+.radio-volume span {
+  white-space: nowrap;
+}
+.radio-source {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #b18a992b;
+  padding-top: 10px;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.radio-source a {
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.radio-source a:hover {
+  text-decoration: underline;
+}
+.radio-source span {
+  flex-shrink: 0;
+  opacity: 0.7;
+  font-family: Arial, sans-serif;
+}
+.radio-retry {
+  min-height: 44px;
+  border: 1px solid #b18a9966;
+  background: transparent;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 11px;
+}
+.radio-night {
+  color: #edd9e2;
+}
+.radio-night .radio-toggle,
+.radio-night .radio-panel {
+  background: #393451e8;
+  border-color: #d6bace30;
+}
+.radio-night .radio-toggle:hover {
+  background: #49405d;
+}
+@keyframes radio-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes radio-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (max-width: 850px) {
+  .cloud-radio {
+    left: max(24px, env(safe-area-inset-left));
+    top: 195px;
+  }
+}
+@media (max-width: 520px) {
+  .cloud-radio {
+    left: 20px;
+    top: 166px;
+    width: min(280px, calc(100vw - 80px));
+  }
+  .radio-panel {
+    max-height: calc(100dvh - 280px);
+    padding: 14px;
+  }
+  .radio-volume {
+    gap: 4px;
+  }
+  .cloud-radio .radio-volume input {
+    width: 44px;
+  }
+}
+@media (max-width: 360px) {
+  .radio-volume span {
+    display: none;
+  }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .cloud-radio {
+    top: 113px;
+    left: max(20px, env(safe-area-inset-left));
+  }
+  .radio-panel {
+    position: fixed;
+    top: 14px;
+    left: max(175px, calc(50% - 145px));
+    width: 290px;
+    margin: 0;
+    max-height: calc(100dvh - 125px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud-radio * {
+    animation: none !important;
+  }
+}

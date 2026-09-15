@@ -7,6 +7,7 @@ import { LetterDialog } from "./components/LetterDialog";
 import { HelpPanel } from "./components/HelpPanel";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
+import { CloudRadio } from "./components/CloudRadio";
 import { useSceneController } from "./hooks/useSceneController";
 import { isControl, useWindInput } from "./hooks/useWindInput";
 
@@ -127,6 +128,10 @@ export default function App() {
           {snapshot?.sentCount ? `· 已放飞 ${snapshot.sentCount} 封` : ""}
         </p>
       </SceneOverlay>
+      <CloudRadio
+        hidden={hidden || !snapshot?.ready || !!error || mailOpen || helpOpen}
+        night={(snapshot?.night ?? 0) > 0.63}
+      />
       <div
         className={`hint ${notice ? "show" : ""}`}
         role="status"

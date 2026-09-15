@@ -1,8 +1,8 @@
 # 云上的春日邮局
 
-**Postcards from the Sky** — 一张可以走进去的春日明信片。React 负责界面，TypeScript + Three.js r160 负责真正的体素微缩世界，Vite 构建为可直接部署到 Vercel 的静态文件。
+**Postcards from the Sky** — 一张可以走进去的春日明信片。React 负责界面，TypeScript + Three.js r160 负责真正的体素微缩世界，Vite 构建前端，Vercel Function 为「云上电台」提供公开歌单和播放地址。
 
-本项目从根目录的 `spring-post-office.html` 迁移，主岛保留原有模型生成算法、随机调用顺序、固定种子 **314159**、布局、体素尺寸、配色和自定义 Shader。在此基础上扩展了花园副岛、灯塔小站、群岛邮路和彩虹。原 HTML 原样保留，不参与生产构建。页面未使用 iframe、整页 HTML 注入、运行时 CDN、外部字体或服务端接口。
+本项目从根目录的 `spring-post-office.html` 迁移，主岛保留原有模型生成算法、随机调用顺序、固定种子 **314159**、布局、体素尺寸、配色和自定义 Shader。在此基础上扩展了花园副岛、灯塔小站、群岛邮路、彩虹和云上电台。原 HTML 原样保留，不参与生产构建。前端代码和字体不依赖外部 CDN；音乐由网易云音频 CDN 提供。
 
 ## 环境与启动
 
@@ -37,6 +37,7 @@ npm run dev
 - **寄信**：点击粉色邮筒或「寄一封春天」，输入最多 80 个 Unicode 字符。计数含空格与标点，普通 emoji 按一个码点计。信封沿弧线飞向正在移动的飞艇，停靠时可衔接离港。飞行中最多容纳 24 封，达到上限会提示稍候；本次页面放飞总数不受此上限影响。
 - **弹窗**：打开自动聚焦；Tab / Shift+Tab 在弹窗内循环；Escape、关闭按钮或空白背景关闭，焦点回到触发控件。
 - **隐藏界面**：侧边按钮或画布聚焦后 `H`；隐藏后始终保留右侧恢复按钮。
+- **云上电台**：标题下方展开电台，点击播放。支持上一首、下一首、进度拖动和音量调节；曲终继续下一首。收起电台、隐藏界面或打开寄信窗不打断音乐。页面刷新后保持静音，音乐不跟随场景时间倍率变化。
 - **画质**：打开「操作指南」选择自动 / 高 / 中 / 低。生产页面默认不显示诊断；加 `?debug=1` 可查看 FPS、draw calls、实例数、渲染分辨率和 GPU 资源数量。开发环境默认开启诊断。
 
 ## 数据与隐私
@@ -56,7 +57,7 @@ npm run build
 npm run preview
 ```
 
-`dist/` 包含全部线上所需 HTML、JS、CSS 与静态文件。`preview` 只用于本地验证；线上由 Vercel CDN 提供静态资源，没有常驻 Node 服务、Functions、数据库或 SSR。
+`dist/` 包含前端 HTML、JS、CSS 与静态文件；电台还需要仓库根目录的 `api/music.ts`，由 Vercel 构建为 Node.js Function。仅上传 `dist/` 到纯静态服务器不能运行电台。开发和生产预览通过 Vite 中间件执行同一套电台处理逻辑；线上不需要常驻 Node 服务、数据库或 SSR。
 
 1. 项目仓库：[Ayi456/MyWeb](https://github.com/Ayi456/MyWeb)，使用 `main` 分支。仓库包含原始 HTML 与真实锁文件，排除 `node_modules`、`dist`、`.tools`。
 2. Vercel → Add New → Project → 导入 `Ayi456/MyWeb`。
@@ -73,7 +74,16 @@ npm run preview
 | Node.js          | `24.x`          |
 | 环境变量         | 默认不需要      |
 
-`vercel.json` 已包含四项静态构建设置。单页面不需要路由或全量 rewrite。没有添加其他托管平台适配器。
+`vercel.json` 包含前端构建设置和电台函数配置（最长 30 秒、保留 API 包动态加载的模块与配置）。单页面不需要全量 rewrite，`/api/music` 留给函数处理。
+
+### 云上电台配置
+
+- 使用 [API Enhanced](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced)，固定 npm 版本 `@neteasecloudmusicapienhanced/api@4.40.1`。依赖只在服务端按需加载，不进入浏览器代码。
+- 默认读取网易云公开「热歌榜」`3778678` 的前 30 首。更换歌单：本地复制 `.env.example` 为 `.env.local`，修改 `MUSIC_PLAYLIST_ID` 并重启；Vercel 中设置同名服务端环境变量后重新部署。不要添加 `VITE_` 前缀。
+- `GET /api/music` 返回歌曲名称、歌手和时长；`GET /api/music?action=play&id=歌曲ID` 返回原始服务的 HTTPS 音频地址和试听标记。仅允许当前歌单内的歌曲。
+- 歌单缓存 5 分钟，播放地址不经 CDN 缓存，音频由浏览器直连网易云。接口不转发音乐文件，也不保存用户登录信息。
+- 默认匿名访问，标准音质，未启用解锁、随机地域 IP、登录或账号操作。部分歌曲可能只有试听片段或不可播放，界面会提示；浏览器若阻止首次异步播放，再次点击播放即可。
+- 当前本地验证不代表 Vercel `iad1` 节点一定可播放所有歌曲；部署后仍需在实际域名验证网易云的地区与访问限制。
 
 ### 访问统计
 
@@ -83,21 +93,24 @@ Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。上�
 
 ## 结构与维护
 
-| 位置                       | 职责                                          |
-| -------------------------- | --------------------------------------------- |
-| `src/components`           | React 界面、时间控件、模态寄信、加载/失败界面 |
-| `src/hooks`                | 延迟初始化、取消异步挂载、低频订阅与键盘春风  |
-| `src/scene/createScene.ts` | 唯一动画循环、场景 API 与生命周期编排         |
-| `src/scene/config.ts`      | 固定种子、初始时间/相机、质量、时间参数       |
-| `src/scene/core`           | 相机、统一时钟、共享资源追踪、HDR 渲染管线    |
-| `src/scene/objects`        | 从原 HTML 迁移的模型工厂与所属 Shader         |
-| `src/scene/worldLayout.ts` | 副岛、灯塔停泊点及航线阶段的共享布局         |
-| `src/scene/systems`        | 昼夜、风、动物姿态、航线、信封与自动画质      |
-| `src/scene/utils`          | LCG 随机数、共享立方体 InstancedMesh 批渲染   |
-| `src/styles`               | 原型样式与响应式/无障碍补充                   |
-| `tests/core.test.ts`       | 时间、航线、种子、风、信件、画质测试          |
-| `tests/browser.html`       | 开发环境中的真实 WebGL 生命周期验证页         |
-| `docs/VALIDATION.md`       | 实际验证结果与明确的未验证项                  |
+| 位置                            | 职责                                             |
+| ------------------------------- | ------------------------------------------------ |
+| `src/components`                | React 界面、时间控件、模态寄信、加载/失败界面    |
+| `src/hooks`                     | 延迟初始化、取消异步挂载、低频订阅与键盘春风     |
+| `src/scene/createScene.ts`      | 唯一动画循环、场景 API 与生命周期编排            |
+| `src/scene/config.ts`           | 固定种子、初始时间/相机、质量、时间参数          |
+| `src/scene/core`                | 相机、统一时钟、共享资源追踪、HDR 渲染管线       |
+| `src/scene/objects`             | 从原 HTML 迁移的模型工厂与所属 Shader            |
+| `src/scene/worldLayout.ts`      | 副岛、灯塔停泊点及航线阶段的共享布局             |
+| `src/scene/systems`             | 昼夜、风、动物姿态、航线、信封与自动画质         |
+| `src/scene/utils`               | LCG 随机数、共享立方体 InstancedMesh 批渲染      |
+| `src/styles`                    | 原型样式与响应式/无障碍补充                      |
+| `src/components/CloudRadio.tsx` | 可收起播放器与独立音频生命周期                   |
+| `api/music.ts`、`server/`       | Vercel 入口、网易云适配、只读接口与本地桥接      |
+| `tests/music.test.ts`           | 歌单缓存、试听标记、无效 URL、歌曲范围和错误处理 |
+| `tests/core.test.ts`            | 时间、航线、种子、风、信件、画质测试             |
+| `tests/browser.html`            | 开发环境中的真实 WebGL 生命周期验证页            |
+| `docs/VALIDATION.md`            | 实际验证结果与明确的未验证项                     |
 
 场景公开 `setSpeed`、`setTimeOfDay`、`setWind`、`setCameraPreset`、`setQuality`、`setInteractionBlocked`、`sendLetter`、`subscribe`、`dispose`。React 不保存 Three 对象，也不逐帧 setState；每 300 ms 或用户操作时同步轻量快照，统计每秒更新。
 
