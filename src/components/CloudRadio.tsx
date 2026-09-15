@@ -104,7 +104,7 @@ export function CloudRadio({
     setBusy(false);
   }
 
-  async function play(nextIndex: number) {
+  async function play(nextIndex: number, autoplay = true) {
     const audio = audioRef.current;
     const nextTrack = playlist?.tracks[nextIndex];
     if (!audio || !nextTrack) return;
@@ -144,11 +144,15 @@ export function CloudRadio({
         setMessage("歌曲已准备好，再点一次播放吧。");
       } else {
         loaded.current = "";
-        setMessage(
+        const errorMessage =
           error instanceof Error && !(error instanceof DOMException)
             ? error.message
-            : "这首歌暂时无法播放，换一首听听吧。",
-        );
+            : "这首歌暂时无法播放，换一首听听吧。";
+        setMessage(errorMessage);
+        // Auto-skip to next track if current song is unavailable
+        if (playlist && autoplay) {
+          setTimeout(() => move(1, true), 1500);
+        }
       }
     } finally {
       if (generation.current === version) {
