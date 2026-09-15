@@ -1,4 +1,4 @@
-/** The reference's visual constants. Keep these in sync for visual comparisons. */
+/** Main-island visual constants retained from the reference. */
 export const CONFIG = {
   seed: 314159,
   initialHour: 16.33,

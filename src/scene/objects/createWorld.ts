@@ -14,6 +14,8 @@ import { createClouds } from "./clouds";
 import { createWildlife } from "./wildlife";
 import { createPetals } from "./petals";
 import { createNightSky } from "./nightSky";
+import { createArchipelago } from "./archipelago";
+import { createRainbow } from "./rainbow";
 
 export function createWorld(ctx: SceneContext) {
   const sky = createSky(ctx);
@@ -31,6 +33,8 @@ export function createWorld(ctx: SceneContext) {
   const wildlife = createWildlife(ctx);
   const petals = createPetals(ctx);
   const nightSky = createNightSky(ctx);
+  const archipelago = createArchipelago(ctx);
+  const rainbow = createRainbow(ctx);
   return {
     ...sky,
     ...sakura,
@@ -43,6 +47,8 @@ export function createWorld(ctx: SceneContext) {
     ...wildlife,
     ...petals,
     ...nightSky,
+    ...archipelago,
+    ...rainbow,
   };
 }
 export type WorldObjects = ReturnType<typeof createWorld>;

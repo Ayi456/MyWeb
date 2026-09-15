@@ -59,6 +59,10 @@ export function createDayNight(ctx: SceneContext, o: WorldObjects) {
     ctx.lampMat.emissiveIntensity = 0.2 + night * 2.2;
     o.officeLight.intensity = 0.5 + night * 4.8;
     o.treeLight.intensity = night * 8;
+    o.beaconLight.intensity = 0.15 + night * 5;
+    o.beaconGlow.material.opacity = 0.06 + night * 0.72;
+    o.rainbowMat.uniforms.uStrength.value = 0.46 * (1 - night);
+    o.rainbow.visible = night < 0.99;
     o.cloudMat.color.setRGB(
       1 - night * 0.26,
       1 - night * 0.29,

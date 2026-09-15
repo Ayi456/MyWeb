@@ -2,10 +2,20 @@ import { describe, expect, it } from "vitest";
 import { SimulationClock, wrapHour } from "../src/scene/core/simulationClock";
 import { seededRandom } from "../src/scene/utils/seededRandom";
 import { WindSystem } from "../src/scene/systems/wind";
-import { sampleFlight, dockPoint } from "../src/scene/systems/airshipFlight";
+import {
+  AirshipFlight,
+  sampleFlight,
+  dockPoint,
+  lighthouseDockPoint,
+} from "../src/scene/systems/airshipFlight";
 import { DeliveryProgress } from "../src/scene/systems/letterDelivery";
 import { QualityController } from "../src/scene/systems/quality";
 import { CONFIG } from "../src/scene/config";
+import {
+  FLIGHT_STOPS,
+  GARDEN_ISLAND,
+  LIGHTHOUSE_ISLAND,
+} from "../src/scene/worldLayout";
 
 describe("the shared simulation clock", () => {
   it.each([1, 4, 12] as const)("advances every system at ×%i", (speed) => {
@@ -81,14 +91,15 @@ describe("wind", () => {
   });
 });
 describe("airship route", () => {
-  it.each([11, 31, 49, 76, 152])(
-    "is position-continuous at %i seconds",
-    (t) => {
-      const a = sampleFlight(t - 1e-5),
-        b = sampleFlight(t + 1e-5);
-      expect(a.position.distanceTo(b.position)).toBeLessThan(0.0001);
-    },
-  );
+  it.each([
+    ...Object.values(FLIGHT_STOPS),
+    CONFIG.flightDuration,
+    CONFIG.flightDuration * 2,
+  ])("is position-continuous at %i seconds", (t) => {
+    const a = sampleFlight(t - 1e-5),
+      b = sampleFlight(t + 1e-5);
+    expect(a.position.distanceTo(b.position)).toBeLessThan(0.0001);
+  });
   it("closes every loop at the dock", () => {
     expect(sampleFlight(76).position.distanceTo(dockPoint)).toBe(0);
     expect(sampleFlight(152).position.distanceTo(dockPoint)).toBe(0);
@@ -98,6 +109,60 @@ describe("airship route", () => {
       const p = sampleFlight(t).position;
       expect((p.x / 4.5) ** 2 + (p.z / 3.5) ** 2).toBeGreaterThan(1);
     }
+  });
+  it("stops at the lighthouse landing before returning to the main dock", () => {
+    for (
+      let t = FLIGHT_STOPS.lighthouseArrival;
+      t < FLIGHT_STOPS.lighthouseDeparture;
+      t += 0.25
+    ) {
+      const state = sampleFlight(t);
+      expect(state.position.distanceTo(lighthouseDockPoint)).toBe(0);
+      expect(state.journey).toContain("灯塔小站");
+    }
+    expect(
+      sampleFlight(FLIGHT_STOPS.lighthouseDeparture + 1).position.distanceTo(
+        lighthouseDockPoint,
+      ),
+    ).toBeGreaterThan(0);
+    expect(
+      sampleFlight(CONFIG.flightDuration).position.distanceTo(dockPoint),
+    ).toBe(0);
+  });
+  it.each([
+    FLIGHT_STOPS.departure,
+    FLIGHT_STOPS.lighthouseArrival,
+    FLIGHT_STOPS.lighthouseDeparture,
+    CONFIG.flightDuration,
+  ])("eases to zero speed at the stop boundary %i", (time) => {
+    const before = sampleFlight(time - 0.001).position;
+    const after = sampleFlight(time + 0.001).position;
+    expect(before.distanceTo(after) / 0.002).toBeLessThan(0.01);
+  });
+  it("keeps the balloon clear of the windmill and lighthouse throughout the loop", () => {
+    const landmarks = [
+      [GARDEN_ISLAND.center[0] - 0.68, GARDEN_ISLAND.center[2] - 0.48, 3.1],
+      [
+        LIGHTHOUSE_ISLAND.center[0] - 0.25,
+        LIGHTHOUSE_ISLAND.center[2] - 0.18,
+        2.7,
+      ],
+    ];
+    for (let t = 0; t < CONFIG.flightDuration; t += 0.025) {
+      const p = sampleFlight(t).position;
+      for (const [x, z, clearance] of landmarks) {
+        expect(Math.hypot(p.x - x, p.z - z)).toBeGreaterThan(clearance);
+      }
+    }
+  });
+  it("a letter triggers departure at the main dock without skipping the remote stop", () => {
+    const flight = new AirshipFlight();
+    flight.time = 2;
+    flight.depart();
+    expect(flight.time).toBe(CONFIG.dockDuration);
+    flight.time = FLIGHT_STOPS.lighthouseArrival + 2;
+    flight.depart();
+    expect(flight.time).toBe(FLIGHT_STOPS.lighthouseArrival + 2);
   });
 });
 describe("letter delivery", () => {

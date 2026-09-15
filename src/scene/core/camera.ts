@@ -202,10 +202,14 @@ export function createCamera(
       );
       focus.lerp(targetFocus, damping);
       const dist = distance * Math.max(1, 1.3 / camera.aspect);
+      // A more frontal portrait view keeps the remote beacon clear of the
+      // right-hand controls without shrinking the main island further.
+      const viewAz =
+        az - T.MathUtils.smoothstep(1 - camera.aspect, 0, 0.5) * 0.35;
       camera.position.set(
-        focus.x + Math.sin(az) * Math.cos(el) * dist,
+        focus.x + Math.sin(viewAz) * Math.cos(el) * dist,
         focus.y + Math.sin(el) * dist,
-        focus.z + Math.cos(az) * Math.cos(el) * dist,
+        focus.z + Math.cos(viewAz) * Math.cos(el) * dist,
       );
       camera.lookAt(focus);
     },

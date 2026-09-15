@@ -1,26 +1,37 @@
 import * as T from "three";
 import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
+import { FLIGHT_STOPS, LIGHTHOUSE_ISLAND } from "../worldLayout";
 
 export const dockPoint = new T.Vector3(5.65, 1.21, 0.17);
-// Original three Bezier segments; acceleration is eased only at the dock.
+export const lighthouseDockPoint = new T.Vector3(...LIGHTHOUSE_ISLAND.berth);
+const westPoint = new T.Vector3(-11.4, 3, -4.1);
+const southPoint = new T.Vector3(-1.2, 1.9, 7);
+// The outbound leg docks at the beacon. The return passes behind the islands,
+// around the garden and across the foreground, with clearance for the balloon.
 export const routes = [
   new T.CubicBezierCurve3(
     dockPoint,
-    new T.Vector3(8.4, 1.8, -1.7),
-    new T.Vector3(8, 3.5, -6.3),
-    new T.Vector3(2.4, 3.9, -7.5),
+    new T.Vector3(11.7, 2, 0.17),
+    new T.Vector3(13, 1.18, -10.1),
+    lighthouseDockPoint,
   ),
   new T.CubicBezierCurve3(
-    new T.Vector3(2.4, 3.9, -7.5),
-    new T.Vector3(-5, 4.2, -8),
-    new T.Vector3(-8.6, 3.1, -5.4),
-    new T.Vector3(-6.5, 2.25, 0.8),
+    lighthouseDockPoint,
+    new T.Vector3(9, 2.8, -18),
+    new T.Vector3(-9.2, 3.4, -15.2),
+    westPoint,
   ),
   new T.CubicBezierCurve3(
-    new T.Vector3(-6.5, 2.25, 0.8),
-    new T.Vector3(-5.1, 2.1, 6.7),
-    new T.Vector3(8.9, 1.9, 6),
+    westPoint,
+    new T.Vector3(-12.4, 3, 3.9),
+    new T.Vector3(-7, 2.1, 7.4),
+    southPoint,
+  ),
+  new T.CubicBezierCurve3(
+    southPoint,
+    new T.Vector3(5, 1.9, 7),
+    new T.Vector3(9.2, 1.21, 0.17),
     dockPoint,
   ),
 ];
@@ -33,26 +44,44 @@ export function sampleFlight(
     ((time % CONFIG.flightDuration) + CONFIG.flightDuration) %
     CONFIG.flightDuration;
   let journey: string;
-  if (f < 11) {
+  if (f < FLIGHT_STOPS.departure) {
     position.copy(dockPoint);
     tangent.set(-1, 0, 0);
     journey = "飞艇正在等一封信。";
-  } else if (f < 31) {
-    const t = (f - 11) / 20,
-      u = t * t * (2 - t);
+  } else if (f < FLIGHT_STOPS.lighthouseArrival) {
+    const t =
+        (f - FLIGHT_STOPS.departure) /
+        (FLIGHT_STOPS.lighthouseArrival - FLIGHT_STOPS.departure),
+      u = t * t * (3 - 2 * t);
     routes[0].getPoint(u, position);
     routes[0].getTangent(u, tangent);
-    journey = "一封心意，正飞向远方。";
-  } else if (f < 49) {
-    const t = (f - 31) / 18;
-    routes[1].getPoint(t, position);
-    routes[1].getTangent(t, tangent);
-    journey = "云海很大，春天很近。";
+    journey = "一封心意，正飞向灯塔。";
+  } else if (f < FLIGHT_STOPS.lighthouseDeparture) {
+    position.copy(lighthouseDockPoint);
+    tangent.set(-1, 0, 0);
+    journey = "灯塔小站，收到了春天。";
+  } else if (f < FLIGHT_STOPS.westTurn) {
+    const t =
+        (f - FLIGHT_STOPS.lighthouseDeparture) /
+        (FLIGHT_STOPS.westTurn - FLIGHT_STOPS.lighthouseDeparture),
+      u = t * t * (2 - t);
+    routes[1].getPoint(u, position);
+    routes[1].getTangent(u, tangent);
+    journey = "带上远方的问候，穿过云海。";
+  } else if (f < FLIGHT_STOPS.southTurn) {
+    const t =
+      (f - FLIGHT_STOPS.westTurn) /
+      (FLIGHT_STOPS.southTurn - FLIGHT_STOPS.westTurn);
+    routes[2].getPoint(t, position);
+    routes[2].getTangent(t, tangent);
+    journey = "风车转过一圈，花园又近了。";
   } else {
-    const t = (f - 49) / 27,
+    const t =
+        (f - FLIGHT_STOPS.southTurn) /
+        (CONFIG.flightDuration - FLIGHT_STOPS.southTurn),
       u = t + t * t - t * t * t;
-    routes[2].getPoint(u, position);
-    routes[2].getTangent(u, tangent);
+    routes[3].getPoint(u, position);
+    routes[3].getTangent(u, tangent);
     journey = "下一站，樱花树下。";
   }
   return { position, tangent, journey, phase: f };
@@ -84,7 +113,11 @@ export class AirshipFlight {
       this.yaw,
       Math.sin(simTime * 0.65) * 0.023,
     );
-    this.propellerAngle += dt * (state.phase < 11 ? 4.4 : 15);
+    const moored =
+      state.phase < CONFIG.dockDuration ||
+      (state.phase >= FLIGHT_STOPS.lighthouseArrival &&
+        state.phase < FLIGHT_STOPS.lighthouseDeparture);
+    this.propellerAngle += dt * (moored ? 4.4 : 15);
     propeller.rotation.x = this.propellerAngle;
     banner.rotation.y = Math.sin(simTime * 3) * (0.12 + wind * 0.3);
     pilot.head.rotation.y = Math.sin(simTime * 0.55) * 0.22;

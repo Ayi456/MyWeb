@@ -1,5 +1,6 @@
 import { PI, TAU } from "../core/context";
 import type { WorldObjects } from "../objects/createWorld";
+import { CONFIG } from "../config";
 
 export function updateAmbient(
   objects: WorldObjects,
@@ -22,6 +23,8 @@ export function updateAmbient(
   } = objects;
   tree.rotation.z = Math.sin(simTime * 0.82) * (0.004 + wind * 0.022);
   tree.rotation.x = Math.sin(simTime * 0.71) * (0.004 + wind * 0.009);
+  objects.windmillSails.rotation.z =
+    -simTime * 0.25 - Math.sin(simTime * 0.6) * wind * 0.12;
   swing.rotation.z = Math.sin(simTime * 1.35) * (0.05 + wind * 0.12);
   swing.rotation.x = Math.sin(simTime * 1.1) * 0.015;
   lanterns.forEach(
@@ -34,7 +37,7 @@ export function updateAmbient(
   tail.rotation.y = Math.sin(simTime * 1.2) * 0.36;
   paw.rotation.z =
     -0.12 - Math.pow(Math.max(0, Math.sin(simTime * 0.75)), 7) * 0.95;
-  const busy = f < 11 || f > 70,
+  const busy = f < CONFIG.dockDuration || f > CONFIG.flightDuration - 6,
     walk = busy
       ? Math.sin(simTime * 0.72) * 0.6
       : Math.sin(simTime * 0.28) * 0.12;
