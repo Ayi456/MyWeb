@@ -48,6 +48,7 @@ export function CloudRadio({
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.3);
+  const [playMode, setPlayMode] = useState<"order" | "loop" | "random">("loop");
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const intent = useRef(false);
@@ -165,9 +166,18 @@ export function CloudRadio({
   function move(step: number, autoplay = intent.current) {
     if (!playlist) return;
     cancel();
-    const nextIndex =
-      (indexRef.current + step + playlist.tracks.length) %
-      playlist.tracks.length;
+    let nextIndex: number;
+    if (playMode === "random") {
+      // Random mode: pick a random track different from current
+      do {
+        nextIndex = Math.floor(Math.random() * playlist.tracks.length);
+      } while (nextIndex === indexRef.current && playlist.tracks.length > 1);
+    } else {
+      // Order or loop mode
+      nextIndex =
+        (indexRef.current + step + playlist.tracks.length) %
+        playlist.tracks.length;
+    }
     indexRef.current = nextIndex;
     setIndex(nextIndex);
     loaded.current = "";
@@ -206,7 +216,15 @@ export function CloudRadio({
               : 0,
           )
         }
-        onEnded={() => move(1, true)}
+        onEnded={() => {
+          if (playMode === "order" && indexRef.current === (playlist?.tracks.length ?? 0) - 1) {
+            // Order mode: stop at the last track
+            cancel();
+            setMessage("歌单播放完毕。");
+          } else {
+            move(1, true);
+          }
+        }}
         onError={() => {
           if (!audioRef.current?.getAttribute("src")) return;
           cancel();
@@ -324,6 +342,38 @@ export function CloudRadio({
                   <button aria-label="下一首" onClick={() => move(1, true)}>
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18 5v14M6 5l10 7-10 7Z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="radio-mode"
+                    aria-label={
+                      playMode === "order"
+                        ? "顺序播放"
+                        : playMode === "loop"
+                          ? "循环播放"
+                          : "随机播放"
+                    }
+                    title={
+                      playMode === "order"
+                        ? "顺序播放"
+                        : playMode === "loop"
+                          ? "循环播放"
+                          : "随机播放"
+                    }
+                    onClick={() =>
+                      setPlayMode((m) =>
+                        m === "order" ? "loop" : m === "loop" ? "random" : "order"
+                      )
+                    }
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      {playMode === "order" ? (
+                        <path d="M4 12h13m0 0l-4-4m4 4l-4 4m4-8V6a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2" />
+                      ) : playMode === "loop" ? (
+                        <path d="M4 12h13m0 0l-4-4m4 4l-4 4M3 8V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M3 16v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+                      ) : (
+                        <path d="M9 4l2 4-2 4M15 4l2 4-2 4M5 16h4M15 16h4M7 20l2-4 2 4" />
+                      )}
                     </svg>
                   </button>
                   <label className="radio-volume">

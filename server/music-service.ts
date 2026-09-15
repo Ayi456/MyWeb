@@ -59,7 +59,7 @@ export function normalizePlaylist(
       duration:
         typeof track.dt === "number" && track.dt > 0 ? track.dt / 1000 : 0,
     });
-    if (tracks.length === 30) break;
+    if (tracks.length === 200) break;
   }
   if (!tracks.length)
     throw new MusicError(503, "这份歌单暂时没有可读取的歌曲。");

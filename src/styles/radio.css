@@ -223,6 +223,10 @@
 .radio-controls .radio-play:hover {
   background: #a87284;
 }
+.radio-controls .radio-mode svg {
+  width: 16px;
+  height: 16px;
+}
 .radio-volume {
   display: flex;
   align-items: center;
