@@ -6,22 +6,22 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-// Clean up expired entries every 5 minutes
-setInterval(
-  () => {
-    const now = Date.now();
-    for (const [key, entry] of store.entries()) {
-      if (entry.resetAt < now) store.delete(key);
-    }
-  },
-  5 * 60_000,
-);
+// Clean up expired entries on-demand (serverless-friendly)
+function cleanupExpired() {
+  const now = Date.now();
+  for (const [key, entry] of store.entries()) {
+    if (entry.resetAt < now) store.delete(key);
+  }
+}
 
 export function checkRateLimit(
   identifier: string,
   maxRequests = 30,
   windowMs = 60_000,
 ): { allowed: boolean; remaining: number; resetAt: number } {
+  // Lazy cleanup on each check (serverless-friendly)
+  if (store.size > 1000) cleanupExpired();
+
   const now = Date.now();
   const entry = store.get(identifier);
 
