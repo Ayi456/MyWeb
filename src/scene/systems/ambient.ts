@@ -37,11 +37,13 @@ export function updateAmbient(
   tail.rotation.y = Math.sin(simTime * 1.2) * 0.36;
   paw.rotation.z =
     -0.12 - Math.pow(Math.max(0, Math.sin(simTime * 0.75)), 7) * 0.95;
+  // The route stays on the dock planks (x 2.67..4.92): the cart body reaches
+  // 0.28 beyond its origin, and the post office wall stands at x 2.21.
   const busy = f < CONFIG.dockDuration || f > CONFIG.flightDuration - 6,
     walk = busy
-      ? Math.sin(simTime * 0.72) * 0.6
+      ? Math.sin(simTime * 0.72) * 0.45
       : Math.sin(simTime * 0.28) * 0.12;
-  courier.g.position.set(3.24 + walk, 1.21, 0.18);
+  courier.g.position.set(3.9 + walk, 1.21, 0.18);
   courier.g.rotation.y = walk >= 0 ? PI / 2 : -PI / 2;
   courier.g.position.y += busy ? Math.abs(Math.sin(simTime * 4)) * 0.018 : 0;
   courier.legs.forEach(
@@ -50,7 +52,7 @@ export function updateAmbient(
   courier.arms[0].rotation.z = busy
     ? -0.1
     : -0.8 + Math.sin(simTime * 3) * 0.28;
-  cart.position.set(2.7 + walk, 1.15, 0.18);
+  cart.position.set(3.36 + walk, 1.19, 0.18);
   wheels.forEach((w) => (w.rotation.y = busy ? simTime * 2 : 0));
   butterflies.forEach(({ g, wings }, i) => {
     const a = simTime * (0.34 + i * 0.008) + i * 2.41;
