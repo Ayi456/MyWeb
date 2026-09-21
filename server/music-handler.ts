@@ -17,19 +17,29 @@ export function createMusicHandler(
         throw new MusicError(405, "只支持读取电台内容。");
       }
 
-      // Rate limiting check
+      // Rate limiting check. Header and socket lookups are guarded so an
+      // incomplete request object cannot turn every response into a 503.
+      const headers = req.headers ?? {};
       const clientId = getClientIdentifier(
-        req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.socket.remoteAddress,
-        req.headers["user-agent"],
+        headers["x-forwarded-for"] ||
+          headers["x-real-ip"] ||
+          req.socket?.remoteAddress,
+        headers["user-agent"],
       );
       const rateLimit = checkRateLimit(clientId);
       res.setHeader("X-RateLimit-Limit", "30");
       res.setHeader("X-RateLimit-Remaining", String(rateLimit.remaining));
-      res.setHeader("X-RateLimit-Reset", String(Math.floor(rateLimit.resetAt / 1000)));
+      res.setHeader(
+        "X-RateLimit-Reset",
+        String(Math.floor(rateLimit.resetAt / 1000)),
+      );
 
       if (!rateLimit.allowed) {
         res.statusCode = 429;
-        res.setHeader("Retry-After", String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)));
+        res.setHeader(
+          "Retry-After",
+          String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
+        );
         res.end(JSON.stringify({ error: "请求过于频繁，请稍后再试。" }));
         return;
       }
