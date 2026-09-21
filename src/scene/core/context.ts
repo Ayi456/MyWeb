@@ -2,6 +2,7 @@ import * as T from "three";
 import { CONFIG } from "../config";
 import { VoxelBatch } from "../utils/voxelBatch";
 import { hash, seededRandom } from "../utils/seededRandom";
+import { SeasonalPalette } from "../systems/season";
 
 export type Point3 = [number, number, number];
 export const PI = Math.PI,
@@ -26,7 +27,20 @@ export function createContext() {
     uNight: { value: 0 },
     uPetalTime: { value: 0 },
     uShip: { value: new T.Vector3(5.3, 1.2, 0.4) },
+    /** Season blend weights: spring, summer, autumn, winter. */
+    uSeason: { value: new T.Vector4(1, 0, 0, 0) },
+    /** Pointer position on the petal plane, w = influence (0 when away). */
+    uPointer: { value: new T.Vector4(0, 0, 0, 0) },
+    /** Extra petal burst from a tap on the tree, decays to 0. */
+    uBurst: { value: 0 },
+    /** Rain shower strength 0..1 from the event system. */
+    uRain: { value: 0 },
+    /** Firefly brightness, strongest on summer nights. */
+    uFirefly: { value: 1 },
+    /** Ripple strength on the spring pool after a tap. */
+    uRipple: { value: 0 },
   };
+  const seasonal = new SeasonalPalette();
   const cube = new T.BoxGeometry(1, 1, 1);
   const matte = new T.MeshStandardMaterial({
     roughness: 0.84,
@@ -48,6 +62,7 @@ export function createContext() {
   class Batch extends VoxelBatch {
     constructor(parent: T.Object3D = world, mat: T.Material = matte) {
       super(parent, mat, cube);
+      this.onSeasonal = (data) => seasonal.register(data);
     }
   }
   function mesh<M extends T.Material>(
@@ -134,6 +149,7 @@ export function createContext() {
     scene,
     world,
     U,
+    seasonal,
     cube,
     matte,
     rockMat,

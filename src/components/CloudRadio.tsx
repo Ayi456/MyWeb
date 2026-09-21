@@ -217,7 +217,10 @@ export function CloudRadio({
           )
         }
         onEnded={() => {
-          if (playMode === "order" && indexRef.current === (playlist?.tracks.length ?? 0) - 1) {
+          if (
+            playMode === "order" &&
+            indexRef.current === (playlist?.tracks.length ?? 0) - 1
+          ) {
             // Order mode: stop at the last track
             cancel();
             setMessage("歌单播放完毕。");
@@ -362,7 +365,11 @@ export function CloudRadio({
                     }
                     onClick={() =>
                       setPlayMode((m) =>
-                        m === "order" ? "loop" : m === "loop" ? "random" : "order"
+                        m === "order"
+                          ? "loop"
+                          : m === "loop"
+                            ? "random"
+                            : "order",
                       )
                     }
                   >

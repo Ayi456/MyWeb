@@ -3,6 +3,18 @@ export const CONFIG = {
   seed: 314159,
   initialHour: 16.33,
   hoursPerSecond: 0.017,
+  /** Continuous year: 0 spring, 1 summer, 2 autumn, 3 winter. */
+  initialYear: 0.2,
+  secondsPerSeason: 360,
+  /** Fraction of each season spent blending into the next. */
+  seasonTransition: 0.16,
+  /** Simulation seconds before the first surprise, and between later ones. */
+  events: {
+    firstDelay: [18, 40] as const,
+    gap: [45, 110] as const,
+  },
+  /** Simulation seconds a postcard takes to fly from the ship to the mailbox. */
+  postcardDuration: 3.2,
   initialFlightTime: 1.5,
   flightDuration: 76,
   dockDuration: 11,
@@ -29,7 +41,7 @@ export const CONFIG = {
 } as const;
 
 export const QUALITY = {
-  high: { dpr: 1.6, shadows: 1024, petals: 1250, bloom: 1 },
-  medium: { dpr: 1.2, shadows: 768, petals: 850, bloom: 0.6 },
-  low: { dpr: 0.9, shadows: 512, petals: 480, bloom: 0 },
+  high: { dpr: 1.6, shadows: 1024, petals: 1250, bloom: 1, farDetail: true },
+  medium: { dpr: 1.2, shadows: 768, petals: 850, bloom: 0.6, farDetail: true },
+  low: { dpr: 0.9, shadows: 512, petals: 480, bloom: 0, farDetail: false },
 } as const;

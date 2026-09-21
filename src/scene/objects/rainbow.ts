@@ -88,5 +88,6 @@ export function createRainbow(ctx: SceneContext) {
   rainbow.name = "cloud-mist-rainbow";
   rainbow.renderOrder = 3;
   ctx.world.add(rainbow);
-  return { rainbow, rainbowMat };
+  /** Extra strength after a shower; the event system eases it back to 0. */
+  return { rainbow, rainbowMat, rainbowBoost: 0 };
 }

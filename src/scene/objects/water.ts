@@ -9,8 +9,8 @@ export function createWater(ctx: SceneContext) {
     uniforms: U,
     transparent: true,
     depthWrite: false,
-    vertexShader: `uniform float uTime;uniform float uWind;varying vec3 vP;varying float vH;void main(){vec4 p=instanceMatrix*vec4(position,1.);vH=sin(p.x*6.+uTime)*sin(p.z*5.+uTime*.6)*(.012+uWind*.016);p.y+=vH;vP=p.xyz;gl_Position=projectionMatrix*modelViewMatrix*p;}`,
-    fragmentShader: `uniform float uTime;uniform float uNight;varying vec3 vP;varying float vH;void main(){float glint=pow(max(0.,sin(vP.x*17.+vP.z*10.+uTime)),30.);vec3 c=mix(vec3(.32,.66,.68),vec3(.76,.91,.84),.25+glint*.65);c*=1.-uNight*.48;gl_FragColor=vec4(c,.90);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
+    vertexShader: `uniform float uTime;uniform float uWind;uniform vec4 uSeason;uniform float uRipple;varying vec3 vP;varying float vH;void main(){vec4 p=instanceMatrix*vec4(position,1.);float calm=1.-uSeason.w;vH=sin(p.x*6.+uTime)*sin(p.z*5.+uTime*.6)*(.012+uWind*.016)*calm;float r=length(p.xz-vec2(-2.72,1.38));vH+=sin(r*22.-uTime*9.)*.02*uRipple*smoothstep(.9,0.,r);p.y+=vH;vP=p.xyz;gl_Position=projectionMatrix*modelViewMatrix*p;}`,
+    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;varying float vH;void main(){float glint=pow(max(0.,sin(vP.x*17.+vP.z*10.+uTime)),30.);vec3 c=mix(vec3(.32,.66,.68),vec3(.76,.91,.84),.25+glint*.65);vec3 ice=mix(vec3(.78,.86,.92),vec3(.93,.96,1.),.5+.5*sin(vP.x*9.+vP.z*7.));c=mix(c,ice,uSeason.w);c*=1.-uNight*.48;gl_FragColor=vec4(c,.90);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
   });
   const pool = new Batch(world, poolMat);
   for (let x = -0.64; x < 0.65; x += 0.13)
@@ -52,7 +52,7 @@ export function createWater(ctx: SceneContext) {
     depthWrite: false,
     side: T.DoubleSide,
     vertexShader: `uniform float uTime;varying vec3 vP;void main(){vP=position;vec3 p=position;p.x+=sin(position.y*3.+uTime*1.3)*.025;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,
-    fragmentShader: `uniform float uTime;uniform float uNight;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.);float side=1.-smoothstep(.05,.21,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c*=1.-uNight*.40;float fade=smoothstep(-3.35,-2.7,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
+    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.*(1.-uSeason.w*.9));float side=1.-smoothstep(.05,.21,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c=mix(c,vec3(.86,.92,.98),uSeason.w*.8);c*=1.-uNight*.40;float fade=smoothstep(-3.35,-2.7,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
   });
   const waterfall = mesh(
     new T.PlaneGeometry(0.43, 4.25, 2, 48),

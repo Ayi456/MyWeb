@@ -1,4 +1,5 @@
 import { type SceneContext, TAU } from "../core/context";
+import { GRASS, GRASS_RIM, LEAF } from "./seasonalColors";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createIsland(ctx: SceneContext) {
@@ -33,14 +34,36 @@ export function createIsland(ctx: SceneContext) {
         isPath =
           (x > -0.9 && x < 3.52 && Math.abs(z - pathZ) < 0.23) ||
           (x < -0.75 && x > -2.7 && Math.abs(z - 1.13) < 0.18);
-      const c = isPath
-        ? ["#e5d5b2", "#d6c6a8", "#efe0c1"][Math.floor(hash(x + 4, z) * 3)]
-        : ["#78a884", "#89b78d", "#a0c295", "#73a080"][
-            Math.floor(hash(x, z + 5) * 4)
-          ];
-      grass.add(x, y + 0.02, z, step + 0.005, 0.14, step + 0.005, c);
+      if (isPath)
+        grass.add(
+          x,
+          y + 0.02,
+          z,
+          step + 0.005,
+          0.14,
+          step + 0.005,
+          ["#e5d5b2", "#d6c6a8", "#efe0c1"][Math.floor(hash(x + 4, z) * 3)],
+        );
+      else
+        grass.addSeasonal(
+          x,
+          y + 0.02,
+          z,
+          step + 0.005,
+          0.14,
+          step + 0.005,
+          GRASS[Math.floor(hash(x, z + 5) * 4)],
+        );
       if (d > 0.85 && hash(x + 8, z) > 0.6)
-        grass.add(x, y - 0.11, z, step + 0.03, 0.16, step + 0.03, "#698d77");
+        grass.addSeasonal(
+          x,
+          y - 0.11,
+          z,
+          step + 0.03,
+          0.16,
+          step + 0.03,
+          GRASS_RIM,
+        );
     }
   terrain.build();
   grass.build();
@@ -75,14 +98,14 @@ export function createIsland(ctx: SceneContext) {
         y = top - j * 0.15;
       vines.add(xx, y, zz, 0.038, 0.17, 0.038, "#6c9476");
       if (j % 2 === 0)
-        vines.add(
+        vines.addSeasonal(
           xx + 0.055,
           y - 0.02,
           zz,
           0.14,
           0.035,
           0.1,
-          j % 4 ? "#9abc87" : "#7da280",
+          LEAF[j % 4 ? 0 : 1],
           0,
           j * 0.4,
           0.35,

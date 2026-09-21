@@ -2,19 +2,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SceneCanvas } from "./components/SceneCanvas";
 import { SceneOverlay } from "./components/SceneOverlay";
 import { TimeControls } from "./components/TimeControls";
+import { SeasonControls } from "./components/SeasonControls";
 import { ActionControls } from "./components/ActionControls";
 import { LetterDialog } from "./components/LetterDialog";
 import { HelpPanel } from "./components/HelpPanel";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
+import { PostcardPanel, type Reply } from "./components/PostcardPanel";
 import { useSceneController } from "./hooks/useSceneController";
 import { isControl, useWindInput } from "./hooks/useWindInput";
 
+const SOUND_KEY = "spring-post-office:sound";
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [attempt, setAttempt] = useState(0),
     [mailOpen, setMailOpen] = useState(false),
+    [postcardsOpen, setPostcardsOpen] = useState(false),
     [hidden, setHidden] = useState(false),
     [timeCollapsed, setTimeCollapsed] = useState(() => {
       try {
@@ -26,7 +30,9 @@ export default function App() {
       }
     }),
     [helpOpen, setHelpOpen] = useState(false),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [replies, setReplies] = useState<Reply[]>([]);
+  const soundPref = useRef(false);
   const openMail = useCallback(() => setMailOpen(true), []);
   const { controller, snapshot, error } = useSceneController(
     canvas,
@@ -35,7 +41,7 @@ export default function App() {
   );
   const wind = useWindInput(
     controller,
-    mailOpen || !snapshot?.ready || !!error,
+    mailOpen || postcardsOpen || !snapshot?.ready || !!error,
   );
   const closeMail = useCallback(() => setMailOpen(false), []);
   useEffect(() => {
@@ -48,18 +54,57 @@ export default function App() {
       // Keep the toggle usable when browser storage is unavailable.
     }
   }, [timeCollapsed]);
+  const blocked = mailOpen || helpOpen || postcardsOpen;
   useEffect(() => {
-    controller.current?.setInteractionBlocked(mailOpen || helpOpen);
-  }, [controller, mailOpen, helpOpen]);
+    controller.current?.setInteractionBlocked(blocked);
+  }, [controller, blocked, snapshot?.ready]);
+  // Scene notices (taps, events, replies, stamps) share the one hint line.
+  useEffect(() => {
+    const scene = controller.current;
+    if (!scene || !snapshot?.ready) return;
+    return scene.onNotice((n) => {
+      setNotice(n.text);
+      if (n.type === "reply")
+        setReplies((list) => [
+          ...list,
+          { text: n.text, season: n.season, at: Date.now() },
+        ]);
+    });
+  }, [controller, snapshot?.ready]);
   useEffect(() => {
     if (!notice) return;
     const timeout = setTimeout(() => setNotice(""), 5000);
     return () => clearTimeout(timeout);
   }, [notice]);
+  // Sound needs a user gesture; remember the preference and re-arm on the first click.
+  useEffect(() => {
+    try {
+      soundPref.current = localStorage.getItem(SOUND_KEY) === "true";
+    } catch {
+      soundPref.current = false;
+    }
+    if (!soundPref.current) return;
+    const arm = () => controller.current?.setSound(true);
+    window.addEventListener("pointerdown", arm, { once: true });
+    window.addEventListener("keydown", arm, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", arm);
+      window.removeEventListener("keydown", arm);
+    };
+  }, [controller, attempt]);
+  const setSound = (on: boolean) => {
+    controller.current?.setSound(on);
+    try {
+      localStorage.setItem(SOUND_KEY, String(on));
+    } catch {
+      // Preference simply does not persist.
+    }
+  };
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (
         mailOpen ||
+        postcardsOpen ||
         e.isComposing ||
         isControl(e.target) ||
         e.ctrlKey ||
@@ -68,6 +113,10 @@ export default function App() {
       )
         return;
       if (e.code === "KeyR") controller.current?.setCameraPreset("reset");
+      if (e.code === "KeyF" && !e.repeat)
+        controller.current?.setCameraPreset(
+          snapshot?.riding ? "reset" : "ride",
+        );
       if (e.code === "KeyH" && !e.repeat) {
         setHidden((v) => !v);
         setHelpOpen(false);
@@ -76,11 +125,13 @@ export default function App() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [controller, mailOpen]);
+  }, [controller, mailOpen, postcardsOpen, snapshot?.riding]);
   const toggleUI = () => {
     setHidden((v) => !v);
     setHelpOpen(false);
   };
+  const ride = () =>
+    controller.current?.setCameraPreset(snapshot?.riding ? "reset" : "ride");
   return (
     <>
       <SceneCanvas key={attempt} canvasRef={canvas} />
@@ -90,13 +141,18 @@ export default function App() {
         onToggle={toggleUI}
         onReset={() => controller.current?.setCameraPreset("reset")}
         onCloseup={() => controller.current?.setCameraPreset("tree")}
+        onRide={ride}
         onHelp={() => setHelpOpen((v) => !v)}
+        onPostcards={() => setPostcardsOpen(true)}
         helpOpen={helpOpen}
+        replyCount={replies.length}
       >
         {helpOpen && (
           <HelpPanel
             quality={snapshot?.quality ?? "auto"}
             onQuality={(mode) => controller.current?.setQuality(mode)}
+            sound={snapshot?.sound ?? false}
+            onSound={setSound}
             onClose={() => setHelpOpen(false)}
           />
         )}
@@ -106,17 +162,27 @@ export default function App() {
             <p>{snapshot?.journey ?? "飞艇正在等一封信。"}</p>
             <p>
               {snapshot?.sentCount
-                ? `已放飞 ${String(snapshot.sentCount).padStart(2, "0")} 封心意`
+                ? `已放飞 ${String(snapshot.sentCount).padStart(2, "0")} 封心意${
+                    snapshot.repliesWaiting
+                      ? ` · ${snapshot.repliesWaiting} 封回信在路上`
+                      : ""
+                  }`
                 : "春天，还很长。"}
             </p>
           </div>
-          <TimeControls
-            snapshot={snapshot}
-            collapsed={timeCollapsed}
-            onToggle={() => setTimeCollapsed((v) => !v)}
-            onSpeed={(v) => controller.current?.setSpeed(v)}
-            onHour={(v) => controller.current?.setTimeOfDay(v)}
-          />
+          <div className="time-stack">
+            <SeasonControls
+              snapshot={snapshot}
+              onSeason={(i) => controller.current?.setSeason(i)}
+            />
+            <TimeControls
+              snapshot={snapshot}
+              collapsed={timeCollapsed}
+              onToggle={() => setTimeCollapsed((v) => !v)}
+              onSpeed={(v) => controller.current?.setSpeed(v)}
+              onHour={(v) => controller.current?.setTimeOfDay(v)}
+            />
+          </div>
           <ActionControls
             onWrite={openMail}
             wind={wind}
@@ -129,7 +195,7 @@ export default function App() {
         </p>
       </SceneOverlay>
       <CloudRadio
-        hidden={hidden || !snapshot?.ready || !!error || mailOpen || helpOpen}
+        hidden={hidden || !snapshot?.ready || !!error || blocked}
         night={(snapshot?.night ?? 0) > 0.63}
       />
       <div
@@ -155,12 +221,20 @@ export default function App() {
           }}
         />
       )}
+      {postcardsOpen && (
+        <PostcardPanel
+          replies={replies}
+          stamps={snapshot?.stamps ?? []}
+          onClose={() => setPostcardsOpen(false)}
+        />
+      )}
       {error ? (
         <ErrorFallback
           message={error}
           onRetry={() => {
             setMailOpen(false);
             setHelpOpen(false);
+            setPostcardsOpen(false);
             setAttempt((v) => v + 1);
           }}
         />

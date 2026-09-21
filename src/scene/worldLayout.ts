@@ -10,6 +10,18 @@ export const LIGHTHOUSE_ISLAND = {
   berth: [9.85, 1.18, -10.1] as const,
 };
 
+/** Large terraced tea hill, far to the north-west and well outside the postal loop. */
+export const TEA_ISLAND = {
+  center: [-18.5, -1.4, -15.5] as const,
+  radius: [4.8, 3.7] as const,
+};
+
+/** Hot-spring hamlet to the right of the beacon, past the cloud whale's lane. */
+export const VILLAGE_ISLAND = {
+  center: [11.5, -2.2, -27.5] as const,
+  radius: [4.4, 3.3] as const,
+};
+
 export const FLIGHT_STOPS = {
   departure: 11,
   lighthouseArrival: 31,

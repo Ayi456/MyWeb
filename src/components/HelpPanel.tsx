@@ -2,10 +2,14 @@ import type { QualityMode } from "../scene/types";
 export function HelpPanel({
   quality,
   onQuality,
+  sound,
+  onSound,
   onClose,
 }: {
   quality: QualityMode;
   onQuality: (q: QualityMode) => void;
+  sound: boolean;
+  onSound: (on: boolean) => void;
   onClose: () => void;
 }) {
   return (
@@ -22,12 +26,17 @@ export function HelpPanel({
         方向键 / 加减键 · 调整视角
         <br />
         按住 Space / 春风按钮 · 花瓣纷飞
-        <br />R · 复位视角 H · 隐藏界面
+        <br />R · 复位视角 H · 隐藏界面 F · 登上飞艇
       </p>
-      <p>春风按钮获得焦点后，Enter 可切换持续春风。离开窗口会停止吹风。</p>
-      <p>点击邮筒或「寄一封春天」，让信封飞向飞艇。文字仅留在当前页面。</p>
-      <p>时间轴可以前往任意时刻。暂停会冻结场景，仍可自由环视。</p>
-      <p>时间卡片右上角可收起，点击底部时钟重新展开；会记住你的选择。</p>
+      <p>
+        岛上的樱花树、灯笼、写信的小兔、猫咪、风车、门铃、水池、飞艇、灯塔、茶山和温泉村都可以点一点，它们会回应你。鼠标划过树冠，花瓣会被拨开。
+      </p>
+      <p>
+        寄出的信送达后，飞艇会从灯塔带回一张明信片，落进邮筒。点邮票图章查看回信与集章。
+      </p>
+      <p>
+        季节按钮切换春夏秋冬，四季也会随时间自然轮换。云鲸、热气球、太阳雨和流星会不定期出现。
+      </p>
       <label className="quality-label">
         画质{" "}
         <select
@@ -41,8 +50,16 @@ export function HelpPanel({
           <option value="low">低</option>
         </select>
       </label>
+      <label className="quality-label sound-label">
+        <input
+          type="checkbox"
+          checked={sound}
+          onChange={(e) => onSound(e.target.checked)}
+        />
+        环境音效（风声、虫鸣、雨声、互动提示音）
+      </label>
       <div className="fine">
-        自动画质根据设备与运行表现逐级调整。遵循系统的减少动态效果设置。
+        自动画质根据设备与运行表现逐级调整，低画质会隐藏远处岛屿的细节。遵循系统的减少动态效果设置。音效由浏览器实时合成，不加载任何音频文件。
       </div>
     </aside>
   );

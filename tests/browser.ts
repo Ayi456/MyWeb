@@ -48,10 +48,31 @@ if (params.get("mode") === "visual") {
   start();
   controller!.setSpeed(0);
   controller!.setTimeOfDay(Number(params.get("hour") ?? 16.33));
+  if (params.has("season")) controller!.setSeason(Number(params.get("season")));
   controller!.setQuality("high");
+  const preset = params.get("preset");
   controller!.setCameraPreset(
-    params.get("preset") === "tree" ? "tree" : "reset",
+    preset === "tree" ? "tree" : preset === "ride" ? "ride" : "reset",
   );
+  const event = params.get("event");
+  if (
+    event === "shower" ||
+    event === "whale" ||
+    event === "balloon" ||
+    event === "shootingStar"
+  )
+    controller!.triggerEvent(event);
+  // Let visitors and camera settle by running the simulation for N sim-seconds.
+  if (params.has("settle")) {
+    const target = Number(params.get("settle"));
+    // Short targets use ×1 so the 300 ms snapshot cadence cannot overshoot much.
+    controller!.setSpeed(target < 6 ? 1 : 12);
+    const tick = () => {
+      if ((snapshot?.simTime ?? 0) >= target) controller!.setSpeed(0);
+      else setTimeout(tick, 30);
+    };
+    tick();
+  }
 } else {
   const originalRAF = window.requestAnimationFrame.bind(window),
     originalCancel = window.cancelAnimationFrame.bind(window);
@@ -104,6 +125,45 @@ if (params.get("mode") === "visual") {
       controller!.setWind(false);
       await until(() => snapshot!.wind < 0.001);
       assert(snapshot!.wind < 0.001, "wind returns smoothly to calm");
+      if (cycle === 0) {
+        // New systems: seasons, taps, events, ride and replies.
+        controller!.setSpeed(0);
+        controller!.setSeason(3);
+        await delay(350);
+        assert(
+          snapshot!.season === "winter",
+          "season jumps to winter on request",
+        );
+        controller!.setSeason(0);
+        let notices = 0;
+        const stopNotices = controller!.onNotice(() => notices++);
+        controller!.poke("tree");
+        controller!.poke("bell");
+        await delay(100);
+        assert(notices >= 2, "taps raise scene notices");
+        controller!.triggerEvent("shower");
+        controller!.setSpeed(12);
+        await until(() => snapshot!.rain > 0.3, 8000);
+        assert(
+          snapshot!.event === "shower",
+          "a forced shower becomes the active event",
+        );
+        controller!.setCameraPreset("ride");
+        await delay(400);
+        assert(snapshot!.riding, "camera follows the airship on request");
+        controller!.setCameraPreset("reset");
+        await delay(400);
+        assert(!snapshot!.riding, "reset leaves the ride");
+        controller!.sendLetter("Reply test");
+        await until(() => snapshot!.deliveredCount >= 2);
+        await until(() => snapshot!.repliesWaiting === 0, 60000);
+        assert(
+          notices > 2 && snapshot!.stamps.includes("beacon"),
+          "a reply lands in the mailbox after the ship returns",
+        );
+        stopNotices();
+        controller!.setSpeed(1);
+      }
       if (cycle === 0) {
         controller!.setSpeed(1);
         controller!.setQuality("high");

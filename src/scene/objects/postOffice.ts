@@ -56,7 +56,6 @@ export function createPostOffice(ctx: SceneContext) {
   windows.add(-0.43, 0.61, 0.721, 0.39, 0.39, 0.014, "#ffe4ac");
   for (const z of [-0.3, 0.28])
     windows.add(0.929, 0.66, z, 0.014, 0.36, 0.27, "#ffe8b6");
-  windows.build(false);
   const sign = mesh(
     new T.PlaneGeometry(1.14, 0.36),
     new T.MeshStandardMaterial({
@@ -72,8 +71,16 @@ export function createPostOffice(ctx: SceneContext) {
   const hb2 = new Batch(house);
   hb2.add(0.84, 1.13, 0.9, 0.045, 0.39, 0.045, "#ac906f");
   hb2.add(0.71, 1.3, 0.9, 0.31, 0.04, 0.04, "#ac906f");
-  hb2.add(0.66, 1.09, 0.9, 0.1, 0.11, 0.1, "#d6b370");
-  hb2.add(0.66, 1.015, 0.9, 0.13, 0.027, 0.13, "#deb96e");
   hb2.build();
-  return { house };
+  // The brass bell hangs from its own pivot so a tap can swing it.
+  const bell = new T.Group();
+  bell.position.set(0.66, 1.3, 0.9);
+  house.add(bell);
+  const bellBatch = new Batch(bell);
+  bellBatch.add(0, -0.21, 0, 0.1, 0.11, 0.1, "#d6b370");
+  bellBatch.add(0, -0.285, 0, 0.13, 0.027, 0.13, "#deb96e");
+  bellBatch.add(0, -0.1, 0, 0.03, 0.12, 0.03, "#b89a62");
+  bellBatch.build();
+  const windowMesh = windows.build(false);
+  return { house, bell, windowMesh };
 }

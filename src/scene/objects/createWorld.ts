@@ -16,18 +16,20 @@ import { createPetals } from "./petals";
 import { createNightSky } from "./nightSky";
 import { createArchipelago } from "./archipelago";
 import { createRainbow } from "./rainbow";
+import { createFarIslands } from "./farIslands";
+import { createVisitors } from "./visitors";
 
 export function createWorld(ctx: SceneContext) {
   const sky = createSky(ctx);
   createIsland(ctx);
   const sakura = createSakura(ctx);
-  createPostOffice(ctx);
+  const office = createPostOffice(ctx);
   const dock = createDock(ctx);
   createFlowers(ctx);
   const furniture = createFurniture(ctx, sakura.tree);
   const lanterns = createLanterns(ctx);
   const animals = createAnimals(ctx, furniture.bench);
-  createWater(ctx);
+  const water = createWater(ctx);
   const airship = createAirship(ctx);
   const clouds = createClouds(ctx);
   const wildlife = createWildlife(ctx);
@@ -35,13 +37,17 @@ export function createWorld(ctx: SceneContext) {
   const nightSky = createNightSky(ctx);
   const archipelago = createArchipelago(ctx);
   const rainbow = createRainbow(ctx);
+  const farIslands = createFarIslands(ctx);
+  const visitors = createVisitors(ctx);
   return {
     ...sky,
     ...sakura,
+    ...office,
     ...dock,
     ...furniture,
     ...lanterns,
     ...animals,
+    ...water,
     ...airship,
     ...clouds,
     ...wildlife,
@@ -49,6 +55,8 @@ export function createWorld(ctx: SceneContext) {
     ...nightSky,
     ...archipelago,
     ...rainbow,
+    ...farIslands,
+    ...visitors,
   };
 }
 export type WorldObjects = ReturnType<typeof createWorld>;

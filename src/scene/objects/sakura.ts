@@ -1,5 +1,6 @@
 import * as T from "three";
 import { type SceneContext, type Point3, TAU, clamp } from "../core/context";
+import { blossom, fallenPetal } from "./seasonalColors";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createSakura(ctx: SceneContext) {
@@ -93,7 +94,16 @@ export function createSakura(ctx: SceneContext) {
                   ? "#e6a0b7"
                   : "#efb0c4";
         const s = leafStep * range(0.94, 1.13);
-        blossoms.add(x, y, z, s, s * range(0.78, 1), s, c);
+        // Upper, outer voxels hold snow in winter; the rest of the crown goes bare.
+        blossoms.addSeasonal(
+          x,
+          y,
+          z,
+          s,
+          s * range(0.78, 1),
+          s,
+          blossom(c, high > 0.45 && q > 0.3),
+        );
       }
   blossoms.build();
   const fallen = new Batch();
@@ -101,14 +111,14 @@ export function createSakura(ctx: SceneContext) {
     const x = range(-3.4, 0.8),
       z = range(-1.8, 1.9);
     if ((x / 3.9) ** 2 + (z / 2.9) ** 2 < 0.88)
-      fallen.add(
+      fallen.addSeasonal(
         x,
         ground(x, z) + 0.096,
         z,
         0.063,
         0.012,
         0.045,
-        i % 3 ? "#efb6c5" : "#ffe3dc",
+        fallenPetal(i % 3 ? "#efb6c5" : "#ffe3dc"),
         0,
         rand() * TAU,
         0,

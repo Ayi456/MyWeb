@@ -1,11 +1,16 @@
 import * as T from "three";
 import { CONFIG } from "../config";
 import type { CameraPreset } from "../types";
+import { HIT_LAYER } from "../systems/interactions";
 
-export function createCamera(
+export interface HitTarget<Id extends string = string> {
+  object: T.Object3D;
+  id: Id;
+}
+export function createCamera<Id extends string>(
   canvas: HTMLCanvasElement,
-  mailHit: T.Object3D,
-  onMailbox: () => void,
+  hits: HitTarget<Id>[],
+  onTap: (id: Id) => void,
 ) {
   const camera = new T.PerspectiveCamera(37, 1, 0.1, 150);
   const abort = new AbortController();
@@ -22,11 +27,21 @@ export function createCamera(
     pinchDist = 0,
     blocked = false,
     autoOrbit = false;
+  // Follow mode keeps the focus on the airship; drag adjusts an offset around it.
+  let followTarget: T.Object3D | null = null,
+    followOffset = 0.55,
+    followTime = 0;
   const pointers = new Map<number, { x: number; y: number }>();
   let pointerStart: { x: number; y: number; moved: boolean } | null = null;
   const raycaster = new T.Raycaster(),
     mouse = new T.Vector2();
+  raycaster.layers.set(HIT_LAYER);
   const limits = CONFIG.cameraLimits;
+  // Hover position projected onto a plane through the blossom canopy.
+  const hoverPlane = new T.Plane(new T.Vector3(0, 1, 0), -2.6),
+    pointerWorld = new T.Vector3(),
+    hoverPoint = new T.Vector3();
+  let pointerActive = false;
   const interact = () => {
     lastInput = performance.now();
     autoOrbit = false;
@@ -34,9 +49,11 @@ export function createCamera(
   function resetInput() {
     pointers.clear();
     pointerStart = null;
+    pointerActive = false;
     interact();
   }
   function preset(value: CameraPreset) {
+    followTarget = null;
     targetAz = value === "tree" ? 0.31 : CONFIG.camera.azimuth;
     targetEl = value === "tree" ? 0.26 : CONFIG.camera.elevation;
     targetDistance = value === "tree" ? 17 : CONFIG.camera.distance;
@@ -44,6 +61,14 @@ export function createCamera(
       value === "tree" ? [-0.4, 2.25, 0.2] : CONFIG.camera.focus,
     );
     interact();
+  }
+  function screenToRay(e: { clientX: number; clientY: number }) {
+    const b = canvas.getBoundingClientRect();
+    mouse.set(
+      ((e.clientX - b.left) / b.width) * 2 - 1,
+      (-(e.clientY - b.top) / b.height) * 2 + 1,
+    );
+    raycaster.setFromCamera(mouse, camera);
   }
   canvas.addEventListener(
     "pointerdown",
@@ -65,6 +90,11 @@ export function createCamera(
   canvas.addEventListener(
     "pointermove",
     (e) => {
+      if (!blocked && e.pointerType !== "touch") {
+        screenToRay(e);
+        pointerActive = !!raycaster.ray.intersectPlane(hoverPlane, hoverPoint);
+        if (pointerActive) pointerWorld.copy(hoverPoint);
+      }
       const previous = pointers.get(e.pointerId);
       if (!previous || blocked) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -83,7 +113,9 @@ export function createCamera(
         );
         pinchDist = d;
       } else {
-        targetAz -= (e.clientX - previous.x) * 0.005;
+        const dAz = (e.clientX - previous.x) * 0.005;
+        if (followTarget) followOffset -= dAz;
+        else targetAz -= dAz;
         targetEl = T.MathUtils.clamp(
           targetEl + (e.clientY - previous.y) * 0.004,
           limits.minElevation,
@@ -91,6 +123,13 @@ export function createCamera(
         );
       }
       interact();
+    },
+    opts,
+  );
+  canvas.addEventListener(
+    "pointerleave",
+    () => {
+      pointerActive = false;
     },
     opts,
   );
@@ -105,13 +144,15 @@ export function createCamera(
     pointerStart = null;
     interact();
     if (click) {
-      const b = canvas.getBoundingClientRect();
-      mouse.set(
-        ((e.clientX - b.left) / b.width) * 2 - 1,
-        (-(e.clientY - b.top) / b.height) * 2 + 1,
+      screenToRay(e);
+      const found = raycaster.intersectObjects(
+        hits.map((h) => h.object),
+        false,
       );
-      raycaster.setFromCamera(mouse, camera);
-      if (raycaster.intersectObject(mailHit).length) onMailbox();
+      if (found.length) {
+        const target = hits.find((h) => h.object === found[0].object);
+        if (target) onTap(target.id);
+      }
     }
   }
   for (const name of [
@@ -151,8 +192,12 @@ export function createCamera(
       )
         return;
       e.preventDefault();
-      if (e.key === "ArrowLeft") targetAz -= 0.12;
-      if (e.key === "ArrowRight") targetAz += 0.12;
+      const turn = (d: number) => {
+        if (followTarget) followOffset += d;
+        else targetAz += d;
+      };
+      if (e.key === "ArrowLeft") turn(-0.12);
+      if (e.key === "ArrowRight") turn(0.12);
       if (e.key === "ArrowUp") targetEl -= 0.08;
       if (e.key === "ArrowDown") targetEl += 0.08;
       if (e.key === "+" || e.key === "=") targetDistance -= 1;
@@ -172,35 +217,72 @@ export function createCamera(
     opts,
   );
   window.addEventListener("blur", resetInput, opts);
+  const shortest = (from: number, to: number) =>
+    from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
   return {
     camera,
     preset,
     interact,
     resetInput,
+    pointerWorld,
+    get pointerActive() {
+      return pointerActive;
+    },
     get autoOrbit() {
       return autoOrbit;
+    },
+    get following() {
+      return !!followTarget;
+    },
+    get followTime() {
+      return followTime;
+    },
+    /** Ride behind the airship. Reset or the tree preset leaves the ride. */
+    follow(target: T.Object3D | null) {
+      if (target === followTarget) return;
+      followTarget = target;
+      followTime = 0;
+      if (target) {
+        followOffset = 0.55;
+        targetEl = 0.22;
+        targetDistance = 9.5;
+      } else preset("reset");
+      interact();
     },
     setBlocked(value: boolean) {
       blocked = value;
       resetInput();
     },
     update(dt: number, now: number, playing: boolean, reducedMotion: boolean) {
+      if (followTarget) {
+        followTime += dt;
+        targetFocus.copy(followTarget.position).add(new T.Vector3(0, 0.9, 0));
+        // Sit behind and slightly to one side of the ship's heading.
+        const behind = followTarget.rotation.y - Math.PI / 2 + followOffset;
+        targetAz = shortest(targetAz, behind);
+        az = shortest(az, targetAz);
+      }
       autoOrbit =
         !pointers.size &&
         !blocked &&
         !reducedMotion &&
+        !followTarget &&
         playing &&
         now - lastInput > CONFIG.autoOrbitDelay;
       if (autoOrbit) targetAz += dt * 0.018;
       const damping = reducedMotion ? 1 : 1 - Math.exp(-dt * 7);
-      az = T.MathUtils.lerp(az, targetAz, damping);
+      az = T.MathUtils.lerp(
+        az,
+        targetAz,
+        followTarget ? damping * 0.45 : damping,
+      );
       el = T.MathUtils.lerp(el, targetEl, damping);
       distance = T.MathUtils.lerp(
         distance,
         targetDistance,
         reducedMotion ? 1 : 1 - Math.exp(-dt * 5),
       );
-      focus.lerp(targetFocus, damping);
+      focus.lerp(targetFocus, followTarget ? 1 - Math.exp(-dt * 3.5) : damping);
       const dist = distance * Math.max(1, 1.3 / camera.aspect);
       // A more frontal portrait view keeps the remote beacon clear of the
       // right-hand controls without shrinking the main island further.

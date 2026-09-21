@@ -2,6 +2,13 @@ import * as T from "three";
 import { type SceneContext, type Point3, TAU } from "../core/context";
 import { seededRandom } from "../utils/seededRandom";
 import { GARDEN_ISLAND, LIGHTHOUSE_ISLAND } from "../worldLayout";
+import {
+  FLOWER_LEAF,
+  FLOWER_STEM,
+  ISLET_GRASS,
+  LEAF,
+  flowerHead,
+} from "./seasonalColors";
 
 export function createArchipelago(ctx: SceneContext) {
   const { world, Batch, rockMat, lampMat, rod } = ctx;
@@ -38,14 +45,14 @@ export function createArchipelago(ctx: SceneContext) {
             ["#9b91a6", "#bcaaa9", "#d1bdae"][layer],
           );
         }
-        grass.add(
+        grass.addSeasonal(
           x,
           0.055,
           z,
           step + 0.008,
           0.14,
           step + 0.008,
-          ["#88aa8d", "#a8bf98", "#9ab58e"][Math.floor(random() * 3)],
+          ISLET_GRASS[Math.floor(random() * 3)],
         );
       }
     }
@@ -58,7 +65,15 @@ export function createArchipelago(ctx: SceneContext) {
       const z = Math.sin(angle) * radius[1] * 0.86;
       const length = range(0.35, 0.8);
       roots.add(x, -length / 2, z, 0.045, length, 0.045, "#7a9981");
-      roots.add(x + 0.06, -length * 0.7, z, 0.16, 0.06, 0.13, "#a0b68d");
+      roots.addSeasonal(
+        x + 0.06,
+        -length * 0.7,
+        z,
+        0.16,
+        0.06,
+        0.13,
+        LEAF[i % 2],
+      );
     }
     roots.build(false);
     return group;
@@ -91,24 +106,24 @@ export function createArchipelago(ctx: SceneContext) {
       continue;
     if (x < -0.45 && z < -0.15) continue;
     const h = range(0.13, 0.28);
-    garden.add(x, 0.14 + h / 2, z, 0.025, h, 0.025, "#6f9975");
-    garden.add(
+    garden.addSeasonal(x, 0.14 + h / 2, z, 0.025, h, 0.025, FLOWER_STEM);
+    garden.addSeasonal(
       x,
       0.14 + h,
       z,
       0.1,
       0.065,
       0.1,
-      ["#ebbbc7", "#f1dda6", "#b6abd2", "#faf1d9"][i % 4],
+      flowerHead(["#ebbbc7", "#f1dda6", "#b6abd2", "#faf1d9"][i % 4]),
     );
-    garden.add(
+    garden.addSeasonal(
       x - 0.04,
       0.14 + h * 0.4,
       z,
       0.1,
       0.025,
       0.05,
-      "#9abc8c",
+      FLOWER_LEAF,
       0,
       0,
       0.3,

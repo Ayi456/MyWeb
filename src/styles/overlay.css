@@ -218,7 +218,7 @@ textarea {
   .mobile-journey {
     display: block;
     position: absolute;
-    bottom: max(171px, calc(env(safe-area-inset-bottom) + 153px));
+    bottom: max(217px, calc(env(safe-area-inset-bottom) + 199px));
     left: 24px;
     right: 24px;
     text-align: center;
@@ -231,7 +231,7 @@ textarea {
     top: 102px;
   }
   .hint {
-    bottom: 207px;
+    bottom: 250px;
   }
 }
 @media (max-width: 520px) {
@@ -291,11 +291,11 @@ textarea {
     height: 44px;
   }
   .mobile-journey {
-    bottom: max(157px, calc(env(safe-area-inset-bottom) + 142px));
+    bottom: max(199px, calc(env(safe-area-inset-bottom) + 184px));
     margin: 0;
   }
   .hint {
-    bottom: 183px;
+    bottom: 226px;
     font-size: 10px;
     min-width: 240px;
   }
@@ -453,4 +453,254 @@ textarea {
   border: 0;
   border-radius: 50%;
   background: #be8291;
+}
+
+/* ---- Seasons, ride, postcards and stamps ---- */
+.time-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  pointer-events: auto;
+}
+.seasons {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px 7px;
+  border-radius: 12px;
+  background: #fff9efc4;
+  border: 1px solid #fff9f4a8;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px #775a6b10;
+  color: #755a62;
+}
+.seasons button {
+  flex: 1;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font:
+    11px Arial,
+    "Microsoft YaHei",
+    sans-serif;
+  letter-spacing: 1px;
+  color: #977781;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.seasons button span {
+  font-size: 13px;
+}
+.seasons button[aria-pressed="true"] {
+  background: #bf8293;
+  color: #fff9ee;
+}
+.season-track {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  background: #d9bdc6;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.season-track i {
+  display: block;
+  height: 100%;
+  background: #be8291;
+  transition: width 0.4s;
+}
+.round.pressed {
+  background: #bf8293;
+  color: #fff9ee;
+}
+.stamp-button {
+  pointer-events: auto;
+  background: #fffbf033;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  transition:
+    transform 0.25s,
+    opacity 0.25s,
+    background 0.25s;
+}
+.stamp-button:hover,
+.stamp-button:focus-visible {
+  opacity: 1;
+  transform: rotate(4deg) scale(1.04);
+  background: #fffbf0a8;
+}
+.stamp-button.has-mail {
+  opacity: 0.9;
+}
+.stamp-badge {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #b87f91;
+  color: #fff9f0;
+  font:
+    10px Arial,
+    sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  transform: rotate(-10deg);
+  animation: badge-pop 0.5s;
+}
+@keyframes badge-pop {
+  0% {
+    transform: rotate(-10deg) scale(0.4);
+  }
+  60% {
+    transform: rotate(-10deg) scale(1.2);
+  }
+}
+.postcard-card {
+  width: min(520px, 100%);
+}
+.postcard-card h3 {
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin: 20px 0 8px;
+  color: #8a6c78;
+}
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.stamp-slot {
+  border: 1px dashed #d8bdc5;
+  border-radius: 6px;
+  padding: 8px 4px 6px;
+  text-align: center;
+  display: grid;
+  gap: 4px;
+  opacity: 0.6;
+  min-height: 62px;
+  align-content: start;
+}
+.stamp-slot b {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #c9a4af;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  font-weight: 400;
+  font-size: 14px;
+  color: #b58c9a;
+}
+.stamp-slot span {
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+}
+.stamp-slot.earned {
+  opacity: 1;
+  border-style: solid;
+  border-color: #c98ea0;
+  background: #fdf2f1;
+}
+.stamp-slot.earned b {
+  background: #b87f91;
+  border-color: #b87f91;
+  color: #fff9f0;
+  transform: rotate(-8deg);
+}
+.reply-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+.reply-list li {
+  font-size: 12px;
+  line-height: 1.8;
+  letter-spacing: 0.6px;
+  padding: 9px 12px;
+  background: #fff4ee;
+  border-left: 2px solid #d4a1b0;
+  border-radius: 0 6px 6px 0;
+}
+.reply-season {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #c9a4af;
+  font-size: 9px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  color: #a7798a;
+}
+.reply-empty {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #9c8089;
+  margin: 4px 0 10px;
+}
+.sound-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: #b87f91;
+}
+@media (max-width: 850px) {
+  .seasons button {
+    font-size: 10px;
+    gap: 3px;
+    min-height: 32px;
+  }
+  .stamp-button {
+    font-size: inherit;
+  }
+}
+@media (max-width: 520px) {
+  .time-stack {
+    flex: 1;
+    min-width: 0;
+  }
+  .seasons {
+    padding: 3px 4px 6px;
+  }
+  .seasons button {
+    font-size: 0;
+    gap: 0;
+    min-height: 30px;
+  }
+  .seasons button span {
+    font-size: 13px;
+  }
+  .stamp-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+  .stamp-slot span {
+    display: none;
+  }
+  .stamp-slot {
+    min-height: 44px;
+  }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .seasons {
+    display: none;
+  }
 }

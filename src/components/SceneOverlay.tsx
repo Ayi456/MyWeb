@@ -6,8 +6,11 @@ export function SceneOverlay({
   onToggle,
   onReset,
   onCloseup,
+  onRide,
   onHelp,
+  onPostcards,
   helpOpen,
+  replyCount,
   children,
 }: {
   snapshot: SceneSnapshot | null;
@@ -15,13 +18,17 @@ export function SceneOverlay({
   onToggle: () => void;
   onReset: () => void;
   onCloseup: () => void;
+  onRide: () => void;
   onHelp: () => void;
+  onPostcards: () => void;
   helpOpen: boolean;
+  replyCount: number;
   children: ReactNode;
 }) {
   const debug =
     import.meta.env.DEV ||
     new URLSearchParams(location.search).get("debug") === "1";
+  const stampCount = snapshot?.stamps.length ?? 0;
   return (
     <main className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""}`}>
       {!hidden && (
@@ -35,11 +42,25 @@ export function SceneOverlay({
             </h1>
             <div className="subtitle">写给远方，也写给你。</div>
           </header>
-          <div className="stamp" aria-hidden="true">
+          <button
+            className={`stamp stamp-button ${replyCount || stampCount ? "has-mail" : ""}`}
+            aria-label={`信箱与集章：${replyCount} 封回信，${stampCount} 枚邮戳`}
+            title="信箱与集章"
+            onClick={onPostcards}
+          >
             <span>AIR MAIL</span>
             <b>✿</b>
-            <span>SPRING · 01</span>
-          </div>
+            <span>
+              {stampCount
+                ? `STAMPS · ${String(stampCount).padStart(2, "0")}`
+                : "SPRING · 01"}
+            </span>
+            {replyCount > 0 && (
+              <i className="stamp-badge" aria-hidden="true">
+                {replyCount}
+              </i>
+            )}
+          </button>
         </>
       )}
       <nav
@@ -62,6 +83,15 @@ export function SceneOverlay({
               onClick={onCloseup}
             >
               ⌕
+            </button>
+            <button
+              className={`round ${snapshot?.riding ? "pressed" : ""}`}
+              aria-label={snapshot?.riding ? "离开飞艇" : "登上飞艇，跟随邮路"}
+              aria-pressed={!!snapshot?.riding}
+              title="登上飞艇 · F"
+              onClick={onRide}
+            >
+              ➶
             </button>
           </>
         )}
@@ -94,6 +124,9 @@ export function SceneOverlay({
           <br />
           {snapshot.actualQuality} · {snapshot.geometries} geometries ·{" "}
           {snapshot.textures} textures
+          <br />
+          {snapshot.season} · {snapshot.event ?? "quiet"} · rain{" "}
+          {snapshot.rain.toFixed(2)}
         </output>
       )}
     </main>
