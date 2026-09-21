@@ -28,7 +28,7 @@ const playbackResponse = (
 });
 
 describe("public cloud radio", () => {
-  it("returns only player metadata and caps the public list at 30 unique valid tracks", () => {
+  it("returns only player metadata and caps the public list at 200 unique valid tracks", () => {
     const result = normalizePlaylist(
       {
         body: {
@@ -36,7 +36,7 @@ describe("public cloud radio", () => {
           playlist: {
             tracks: [
               { id: "invalid", name: "bad" },
-              ...Array.from({ length: 50 }, (_, i) => ({
+              ...Array.from({ length: 250 }, (_, i) => ({
                 id: i + 1,
                 name: `Song ${i}`,
                 ar: [],
@@ -48,7 +48,7 @@ describe("public cloud radio", () => {
       },
       "3778678",
     );
-    expect(result.tracks).toHaveLength(30);
+    expect(result.tracks).toHaveLength(200);
     expect(result.tracks[0]).toEqual({
       id: "1",
       name: "Song 0",
