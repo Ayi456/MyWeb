@@ -16,15 +16,16 @@ npm run dev
 
 没有 nvm 时，直接安装 Node.js 24.x 后运行后两行。开发地址以终端输出为准，默认端口 5173。无需环境变量。依赖锁文件由真实 npm 安装生成，请提交 `package-lock.json`，团队安装和 CI 使用 `npm ci`。
 
-| 命令                | 用途                                        |
-| ------------------- | ------------------------------------------- |
-| `npm run dev`       | Vite 开发服务器与热更新                     |
-| `npm run typecheck` | 严格 TypeScript 检查                        |
-| `npm run lint`      | ESLint 检查，无警告交付                     |
-| `npm run test`      | Vitest 核心逻辑测试                         |
-| `npm run build`     | 先 TypeScript 检查，再生成 `dist`           |
-| `npm run preview`   | 本地检查生产产物，默认端口 4173             |
-| `npm run format`    | 格式化源代码与工程配置，不改动原始参考 HTML |
+| 命令                  | 用途                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run dev`         | Vite 开发服务器与热更新                                                                  |
+| `npm run typecheck`   | 严格 TypeScript 检查                                                                     |
+| `npm run lint`        | ESLint 检查，无警告交付                                                                  |
+| `npm run test`        | Vitest 核心逻辑测试                                                                      |
+| `npm run build`       | 先 TypeScript 检查，再生成 `dist`                                                        |
+| `npm run preview`     | 本地检查生产产物，默认端口 4173                                                          |
+| `npm run format`      | 格式化源代码与工程配置，不改动原始参考 HTML                                              |
+| `npm run test:visual` | Playwright 主岛视觉回归（黄昏 / 正午近景 / 星夜 / 冬），基线按平台保存，`-- -u` 重新生成 |
 
 ## 操作
 
