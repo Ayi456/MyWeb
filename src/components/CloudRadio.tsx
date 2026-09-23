@@ -1,12 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import type { RadioPlayback, RadioPlaylist } from "../music/types";
+import { nextPlayable, skipDelay } from "../music/skipPolicy";
 import "../styles/radio.css";
+
+class RadioError extends Error {
+  constructor(
+    message: string,
+    readonly retryAfter: number,
+  ) {
+    super(message);
+  }
+}
 
 async function readRadio<T>(query: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(`/api/music${query}`, { signal });
   const body = await response.json();
   if (!response.ok)
-    throw new Error(body.error || "电台暂时连接不上，请稍后重试。");
+    throw new RadioError(
+      body.error || "电台暂时连接不上，请稍后重试。",
+      Number(response.headers.get("Retry-After")) || 0,
+    );
   return body as T;
 }
 
@@ -54,6 +67,12 @@ export function CloudRadio({
   const intent = useRef(false);
   const loaded = useRef("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const skipTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const failures = useRef(0);
+  const failed = useRef(new Set<string>());
+  const lastFail = useRef({ id: "", at: 0 });
   const track = playlist?.tracks[index];
 
   useEffect(() => {
@@ -86,10 +105,12 @@ export function CloudRadio({
   useEffect(() => {
     const audio = audioRef.current;
     const requestGeneration = generation;
+    const requestSkip = skipTimer;
     return () => {
       requestGeneration.current++;
       request.current?.abort();
       clearTimeout(timer.current);
+      clearTimeout(requestSkip.current);
       audio?.pause();
       audio?.removeAttribute("src");
       audio?.load();
@@ -100,9 +121,35 @@ export function CloudRadio({
     generation.current++;
     request.current?.abort();
     clearTimeout(timer.current);
+    clearTimeout(skipTimer.current);
     intent.current = false;
     audioRef.current?.pause();
     setBusy(false);
+  }
+
+  // play() rejections and <audio> errors share one policy: remember the
+  // failed track, back off, and stop after a few misses in a row.
+  function fail(id: string, text: string, autoplay: boolean, retryAfter = 0) {
+    loaded.current = "";
+    // A broken source both rejects play() and fires <audio> error; count once.
+    const now = Date.now();
+    if (lastFail.current.id === id && now - lastFail.current.at < 1000) return;
+    lastFail.current = { id, at: now };
+    clearTimeout(skipTimer.current);
+    failed.current.add(id);
+    failures.current++;
+    const delay = skipDelay(failures.current, retryAfter);
+    if (!playlist || !autoplay) return setMessage(text);
+    if (delay === null) {
+      failures.current = 0;
+      return setMessage("连续几首都没能接通，稍后再试试吧。");
+    }
+    setMessage(text);
+    skipTimer.current = setTimeout(() => move(1, true), delay);
+  }
+
+  function userAction() {
+    failures.current = 0;
   }
 
   async function play(nextIndex: number, autoplay = true) {
@@ -144,16 +191,16 @@ export function CloudRadio({
       if (error instanceof DOMException && error.name === "NotAllowedError") {
         setMessage("歌曲已准备好，再点一次播放吧。");
       } else {
-        loaded.current = "";
         const errorMessage =
           error instanceof Error && !(error instanceof DOMException)
             ? error.message
             : "这首歌暂时无法播放，换一首听听吧。";
-        setMessage(errorMessage);
-        // Auto-skip to next track if current song is unavailable
-        if (playlist && autoplay) {
-          setTimeout(() => move(1, true), 1500);
-        }
+        fail(
+          nextTrack.id,
+          errorMessage,
+          autoplay,
+          error instanceof RadioError ? error.retryAfter : 0,
+        );
       }
     } finally {
       if (generation.current === version) {
@@ -173,10 +220,11 @@ export function CloudRadio({
         nextIndex = Math.floor(Math.random() * playlist.tracks.length);
       } while (nextIndex === indexRef.current && playlist.tracks.length > 1);
     } else {
-      // Order or loop mode
-      nextIndex =
-        (indexRef.current + step + playlist.tracks.length) %
-        playlist.tracks.length;
+      // Order or loop mode, stepping over tracks that failed this session
+      const tracks = playlist.tracks;
+      nextIndex = nextPlayable(indexRef.current, step, tracks.length, (i) =>
+        failed.current.has(tracks[i].id),
+      );
     }
     indexRef.current = nextIndex;
     setIndex(nextIndex);
@@ -206,7 +254,10 @@ export function CloudRadio({
         ref={audioRef}
         preload="none"
         aria-label="云上电台音频"
-        onPlaying={() => setPlaying(true)}
+        onPlaying={() => {
+          failures.current = 0;
+          setPlaying(true);
+        }}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onDurationChange={(e) =>
@@ -229,10 +280,10 @@ export function CloudRadio({
           }
         }}
         onError={() => {
-          if (!audioRef.current?.getAttribute("src")) return;
+          if (!audioRef.current?.getAttribute("src") || !track) return;
+          const autoplay = intent.current;
           cancel();
-          loaded.current = "";
-          setMessage("这首歌暂时无法播放，换一首听听吧。");
+          fail(track.id, "这首歌暂时无法播放，换一首听听吧。", autoplay);
         }}
       />
       <aside
@@ -315,7 +366,13 @@ export function CloudRadio({
                   <span>{formatTime(duration || track?.duration || 0)}</span>
                 </div>
                 <div className="radio-controls">
-                  <button aria-label="上一首" onClick={() => move(-1, true)}>
+                  <button
+                    aria-label="上一首"
+                    onClick={() => {
+                      userAction();
+                      move(-1, true);
+                    }}
+                  >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M6 5v14M18 5L8 12l10 7Z" />
                     </svg>
@@ -329,7 +386,10 @@ export function CloudRadio({
                       if (playing || busy) {
                         cancel();
                         setMessage("");
-                      } else void play(indexRef.current);
+                      } else {
+                        userAction();
+                        void play(indexRef.current);
+                      }
                     }}
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -342,7 +402,13 @@ export function CloudRadio({
                       )}
                     </svg>
                   </button>
-                  <button aria-label="下一首" onClick={() => move(1, true)}>
+                  <button
+                    aria-label="下一首"
+                    onClick={() => {
+                      userAction();
+                      move(1, true);
+                    }}
+                  >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18 5v14M6 5l10 7-10 7Z" />
                     </svg>
