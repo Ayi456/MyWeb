@@ -456,3 +456,4 @@ S 级投入、价值明显，可以随时开工。详情在第 3 节对应条目
 | GitHub Actions 质量门禁 | 已完成 | 新增 `.github/workflows/ci.yml` 与 `format:check` 脚本 |
 | 通知分层与队列 | 已完成 | `noticeQueue.ts` + `NoticeStack.tsx`，回信带「打开信箱」、寄信带「登船跟随」，修复 1.1 |
 | 播放失败诊断与跳过退避 | 已完成 | `src/music/skipPolicy.ts`：1.5/3/6/12 秒退避、连续 5 次停止、读 Retry-After、跳过本次失败曲目；play() 与 `<audio>` onError 合并为同一 `fail()`，修复 1.2 |
+| 热点键盘可达与数字键直达 | 已完成 | 指南面板 11 个热点按钮（邮筒已有「寄一封春天」），数字键 1–9、0 直达，修复 1.3 |

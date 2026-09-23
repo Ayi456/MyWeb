@@ -1,15 +1,19 @@
 import type { QualityMode } from "../scene/types";
+import type { HotspotId } from "../scene/systems/interactions";
+import { KEY_HOTSPOTS, keyLabel } from "./hotspotKeys";
 export function HelpPanel({
   quality,
   onQuality,
   sound,
   onSound,
+  onPoke,
   onClose,
 }: {
   quality: QualityMode;
   onQuality: (q: QualityMode) => void;
   sound: boolean;
   onSound: (on: boolean) => void;
+  onPoke: (id: HotspotId) => void;
   onClose: () => void;
 }) {
   return (
@@ -27,10 +31,25 @@ export function HelpPanel({
         <br />
         按住 Space / 春风按钮 · 花瓣纷飞
         <br />R · 复位视角 H · 隐藏界面 F · 登上飞艇
+        <br />
+        数字键 1–0 · 点一点岛上的角落
       </p>
       <p>
         岛上的樱花树、灯笼、写信的小兔、猫咪、风车、门铃、水池、飞艇、灯塔、茶山和温泉村都可以点一点，它们会回应你。鼠标划过树冠，花瓣会被拨开。
       </p>
+      <div className="hotspot-keys" role="group" aria-label="点一点岛上的角落">
+        {KEY_HOTSPOTS.map(({ id, label }, i) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onPoke(id)}
+            aria-keyshortcuts={keyLabel(i) || undefined}
+          >
+            {keyLabel(i) && <kbd>{keyLabel(i)}</kbd>}
+            {label}
+          </button>
+        ))}
+      </div>
       <p>
         寄出的信送达后，飞艇会从灯塔带回一张明信片，落进邮筒。点邮票图章查看回信与集章。
       </p>

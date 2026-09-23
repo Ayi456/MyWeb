@@ -11,6 +11,7 @@ import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
 import { PostcardPanel, type Reply } from "./components/PostcardPanel";
 import { NoticeStack } from "./components/NoticeStack";
+import { hotspotForKey } from "./components/hotspotKeys";
 import {
   pruneNotices,
   pushNotice,
@@ -145,6 +146,8 @@ export default function App() {
         setHelpOpen(false);
       }
       if (e.code === "Escape") setHelpOpen(false);
+      const hotspot = hotspotForKey(e.code);
+      if (hotspot && !e.repeat) controller.current?.poke(hotspot);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -176,6 +179,7 @@ export default function App() {
             onQuality={(mode) => controller.current?.setQuality(mode)}
             sound={snapshot?.sound ?? false}
             onSound={setSound}
+            onPoke={(id) => controller.current?.poke(id)}
             onClose={() => setHelpOpen(false)}
           />
         )}
