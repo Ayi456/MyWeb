@@ -459,3 +459,4 @@ S 级投入、价值明显，可以随时开工。详情在第 3 节对应条目
 | 热点键盘可达与数字键直达 | 已完成 | 指南面板 11 个热点按钮（邮筒已有「寄一封春天」），数字键 1–9、0 直达，修复 1.3 |
 | 补全社交预览与 canonical | 已完成 | `server/vite-meta.ts` 构建期读 `SITE_URL` / `VERCEL_PROJECT_PRODUCTION_URL` 注入标签，缺失时不输出；新增 `public/og.jpg`；统一两处 description，修复 1.5 后半条 |
 | Playwright 视觉回归 | 已完成 | `npm run test:visual`，4 张主岛基线（`tests/visual/*-win32.png`）。仅在本机跑、不进 CI：Windows 上 SwiftShader 截图会超时，改用 D3D11；Linux CI 需另生成 linux 基线后再接入 |
+| 热点悬停可见与微反应 | 已完成 | `camera.ts` 悬停按 id 去抖、设置手形光标（按下时清除以保留 grabbing），进入时给对应热点 0.12 冲量、樱花树 0.05；浏览器中实测光标切换 |

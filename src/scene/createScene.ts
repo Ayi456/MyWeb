@@ -84,8 +84,12 @@ export function createScene(
     const stamps = new StampBook(),
       ledger = new ReplyLedger(),
       postcard = createPostcardFlight(objects);
-    const camera = createCamera<HotspotId>(canvas, interactions.hits, (id) =>
-      tap(id),
+    const camera = createCamera<HotspotId>(
+      canvas,
+      interactions.hits,
+      (id) => tap(id),
+      // A light nudge on hover; the tree gets less so petals stay calm.
+      (id) => interactions.impulses[id].hit(id === "tree" ? 0.05 : 0.12),
     );
     cleanups.push(() => camera.dispose());
     const clock = new SimulationClock(),

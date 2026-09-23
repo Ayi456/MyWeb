@@ -11,6 +11,7 @@ export function createCamera<Id extends string>(
   canvas: HTMLCanvasElement,
   hits: HitTarget<Id>[],
   onTap: (id: Id) => void,
+  onHover: (id: Id) => void = () => {},
 ) {
   const camera = new T.PerspectiveCamera(37, 1, 0.1, 150);
   const abort = new AbortController();
@@ -42,6 +43,24 @@ export function createCamera<Id extends string>(
     pointerWorld = new T.Vector3(),
     hoverPoint = new T.Vector3();
   let pointerActive = false;
+  // Hover is tracked per id: the two lantern boxes share one.
+  let hoverId: Id | null = null;
+  function setHover(id: Id | null) {
+    if (id === hoverId) return;
+    hoverId = id;
+    // Inline cursor would override #world:active grabbing, so clear it on drag.
+    canvas.style.cursor = id ? "pointer" : "";
+    if (id) onHover(id);
+  }
+  function pick(): Id | null {
+    const found = raycaster.intersectObjects(
+      hits.map((h) => h.object),
+      false,
+    );
+    return found.length
+      ? (hits.find((h) => h.object === found[0].object)?.id ?? null)
+      : null;
+  }
   const interact = () => {
     lastInput = performance.now();
     autoOrbit = false;
@@ -78,6 +97,7 @@ export function createCamera<Id extends string>(
       canvas.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       pointerStart = { x: e.clientX, y: e.clientY, moved: false };
+      setHover(null);
       interact();
       if (pointers.size === 2) {
         const p = [...pointers.values()];
@@ -94,6 +114,7 @@ export function createCamera<Id extends string>(
         screenToRay(e);
         pointerActive = !!raycaster.ray.intersectPlane(hoverPlane, hoverPoint);
         if (pointerActive) pointerWorld.copy(hoverPoint);
+        setHover(pointers.size ? null : pick());
       }
       const previous = pointers.get(e.pointerId);
       if (!previous || blocked) return;
@@ -130,6 +151,7 @@ export function createCamera<Id extends string>(
     "pointerleave",
     () => {
       pointerActive = false;
+      setHover(null);
     },
     opts,
   );
@@ -145,14 +167,8 @@ export function createCamera<Id extends string>(
     interact();
     if (click) {
       screenToRay(e);
-      const found = raycaster.intersectObjects(
-        hits.map((h) => h.object),
-        false,
-      );
-      if (found.length) {
-        const target = hits.find((h) => h.object === found[0].object);
-        if (target) onTap(target.id);
-      }
+      const id = pick();
+      if (id) onTap(id);
     }
   }
   for (const name of [
@@ -251,6 +267,7 @@ export function createCamera<Id extends string>(
     },
     setBlocked(value: boolean) {
       blocked = value;
+      if (value) setHover(null);
       resetInput();
     },
     update(dt: number, now: number, playing: boolean, reducedMotion: boolean) {
