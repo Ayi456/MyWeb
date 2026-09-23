@@ -10,6 +10,12 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
 import { PostcardPanel, type Reply } from "./components/PostcardPanel";
+import { NoticeStack } from "./components/NoticeStack";
+import {
+  pruneNotices,
+  pushNotice,
+  type QueuedNotice,
+} from "./components/noticeQueue";
 import { useSceneController } from "./hooks/useSceneController";
 import { isControl, useWindInput } from "./hooks/useWindInput";
 
@@ -30,7 +36,7 @@ export default function App() {
       }
     }),
     [helpOpen, setHelpOpen] = useState(false),
-    [notice, setNotice] = useState(""),
+    [notices, setNotices] = useState<QueuedNotice[]>([]),
     [replies, setReplies] = useState<Reply[]>([]);
   const soundPref = useRef(false);
   const openMail = useCallback(() => setMailOpen(true), []);
@@ -58,24 +64,41 @@ export default function App() {
   useEffect(() => {
     controller.current?.setInteractionBlocked(blocked);
   }, [controller, blocked, snapshot?.ready]);
-  // Scene notices (taps, events, replies, stamps) share the one hint line.
+  const notify = useCallback(
+    (notice: Parameters<typeof pushNotice>[1]) =>
+      setNotices((list) => pushNotice(list, notice, Date.now())),
+    [],
+  );
+  // Taps replace each other; events, replies and stamps stack briefly.
   useEffect(() => {
     const scene = controller.current;
     if (!scene || !snapshot?.ready) return;
     return scene.onNotice((n) => {
-      setNotice(n.text);
-      if (n.type === "reply")
+      if (n.type === "reply") {
+        notify({
+          kind: "keep",
+          tone: "reply",
+          text: n.text,
+          action: "mailbox",
+        });
         setReplies((list) => [
           ...list,
           { text: n.text, season: n.season, at: Date.now() },
         ]);
+      } else if (n.type === "stamp")
+        notify({ kind: "keep", tone: "stamp", text: n.text });
+      else notify({ kind: n.type === "tap" ? "tap" : "event", text: n.text });
     });
-  }, [controller, snapshot?.ready]);
+  }, [controller, snapshot?.ready, notify]);
   useEffect(() => {
-    if (!notice) return;
-    const timeout = setTimeout(() => setNotice(""), 5000);
+    if (!notices.length) return;
+    const next = Math.min(...notices.map((n) => n.until)) - Date.now();
+    const timeout = setTimeout(
+      () => setNotices((list) => pruneNotices(list, Date.now())),
+      Math.max(0, next) + 20,
+    );
     return () => clearTimeout(timeout);
-  }, [notice]);
+  }, [notices]);
   // Sound needs a user gesture; remember the preference and re-arm on the first click.
   useEffect(() => {
     try {
@@ -198,13 +221,13 @@ export default function App() {
         hidden={hidden || !snapshot?.ready || !!error || blocked}
         night={(snapshot?.night ?? 0) > 0.63}
       />
-      <div
-        className={`hint ${notice ? "show" : ""}`}
-        role="status"
-        aria-live="polite"
-      >
-        {notice}
-      </div>
+      <NoticeStack
+        notices={notices}
+        onAction={(action) => {
+          if (action === "mailbox") setPostcardsOpen(true);
+          else controller.current?.setCameraPreset("ride");
+        }}
+      />
       {mailOpen && (
         <LetterDialog
           onClose={closeMail}
@@ -212,10 +235,17 @@ export default function App() {
           onSend={(message) => {
             const sent = controller.current?.sendLetter(message) ?? false;
             if (sent)
-              setNotice(
+              notify(
                 snapshot?.speed === 0
-                  ? "心意已放上邮路，恢复播放后便会出发。"
-                  : "你的心意，正乘着春风飞向飞艇。",
+                  ? {
+                      kind: "event",
+                      text: "心意已放上邮路，恢复播放后便会出发。",
+                    }
+                  : {
+                      kind: "event",
+                      text: "你的心意，正乘着春风飞向飞艇。",
+                      action: "ride",
+                    },
               );
             return sent;
           }}
