@@ -3,10 +3,12 @@ import type { SceneSnapshot } from "../scene/types";
 export function SceneOverlay({
   snapshot,
   hidden,
+  arriving,
   onToggle,
   onReset,
   onCloseup,
   onRide,
+  onSound,
   onHelp,
   onPostcards,
   helpOpen,
@@ -15,10 +17,13 @@ export function SceneOverlay({
 }: {
   snapshot: SceneSnapshot | null;
   hidden: boolean;
+  /** Staggered fade-in while the opening camera glide plays. */
+  arriving: boolean;
   onToggle: () => void;
   onReset: () => void;
   onCloseup: () => void;
   onRide: () => void;
+  onSound: () => void;
   onHelp: () => void;
   onPostcards: () => void;
   helpOpen: boolean;
@@ -30,7 +35,9 @@ export function SceneOverlay({
     new URLSearchParams(location.search).get("debug") === "1";
   const stampCount = snapshot?.stamps.length ?? 0;
   return (
-    <main className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""}`}>
+    <main
+      className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""} ${arriving ? "arriving" : ""}`}
+    >
       {!hidden && (
         <>
           <header className="masthead">
@@ -92,6 +99,15 @@ export function SceneOverlay({
               onClick={onRide}
             >
               ➶
+            </button>
+            <button
+              className={`round ${snapshot?.sound ? "pressed" : ""}`}
+              aria-label={snapshot?.sound ? "关闭环境音效" : "打开环境音效"}
+              aria-pressed={!!snapshot?.sound}
+              title="环境音效 · M"
+              onClick={onSound}
+            >
+              {snapshot?.sound ? "♫" : "♪"}
             </button>
           </>
         )}

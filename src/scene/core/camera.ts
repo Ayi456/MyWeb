@@ -43,6 +43,9 @@ export function createCamera<Id extends string>(
     pointerWorld = new T.Vector3(),
     hoverPoint = new T.Vector3();
   let pointerActive = false;
+  // Opening shot: a timed ease layered on top of the damped values, since the
+  // damping alone settles within a second and would hide behind the loader.
+  let arrival: { t: number; duration: number } | null = null;
   // Hover is tracked per id: the two lantern boxes share one.
   let hoverId: Id | null = null;
   function setHover(id: Id | null) {
@@ -65,6 +68,11 @@ export function createCamera<Id extends string>(
     lastInput = performance.now();
     autoOrbit = false;
   };
+  // Direct camera input (not API calls like setWind) also ends the opening glide.
+  const takeOver = () => {
+    arrival = null;
+    interact();
+  };
   function resetInput() {
     pointers.clear();
     pointerStart = null;
@@ -79,7 +87,7 @@ export function createCamera<Id extends string>(
     targetFocus.fromArray(
       value === "tree" ? [-0.4, 2.25, 0.2] : CONFIG.camera.focus,
     );
-    interact();
+    takeOver();
   }
   function screenToRay(e: { clientX: number; clientY: number }) {
     const b = canvas.getBoundingClientRect();
@@ -98,7 +106,7 @@ export function createCamera<Id extends string>(
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       pointerStart = { x: e.clientX, y: e.clientY, moved: false };
       setHover(null);
-      interact();
+      takeOver();
       if (pointers.size === 2) {
         const p = [...pointers.values()];
         pinchDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
@@ -143,7 +151,7 @@ export function createCamera<Id extends string>(
           limits.maxElevation,
         );
       }
-      interact();
+      takeOver();
     },
     opts,
   );
@@ -187,7 +195,7 @@ export function createCamera<Id extends string>(
         limits.minDistance,
         limits.maxDistance,
       );
-      interact();
+      takeOver();
     },
     { ...opts, passive: false },
   );
@@ -228,7 +236,7 @@ export function createCamera<Id extends string>(
         limits.minElevation,
         limits.maxElevation,
       );
-      interact();
+      takeOver();
     },
     opts,
   );
@@ -263,7 +271,11 @@ export function createCamera<Id extends string>(
         targetEl = 0.22;
         targetDistance = 9.5;
       } else preset("reset");
-      interact();
+      takeOver();
+    },
+    /** Glide in from a wider, higher angle; any input cancels it. */
+    arrive(duration = 1.6) {
+      arrival = { t: 0, duration };
     },
     setBlocked(value: boolean) {
       blocked = value;
@@ -300,15 +312,26 @@ export function createCamera<Id extends string>(
         reducedMotion ? 1 : 1 - Math.exp(-dt * 5),
       );
       focus.lerp(targetFocus, followTarget ? 1 - Math.exp(-dt * 3.5) : damping);
-      const dist = distance * Math.max(1, 1.3 / camera.aspect);
+      let away = 0;
+      if (reducedMotion) arrival = null;
+      if (arrival) {
+        arrival.t += dt;
+        away = 1 - T.MathUtils.smoothstep(arrival.t / arrival.duration, 0, 1);
+        if (arrival.t >= arrival.duration) arrival = null;
+      }
+      const dist =
+        distance * Math.max(1, 1.3 / camera.aspect) * (1 + away * 0.45);
+      const elView = el + away * 0.14;
       // A more frontal portrait view keeps the remote beacon clear of the
       // right-hand controls without shrinking the main island further.
       const viewAz =
-        az - T.MathUtils.smoothstep(1 - camera.aspect, 0, 0.5) * 0.35;
+        az -
+        T.MathUtils.smoothstep(1 - camera.aspect, 0, 0.5) * 0.35 +
+        away * 0.5;
       camera.position.set(
-        focus.x + Math.sin(viewAz) * Math.cos(el) * dist,
-        focus.y + Math.sin(el) * dist,
-        focus.z + Math.cos(viewAz) * Math.cos(el) * dist,
+        focus.x + Math.sin(viewAz) * Math.cos(elView) * dist,
+        focus.y + Math.sin(elView) * dist,
+        focus.z + Math.cos(viewAz) * Math.cos(elView) * dist,
       );
       camera.lookAt(focus);
     },

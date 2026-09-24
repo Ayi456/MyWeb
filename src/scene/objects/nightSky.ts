@@ -13,7 +13,7 @@ export function createNightSky(ctx: SceneContext) {
     transparent: true,
     depthWrite: false,
     blending: T.AdditiveBlending,
-    vertexShader: `uniform float uTime;uniform float uNight;uniform float uFirefly;varying float vAlpha;void main(){vec3 p=vec3(-3.3+position.x*6.,1.3+position.y*2.9,position.z*4.5-2.);p+=vec3(sin(uTime*.4+position.z*25.)*.27,sin(uTime*.7+position.x*28.)*.18,cos(uTime*.36+position.y*20.)*.24);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(72./-mv.z,2.,7.);vAlpha=uNight*uFirefly*(.35+.65*pow(.5+.5*sin(uTime*1.5+position.x*40.),2.));}`,
+    vertexShader: `uniform float uTime;uniform float uNight;uniform float uFirefly;uniform float uWind;varying float vAlpha;void main(){vec3 p=vec3(-3.3+position.x*6.,1.3+position.y*2.9,position.z*4.5-2.);p+=vec3(sin(uTime*.4+position.z*25.)*.27,sin(uTime*.7+position.x*28.)*.18,cos(uTime*.36+position.y*20.)*.24);p.x=mix(p.x,-.3+(p.x+.3)*.55,uWind*.55)+uWind*.3;p.z=mix(p.z,p.z*.65,uWind*.55);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(72./-mv.z,2.,7.);vAlpha=uNight*uFirefly*(.35+.65*pow(.5+.5*sin(uTime*1.5+position.x*40.),2.));}`,
     fragmentShader: `varying float vAlpha;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;gl_FragColor=vec4(1.,.86,.40,pow(1.-r,1.6)*vAlpha);}`,
   });
   const fireflies = new T.Points(fireGeo, fireMat);

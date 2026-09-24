@@ -6,6 +6,8 @@ export function HelpPanel({
   onQuality,
   sound,
   onSound,
+  captions,
+  onCaptions,
   onPoke,
   onClose,
 }: {
@@ -13,6 +15,8 @@ export function HelpPanel({
   onQuality: (q: QualityMode) => void;
   sound: boolean;
   onSound: (on: boolean) => void;
+  captions: boolean;
+  onCaptions: (on: boolean) => void;
   onPoke: (id: HotspotId) => void;
   onClose: () => void;
 }) {
@@ -30,7 +34,7 @@ export function HelpPanel({
         方向键 / 加减键 · 调整视角
         <br />
         按住 Space / 春风按钮 · 花瓣纷飞
-        <br />R · 复位视角 H · 隐藏界面 F · 登上飞艇
+        <br />R · 复位视角 H · 隐藏界面 F · 登上飞艇 M · 环境音效
         <br />
         数字键 1–0 · 点一点岛上的角落
       </p>
@@ -76,6 +80,14 @@ export function HelpPanel({
           onChange={(e) => onSound(e.target.checked)}
         />
         环境音效（风声、虫鸣、雨声、互动提示音）
+      </label>
+      <label className="quality-label sound-label">
+        <input
+          type="checkbox"
+          checked={captions}
+          onChange={(e) => onCaptions(e.target.checked)}
+        />
+        音效字幕（静音时也显示岛上的声音）
       </label>
       <div className="fine">
         自动画质根据设备与运行表现逐级调整，低画质会隐藏远处岛屿的细节。遵循系统的减少动态效果设置。音效由浏览器实时合成，不加载任何音频文件。

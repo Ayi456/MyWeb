@@ -24,6 +24,7 @@ export function createContext() {
   const U = {
     uTime: { value: 0 },
     uWind: { value: 0 },
+    uCloudTravel: { value: 0 },
     uNight: { value: 0 },
     uPetalTime: { value: 0 },
     uShip: { value: new T.Vector3(5.3, 1.2, 0.4) },

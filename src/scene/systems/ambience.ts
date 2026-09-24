@@ -9,6 +9,7 @@ export type SoundName =
   "send" | "chime" | "bell" | "splash" | "rustle" | "pop" | "stamp" | "whale";
 
 export class Ambience {
+  onCue?: (name: SoundName) => void;
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private wind: { gain: GainNode; filter: BiquadFilterNode } | null = null;
@@ -159,6 +160,7 @@ export class Ambience {
     src.stop(at + dur + 0.05);
   }
   play(name: SoundName) {
+    this.onCue?.(name);
     if (!this.ctx || !this.enabled) return;
     const t = this.ctx.currentTime + 0.01;
     switch (name) {

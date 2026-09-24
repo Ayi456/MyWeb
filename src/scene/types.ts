@@ -42,7 +42,8 @@ export type SceneNotice =
   | { type: "event"; kind: SceneEventKind; text: string }
   | { type: "reply"; text: string; season: SeasonName }
   | { type: "stamp"; id: StampId; text: string }
-  | { type: "season"; season: SeasonName; text: string };
+  | { type: "season"; season: SeasonName; text: string }
+  | { type: "sound"; text: string };
 export interface SceneController {
   setSpeed(speed: Speed): void;
   setTimeOfDay(hour: number): void;
@@ -52,6 +53,7 @@ export interface SceneController {
   setQuality(mode: QualityMode): void;
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;
+  setCaptions(on: boolean): void;
   setSoundVolume(volume: number): void;
   sendLetter(message: string): boolean;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
@@ -65,4 +67,6 @@ export interface SceneController {
 export interface SceneOptions {
   onMailbox: () => void;
   onError: (message: string) => void;
+  /** Start on the final framing instead of gliding in (tests, screenshots). */
+  skipArrival?: boolean;
 }

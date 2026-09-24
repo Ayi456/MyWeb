@@ -1,11 +1,11 @@
 export type NoticeKind = "tap" | "event" | "keep";
-export type NoticeAction = "mailbox" | "ride";
+export type NoticeAction = "mailbox" | "ride" | "sound";
 export interface QueuedNotice {
   key: number;
   kind: NoticeKind;
   text: string;
   /** Extra class for the postcard / stamp styling. */
-  tone?: "reply" | "stamp";
+  tone?: "reply" | "stamp" | "sound";
   action?: NoticeAction;
   until: number;
 }

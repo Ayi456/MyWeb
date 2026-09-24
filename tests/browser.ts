@@ -37,7 +37,11 @@ function start(
 ) {
   snapshot = undefined;
   const began = performance.now();
-  controller = createScene(canvas, { onMailbox: () => {}, onError });
+  controller = createScene(canvas, {
+    onMailbox: () => {},
+    onError,
+    skipArrival: true,
+  });
   controller.subscribe((s) => {
     snapshot = s;
   });

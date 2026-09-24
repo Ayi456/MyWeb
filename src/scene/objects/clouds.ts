@@ -11,10 +11,12 @@ export function createClouds(ctx: SceneContext) {
   });
   cloudMat.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.uTime;
-    s.vertexShader = "uniform float uTime;\n" + s.vertexShader;
+    s.uniforms.uCloudTravel = U.uCloudTravel;
+    s.vertexShader =
+      "uniform float uTime;\nuniform float uCloudTravel;\n" + s.vertexShader;
     s.vertexShader = s.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\ntransformed.y+=sin(instanceMatrix[3].x*.18+uTime*.08)*.11;",
+      "#include <begin_vertex>\ntransformed.y+=sin(instanceMatrix[3].x*.18+uTime*.08)*.11;\ntransformed.x+=(mod(instanceMatrix[3].x+uCloudTravel+34.,68.)-34.-instanceMatrix[3].x)/instanceMatrix[0].x;",
     );
   };
   const cloudBatch = new Batch(scene, cloudMat);

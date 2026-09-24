@@ -242,6 +242,11 @@ textarea {
   content: "✿ ";
   color: #d9899f;
 }
+.notice.notice-sound {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  background: #fffaf0c9;
+}
 .notice button {
   pointer-events: auto;
   margin-left: 10px;
@@ -261,6 +266,39 @@ textarea {
 }
 @media (prefers-reduced-motion: reduce) {
   .notice {
+    animation: none;
+  }
+}
+/* Opening shot: chrome settles in behind the camera glide. `backwards` only
+   holds the first keyframe during the delay, so later opacity rules win.
+   `translate` rather than `transform` so the stamp keeps its 10° tilt. */
+.arriving .masthead,
+.arriving .stamp,
+.arriving .side,
+.arriving .bottom,
+.arriving ~ .cloud-radio {
+  animation: arrive-in 0.9s ease-out 0.25s backwards;
+}
+.arriving .stamp,
+.arriving .side,
+.arriving ~ .cloud-radio {
+  animation-delay: 0.45s;
+}
+.arriving .bottom {
+  animation-delay: 0.65s;
+}
+@keyframes arrive-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arriving .masthead,
+  .arriving .stamp,
+  .arriving .side,
+  .arriving .bottom,
+  .arriving ~ .cloud-radio {
     animation: none;
   }
 }

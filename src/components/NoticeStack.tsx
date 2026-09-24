@@ -3,6 +3,7 @@ import type { NoticeAction, QueuedNotice } from "./noticeQueue";
 const ACTION_LABEL: Record<NoticeAction, string> = {
   mailbox: "打开信箱",
   ride: "登船跟随",
+  sound: "打开声音",
 };
 
 export function NoticeStack({

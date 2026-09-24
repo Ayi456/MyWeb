@@ -31,7 +31,8 @@ import {
   StampBook,
   createPostcardFlight,
 } from "./systems/postcards";
-import { Ambience } from "./systems/ambience";
+import { Ambience, type SoundName } from "./systems/ambience";
+import { soundCues, type SoundState } from "./systems/soundCues";
 
 const SEASON_NOTICES = {
   spring: "春天回来了，樱花又开了。",
@@ -54,6 +55,26 @@ export function createScene(
   const listeners = new Set<(snapshot: SceneSnapshot) => void>();
   const noticeListeners = new Set<(notice: SceneNotice) => void>();
   const ambience = new Ambience();
+  let captions = false;
+  const lastCue = new Map<string, number>();
+  const soundLabels: Record<SoundName, string> = {
+    send: "呼，信封飞向飞艇",
+    chime: "叮，远方传来一声轻响",
+    bell: "叮，邮局的门铃",
+    splash: "哗啦，水池溅起涟漪",
+    rustle: "沙沙，树叶轻轻摇晃",
+    pop: "啵，岛上的朋友回应了",
+    stamp: "咚，一枚邮戳落下",
+    whale: "远处传来云鲸的歌声",
+  };
+  function emitSound(key: string, label: string) {
+    if (!captions) return;
+    const now = performance.now();
+    if (now - (lastCue.get(key) ?? -Infinity) < 8000) return;
+    lastCue.set(key, now);
+    notify({ type: "sound", text: label });
+  }
+  ambience.onCue = (name) => emitSound(name, soundLabels[name]);
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -92,6 +113,7 @@ export function createScene(
       (id) => interactions.impulses[id].hit(id === "tree" ? 0.05 : 0.12),
     );
     cleanups.push(() => camera.dispose());
+    if (!options.skipArrival) camera.arrive();
     const clock = new SimulationClock(),
       seasons = new SeasonClock(),
       windSystem = new WindSystem(),
@@ -244,6 +266,11 @@ export function createScene(
       lastSeason = seasons.index,
       wasMoored = true,
       rodeStamp = false;
+    let previousSound: SoundState = {
+      rain: 0,
+      night: 0,
+      season: seasons.weights,
+    };
     const pointerTarget = new T.Vector4(),
       pointer = ctx.U.uPointer.value;
     ctx.seasonal.apply(seasons.weights, true);
@@ -264,11 +291,12 @@ export function createScene(
         const realDt = Math.min(Math.max((now - last) / 1000, 0), 0.05);
         last = now;
         const dt = clock.advance(realDt),
-          wind = windSystem.update(dt);
+          wind = windSystem.update(dt, reducedMotion ? 0.35 : 1);
         const motionWind = reducedMotion ? wind * 0.35 : wind;
         petalTime += dt * (1 + motionWind * 0.62);
         ctx.U.uTime.value = clock.time;
         ctx.U.uWind.value = motionWind;
+        ctx.U.uCloudTravel.value = windSystem.cloudTravel;
         ctx.U.uPetalTime.value = petalTime;
         // Seasons drift with the simulation clock; colours only rewrite when the blend moves.
         seasons.advance(dt);
@@ -305,12 +333,20 @@ export function createScene(
         }
         director.update(scheduler, dt, clock.time);
         snapshot.night = dayNight(clock.hour, weights, director.rain);
+        const nextSound: SoundState = {
+          rain: director.rain,
+          night: snapshot.night,
+          season: weights,
+        };
+        for (const cue of soundCues(previousSound, nextSound))
+          emitSound(cue, cue);
+        previousSound = nextSound;
         const route = flight.update(objects, dt, clock.time, motionWind);
         snapshot.journey = camera.following
           ? `你正跟着飞艇。${route.journey}`
           : route.journey;
         ctx.U.uShip.value.copy(objects.airship.position);
-        updateAmbient(objects, clock.time, motionWind, route.phase);
+        updateAmbient(objects, clock.time, motionWind, route.phase, windSystem);
         interactions.update(dt, clock.time);
         delivery.update(dt, objects.airship);
         // Replies ride back with the ship and land when it moors at home.
@@ -461,6 +497,9 @@ export function createScene(
       setSound(on) {
         ambience.enable(on);
         emit();
+      },
+      setCaptions(on) {
+        captions = on;
       },
       setSoundVolume(volume) {
         ambience.setVolume(volume);

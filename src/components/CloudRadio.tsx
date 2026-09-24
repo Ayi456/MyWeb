@@ -43,9 +43,11 @@ function RadioIcon({ playing = false }: { playing?: boolean }) {
 export function CloudRadio({
   hidden,
   night,
+  onCaption,
 }: {
   hidden: boolean;
   night: boolean;
+  onCaption?: (text: string) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [open, setOpen] = useState(false);
@@ -257,6 +259,8 @@ export function CloudRadio({
         onPlaying={() => {
           failures.current = 0;
           setPlaying(true);
+          if (track)
+            onCaption?.(`电台正在播放：${track.name} · ${track.artist}`);
         }}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}

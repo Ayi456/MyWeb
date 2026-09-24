@@ -1,12 +1,14 @@
 import { PI, TAU } from "../core/context";
 import type { WorldObjects } from "../objects/createWorld";
 import { CONFIG } from "../config";
+import type { WindSystem } from "./wind";
 
 export function updateAmbient(
   objects: WorldObjects,
   simTime: number,
   wind: number,
   f: number,
+  windMotion?: WindSystem,
 ) {
   const {
     tree,
@@ -24,7 +26,9 @@ export function updateAmbient(
   tree.rotation.z = Math.sin(simTime * 0.82) * (0.004 + wind * 0.022);
   tree.rotation.x = Math.sin(simTime * 0.71) * (0.004 + wind * 0.009);
   objects.windmillSails.rotation.z =
-    -simTime * 0.25 - Math.sin(simTime * 0.6) * wind * 0.12;
+    -simTime * 0.25 -
+    Math.sin(simTime * 0.6) * wind * 0.12 -
+    (windMotion?.millTurn ?? 0);
   swing.rotation.z = Math.sin(simTime * 1.35) * (0.05 + wind * 0.12);
   swing.rotation.x = Math.sin(simTime * 1.1) * 0.015;
   lanterns.forEach(
@@ -57,7 +61,9 @@ export function updateAmbient(
   butterflies.forEach(({ g, wings }, i) => {
     const a = simTime * (0.34 + i * 0.008) + i * 2.41;
     g.position.set(
-      -1.1 + Math.cos(a) * (1.6 + (i % 3) * 0.4),
+      -1.1 +
+        Math.cos(a) * (1.6 + (i % 3) * 0.4) +
+        wind * (0.35 + Math.sin(a * 1.7 + i) * 0.25),
       1.55 + (i % 4) * 0.28 + Math.sin(a * 1.9) * 0.15,
       0.4 + Math.sin(a) * 1.5,
     );
@@ -69,7 +75,7 @@ export function updateAmbient(
     );
   });
   birds.forEach(({ g, wings }, i) => {
-    const a = simTime * 0.14 + (i * TAU) / 5;
+    const a = simTime * 0.14 - (windMotion?.birdLag ?? 0) + (i * TAU) / 5;
     g.position.set(
       Math.cos(a) * 7.2,
       6.15 + Math.sin(a * 2 + i) * 0.36,

@@ -6,6 +6,44 @@ import { Impulse } from "../src/scene/systems/interactions";
 import { CONFIG } from "../src/scene/config";
 import { sampleFlight } from "../src/scene/systems/airshipFlight";
 import { TEA_ISLAND, VILLAGE_ISLAND } from "../src/scene/worldLayout";
+import { WindSystem } from "../src/scene/systems/wind";
+import { soundCues } from "../src/scene/systems/soundCues";
+
+describe("wind across the islands", () => {
+  it("moves cloud, bird and windmill phases together and freezes while paused", () => {
+    const wind = new WindSystem();
+    wind.active = true;
+    wind.update(2);
+    expect(wind.cloudTravel).toBeGreaterThan(0);
+    expect(wind.birdLag).toBeGreaterThan(0);
+    expect(wind.millTurn).toBeGreaterThan(0);
+    const phases = [wind.cloudTravel, wind.birdLag, wind.millTurn];
+    wind.update(0);
+    expect([wind.cloudTravel, wind.birdLag, wind.millTurn]).toEqual(phases);
+    const next = new WindSystem();
+    next.active = true;
+    next.update(2, 0.35);
+    expect(next.cloudTravel).toBeCloseTo(phases[0] * 0.35);
+    expect(next.birdLag).toBeCloseTo(phases[1] * 0.35);
+    expect(next.millTurn).toBeCloseTo(phases[2] * 0.35);
+  });
+});
+
+describe("sound captions", () => {
+  const spring = [1, 0, 0, 0] as const;
+  it("detects weather and night sounds from world state without audio", () => {
+    const quiet = { rain: 0, night: 0, season: spring };
+    const rainy = { ...quiet, rain: 0.5 };
+    expect(soundCues(quiet, rainy)).toContain("雨声渐起");
+    expect(soundCues(rainy, rainy)).toEqual([]);
+    expect(soundCues(quiet, { ...quiet, night: 1 })).toContain(
+      "夜里的虫鸣开始了",
+    );
+    expect(soundCues(quiet, { ...quiet, season: [0, 0, 0, 1] })).toContain(
+      "冬日的风声更轻了",
+    );
+  });
+});
 
 describe("seasons", () => {
   it("weights always sum to one and hold steady mid-season", () => {
