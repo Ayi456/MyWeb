@@ -23,7 +23,10 @@ test("stamps and cumulative count survive reload, then clear", async ({
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect(page.getByText(/本次已放飞 00 封 · 累计 1 封/)).toBeVisible();
   await page.getByRole("button", { name: /信箱与集章/ }).click();
-  await expect(page.locator(".stamp-slot.earned")).toContainText("樱花邮戳");
+  // Festival days also award a limited stamp, so look for the sakura one only.
+  await expect(page.getByRole("listitem", { name: "樱花邮戳" })).toHaveClass(
+    /earned/,
+  );
   await page.getByRole("button", { name: "清空收藏" }).click();
   await page.getByRole("button", { name: "确认清空收藏" }).click();
   await expect(page.locator(".stamp-slot.earned")).toHaveCount(0);
