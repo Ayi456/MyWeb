@@ -11,14 +11,14 @@
 
 ### 2. 输入验证
 - 歌单/歌曲 ID：必须是 1-16 位数字
-- URL 白名单：只接受 `*.music.126.net` 域名
+- URL 白名单：只接受 `music.126.net` 及其子域名
 - 操作白名单：只允许 `playlist` 和 `play` 两个操作
 - 协议强制：所有音频 URL 强制使用 HTTPS
 
 ### 3. HTTP 安全头
 - `X-Content-Type-Options: nosniff` - 防止 MIME 类型嗅探
 - `X-Frame-Options: DENY` - 防止点击劫持
-- `X-XSS-Protection: 1; mode=block` - XSS 防护
+- `X-XSS-Protection: 1; mode=block` - 兼容性响应头；现代浏览器的 XSS 防护不依赖它
 - `Referrer-Policy: strict-origin-when-cross-origin` - 控制引用信息泄露
 - `Permissions-Policy` - 禁用不必要的浏览器功能
 
@@ -36,16 +36,11 @@
 ## 建议的额外防护（可选）
 
 ### Vercel 平台级防护
-在 Vercel Dashboard 启用：
-- **DDoS Protection**（Pro 计划）
-- **Firewall Rules**：按地域/IP 封禁
-- **Attack Challenge Mode**：疑似攻击时显示验证码
+目前未使用 Vercel Pro；若需要更强的封禁或挑战能力，先核对当前计划支持的防火墙设置，再在 Vercel Dashboard 配置。
 
 ### 监控告警
-```bash
-# 添加 Vercel Analytics 监控异常流量
-npm install @vercel/analytics
-```
+
+项目已接入 Vercel Web Analytics，用于查看访问量；它不能替代 `/api/music` 的异常请求监控。排查接口滥用时查看 Vercel Function 日志和 429 响应。当前没有 Pro 计划，不接入自定义 Analytics 事件。
 
 ### 环境变量保护
 确保 `.env` 文件不被提交：
@@ -55,13 +50,8 @@ MUSIC_PLAYLIST_ID=你的歌单ID
 ```
 
 ### Content Security Policy（可选）
-如果需要更严格的安全策略，在 `index.html` 添加：
-```html
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; 
-               connect-src 'self' https://*.music.126.net; 
-               style-src 'self' 'unsafe-inline';">
-```
+
+如果要加入 CSP，先按实际的 WebGL、音频、Vercel Web Analytics 和 API 请求列出所需来源，并在预览环境验证后再启用；旧版只包含本站与音乐域名的示例不足以覆盖当前页面。
 
 ## 如果遇到攻击
 
@@ -71,4 +61,4 @@ MUSIC_PLAYLIST_ID=你的歌单ID
 4. **启用维护模式**：返回静态页面，关闭 API 功能
 
 ## 报告安全问题
-如果发现安全漏洞，请通过 GitHub Issues 私密报告（不要公开披露）。
+如果发现安全漏洞，请优先使用仓库 Security 页的私密漏洞报告入口（若已启用）；否则通过维护者提供的私下联系方式报告，不要在公开 Issue 中披露细节。

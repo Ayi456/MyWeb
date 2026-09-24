@@ -1,5 +1,7 @@
 # 验证记录
 
+**当前代码基线**：`4cdd296`（2026-09-24）。最近一次完整本地检查通过 TypeScript、ESLint、Prettier、生产构建、Vitest **78 / 78** 和 Playwright **15 / 15**；其中四张主岛视觉基线未变。下面保留各阶段的实际结果，较早的测试数量和性能数字只代表对应日期，不代表当前测试总量或性能。实施状态见 [路线图第 7 节](ROADMAP.md#7-实施进度)。
+
 ## 第一印象与音效字幕（2026-09-24）
 
 - 开场镜头、加载淡出、风力联动、声音邀请与字幕已实现。工作区原有的 `arrive-mid.png` 未修改，也未纳入提交。
@@ -110,7 +112,9 @@
 
 这里验证的是桌面浏览器中的实际 CSS 视口和 WebGL 渲染，**不是手机真机测试**。工具对嵌套页面的部分点击/键盘注入不可用，手机布局可核验，触屏手势不能据此声称已通过。
 
-## 性能与内存
+## 迁移时的性能与内存基线（2026-09-14）
+
+以下数字取自功能扩展前的桌面设备；群岛、电台与后续效果加入后尚未重测同一条件下的完整性能基线。
 
 - 冷构造到第一帧（浏览器测试页已经加载模块后计时）：三次为 **415 / 447 / 330 ms**。不包括下载依赖模块与首次网络访问，不是完整首访加载耗时。
 - 稳态 10 秒采样：**60, 60, 60, 60, 60, 60, 60, 60, 60, 60 FPS**，约 16.7 ms/帧。测试 framebuffer **1581×900**，约 **201 draw calls、8334 instances**；普通生产页 framebuffer 1600×900 时也观察到 60 FPS。
@@ -140,8 +144,8 @@
 
 ## 未完成外部验证
 
-- 代码已推送到 GitHub；尚未核验 Vercel 公开部署或真实域名，交付的是可部署静态代码。
+- 代码已推送到 GitHub；尚未核验 Vercel 公开部署或真实域名。前端可静态部署，云上电台还需要 Vercel Function 或兼容的后端。
 - Safari / iOS / Android 真机、真实双指缩放、长按与 pointercancel、系统 reduced-motion 切换、中文输入法候选词组合及软键盘遮挡尚未真机验证。对应代码路径已实现，不能将桌面测试等同真机通过。
 - 还没有真实域名，因此没有伪造 canonical / og:url / 社交分享 URL，也没有将设计图冒充 preview.jpg。
 
-Vercel 与 Vite 设置参考：[Vite 官方入门与构建说明](https://vite.dev/guide/)、[Vercel Node.js 版本说明](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。本项目只需要静态托管，Node 24 用于构建。
+Vercel 与 Vite 设置参考：[Vite 官方入门与构建说明](https://vite.dev/guide/)、[Vercel Node.js 版本说明](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。Node 24 用于构建和电台 Function 运行；线上不需要常驻 Node 服务或数据库。

@@ -2,7 +2,7 @@
 
 **Postcards from the Sky** — 一张可以走进去的春日明信片。React 负责界面，TypeScript + Three.js r160 负责真正的体素微缩世界，Vite 构建前端，Vercel Function 为「云上电台」提供公开歌单和播放地址。
 
-本项目从根目录的 `spring-post-office.html` 迁移，主岛保留原有模型生成算法、随机调用顺序、固定种子 **314159**、布局、体素尺寸、配色和自定义 Shader。在此基础上扩展了花园副岛、灯塔小站、群岛邮路、彩虹和云上电台。原 HTML 原样保留，不参与生产构建。前端代码和字体不依赖外部 CDN；音乐由网易云音频 CDN 提供。
+本项目从根目录的 `spring-post-office.html` 迁移，主岛保留原有模型生成算法、随机调用顺序、固定种子 **314159**、布局、体素尺寸、配色和自定义 Shader。在此基础上扩展了花园副岛、灯塔小站、群岛邮路、彩虹和云上电台，并加入邮局历书、本机邮戳收藏、明信片导出与场景分享链接。原 HTML 原样保留，不参与生产构建。前端代码和字体不依赖外部 CDN；音乐由网易云音频 CDN 提供。
 
 ## 环境与启动
 
@@ -14,18 +14,18 @@ npm ci
 npm run dev
 ```
 
-没有 nvm 时，直接安装 Node.js 24.x 后运行后两行。开发地址以终端输出为准，默认端口 5173。无需环境变量。依赖锁文件由真实 npm 安装生成，请提交 `package-lock.json`，团队安装和 CI 使用 `npm ci`。
+没有 nvm 时，直接安装 Node.js 24.x 后运行后两行。开发地址以终端输出为准，默认端口 5173。默认配置无需环境变量。依赖锁文件由真实 npm 安装生成，请提交 `package-lock.json`，团队安装和 CI 使用 `npm ci`。
 
-| 命令                  | 用途                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `npm run dev`         | Vite 开发服务器与热更新                                                                  |
-| `npm run typecheck`   | 严格 TypeScript 检查                                                                     |
-| `npm run lint`        | ESLint 检查，无警告交付                                                                  |
-| `npm run test`        | Vitest 核心逻辑测试                                                                      |
-| `npm run build`       | 先 TypeScript 检查，再生成 `dist`                                                        |
-| `npm run preview`     | 本地检查生产产物，默认端口 4173                                                          |
-| `npm run format`      | 格式化源代码与工程配置，不改动原始参考 HTML                                              |
-| `npm run test:visual` | Playwright 主岛视觉回归（黄昏 / 正午近景 / 星夜 / 冬），基线按平台保存，`-- -u` 重新生成 |
+| 命令                  | 用途                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run dev`         | Vite 开发服务器与热更新                                                                    |
+| `npm run typecheck`   | 严格 TypeScript 检查                                                                       |
+| `npm run lint`        | ESLint 检查，无警告交付                                                                    |
+| `npm run test`        | Vitest 核心逻辑测试                                                                        |
+| `npm run build`       | 先 TypeScript 检查，再生成 `dist`                                                          |
+| `npm run preview`     | 本地检查生产产物，默认端口 4173                                                            |
+| `npm run format`      | 格式化源代码与工程配置，不改动原始参考 HTML                                                |
+| `npm run test:visual` | Playwright 交互回归与四张主岛视觉基线（黄昏 / 正午近景 / 星夜 / 冬）；`-- -u` 重新生成基线 |
 
 ## 操作
 
