@@ -2,6 +2,7 @@ import * as T from "three";
 import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
 import type { SeasonWeights } from "./season";
+import type { FestivalKind } from "./festival";
 
 export const EVENT_KINDS = [
   "shower",
@@ -15,6 +16,7 @@ export interface EventContext {
   night: number;
   season: SeasonWeights;
   hour: number;
+  festival?: FestivalKind | null;
 }
 export const EVENT_NOTICES: Record<SceneEventKind, string> = {
   shower: "一阵太阳雨路过，雨后说不定有彩虹。",
@@ -80,7 +82,9 @@ export class EventScheduler {
       return null;
     }
     const weights = options.map((kind) => {
-      const value = this.weights[kind] ?? 1;
+      const value =
+        (this.weights[kind] ?? 1) *
+        (ctx.festival === "qixi" && kind === "shootingStar" ? 3 : 1);
       return Number.isFinite(value) ? Math.max(0, value) : 1;
     });
     const total = weights.reduce((a, b) => a + b, 0);

@@ -59,7 +59,24 @@ export function PostcardPanel({
         <h2 id="postcard-title">信箱与集章</h2>
         <p className="collection-count">累计放飞 {totalSent} 封心意</p>
         <div className="stamp-grid" role="list" aria-label="邮戳收集">
-          {STAMPS.map((s) => {
+          {STAMPS.filter((s) => !("limited" in s)).map((s) => {
+            const got = stamps.includes(s.id);
+            return (
+              <div
+                key={s.id}
+                role="listitem"
+                className={`stamp-slot ${got ? "earned" : ""}`}
+                title={got ? s.title : `未获得 · ${s.hint}`}
+              >
+                <b aria-hidden="true">{got ? s.label : "·"}</b>
+                <span>{got ? s.title : s.hint}</span>
+              </div>
+            );
+          })}
+        </div>
+        <h3>限时邮戳</h3>
+        <div className="stamp-grid" role="list" aria-label="限时邮戳">
+          {STAMPS.filter((s) => "limited" in s).map((s) => {
             const got = stamps.includes(s.id);
             return (
               <div

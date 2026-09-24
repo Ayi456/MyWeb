@@ -18,6 +18,7 @@ import { createArchipelago } from "./archipelago";
 import { createRainbow } from "./rainbow";
 import { createFarIslands } from "./farIslands";
 import { createVisitors } from "./visitors";
+import { createFestive } from "./festive";
 
 export function createWorld(ctx: SceneContext) {
   const sky = createSky(ctx);
@@ -39,6 +40,7 @@ export function createWorld(ctx: SceneContext) {
   const rainbow = createRainbow(ctx);
   const farIslands = createFarIslands(ctx);
   const visitors = createVisitors(ctx);
+  const festive = createFestive(ctx);
   return {
     ...sky,
     ...sakura,
@@ -57,6 +59,7 @@ export function createWorld(ctx: SceneContext) {
     ...rainbow,
     ...farIslands,
     ...visitors,
+    ...festive,
   };
 }
 export type WorldObjects = ReturnType<typeof createWorld>;

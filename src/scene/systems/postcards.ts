@@ -2,6 +2,7 @@ import * as T from "three";
 import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
 import type { SeasonName } from "./season";
+import type { FestivalKind } from "./festival";
 
 export const REPLIES: Record<SeasonName, string[]> = {
   spring: [
@@ -9,24 +10,28 @@ export const REPLIES: Record<SeasonName, string[]> = {
     "风把你的话带到了灯塔，灯塔说：知道了。",
     "春天很长，慢慢走，别急着抵达。",
     "远方一切都好，只是有点想念樱花。",
+    "回信裹着一点月饼香，月亮替你照亮了邮路。",
   ],
   summer: [
     "这里的夏夜有很多萤火虫，像散落的小灯。",
     "信收到啦。午后下了一场雨，凉快了不少。",
     "茶山的茶新采了一茬，给你留了一罐。",
     "海一样的云，今天格外蓝。",
+    "回信裹着一点月饼香，月亮替你照亮了邮路。",
   ],
   autumn: [
     "枫叶红了，邮差的口袋里装满了叶子。",
     "谢谢你的信。秋天的风把它读了两遍。",
     "村里在晒柿子，甜味飘到了云上。",
     "落叶铺了一路，走起来沙沙响。",
+    "回信裹着一点月饼香，月亮替你照亮了邮路。",
   ],
   winter: [
     "下雪了。信到的时候，还带着一点温度。",
     "温泉的热气把字都熏软了，可我读懂了。",
     "灯塔的光在雪夜里更亮，像是替你守着。",
     "冬天很安静，正好把你的话反复读。",
+    "回信裹着一点月饼香，月亮替你照亮了邮路。",
   ],
 };
 export const STAMPS = [
@@ -48,6 +53,48 @@ export const STAMPS = [
     label: "常",
     title: "常客邮戳",
     hint: "在 3 个不同日期来访",
+  },
+  {
+    id: "hanami",
+    label: "花",
+    title: "花见邮戳",
+    hint: "春分当天寄信",
+    limited: true,
+  },
+  {
+    id: "longday",
+    label: "昼",
+    title: "长日邮戳",
+    hint: "夏至当天寄信",
+    limited: true,
+  },
+  {
+    id: "bridge",
+    label: "桥",
+    title: "鹊桥邮戳",
+    hint: "七夕当天寄信",
+    limited: true,
+  },
+  {
+    id: "moon",
+    label: "月",
+    title: "望月邮戳",
+    hint: "中秋当天寄信",
+    limited: true,
+  },
+  {
+    id: "warmth",
+    label: "汤",
+    title: "暖汤邮戳",
+    hint: "冬至当天寄信",
+    limited: true,
+  },
+  {
+    id: "newyear",
+    label: "新",
+    title: "新岁邮戳",
+    hint: "元旦当天寄信",
+    limited: true,
   },
 ] as const;
 export type StampId = (typeof STAMPS)[number]["id"];
@@ -103,12 +150,14 @@ export class ReplyLedger {
     this.owed++;
   }
   /** Called when the ship moors at the main dock. Returns the new reply. */
-  arrive(season: SeasonName, at: number) {
+  arrive(season: SeasonName, at: number, festival: FestivalKind | null = null) {
     if (this.owed <= 0) return null;
     this.owed--;
     const lines = REPLIES[season];
     const text =
-      lines[(this.cursor++ + Math.floor(this.random() * 2)) % lines.length];
+      festival === "midAutumn"
+        ? lines[4]
+        : lines[(this.cursor++ + Math.floor(this.random() * 2)) % 4];
     const reply = { text, season, at };
     this.received.push(reply);
     if (this.received.length > 40) this.received.shift();

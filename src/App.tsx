@@ -31,6 +31,11 @@ import {
 } from "./content/calendar";
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
 import {
+  FESTIVAL_GREETING,
+  festivalForDate,
+  limitedStampForDate,
+} from "./scene/systems/festival";
+import {
   pruneNotices,
   pushNotice,
   type QueuedNotice,
@@ -42,6 +47,7 @@ const SOUND_KEY = "spring-post-office:sound";
 const SOUND_ASKED_KEY = "spring-post-office:sound-asked";
 const CAPTIONS_KEY = "spring-post-office:captions";
 const GUIDE_KEY = "spring-post-office:guide-done";
+const CLASSIC = new URLSearchParams(location.search).get("classic") === "1";
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [attempt, setAttempt] = useState(0),
@@ -64,6 +70,14 @@ export default function App() {
   const [today, setToday] = useState(() => new Date());
   const todayKey = localDateKey(today);
   const term = useMemo(() => solarTerm(today), [today]);
+  const festival = useMemo(
+    () => (CLASSIC ? null : festivalForDate(today)),
+    [today],
+  );
+  const limitedStamp = useMemo(
+    () => (CLASSIC ? null : limitedStampForDate(today)),
+    [today],
+  );
   const lineToday = term ? `${term.name} · ${term.line}` : dailyLine(today);
   const collectionRef = useRef(collection);
   const [oldReplies, setOldReplies] = useState<Reply[]>(() =>
@@ -81,14 +95,16 @@ export default function App() {
     },
     [],
   );
-  const getInitial = useCallback(
-    () => ({
+  const getInitial = useCallback(() => {
+    const date = new Date();
+    return {
       stamps: collectionRef.current.stamps,
       replies: collectionRef.current.replies,
-      eventWeights: eventWeights(new Date()),
-    }),
-    [],
-  );
+      eventWeights: CLASSIC ? {} : eventWeights(date),
+      festival: CLASSIC ? null : festivalForDate(date),
+      limitedStamp: CLASSIC ? null : limitedStampForDate(date),
+    };
+  }, []);
   const soundPref = useRef(false);
   const [loaderGone, setLoaderGone] = useState(false);
   const [guideDone, setGuideDone] = useState(() => {
@@ -244,12 +260,27 @@ export default function App() {
   useEffect(() => {
     if (snapshot?.ready) controller.current?.visitDays(visits.days.length);
   }, [controller, snapshot?.ready, visits.days.length]);
+  useEffect(() => {
+    if (snapshot?.ready)
+      controller.current?.setCalendarContext(festival, limitedStamp);
+  }, [controller, snapshot?.ready, festival, limitedStamp]);
   const announcedTerm = useRef("");
   useEffect(() => {
-    if (!snapshot?.ready || !term || announcedTerm.current === todayKey) return;
+    if (
+      !snapshot?.ready ||
+      CLASSIC ||
+      announcedTerm.current === todayKey ||
+      (!term && !festival)
+    )
+      return;
     announcedTerm.current = todayKey;
-    notify({ kind: "event", text: `今天是${term.name}。${term.line}` });
-  }, [snapshot?.ready, todayKey, term, notify]);
+    notify({
+      kind: "event",
+      text: festival
+        ? FESTIVAL_GREETING[festival]
+        : `今天是${term!.name}。${term!.line}`,
+    });
+  }, [snapshot?.ready, todayKey, term, festival, notify]);
   useEffect(() => {
     if (!notices.length) return;
     const next = Math.min(...notices.map((n) => n.until)) - Date.now();
@@ -397,10 +428,12 @@ export default function App() {
           <div className="notes">
             <div className="tiny">TODAY'S LITTLE JOURNEY</div>
             <p>{snapshot?.journey ?? "飞艇正在等一封信。"}</p>
-            <p className="almanac-line">
-              {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
-            </p>
-            {visits.count > 1 && (
+            {!CLASSIC && (
+              <p className="almanac-line">
+                {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
+              </p>
+            )}
+            {!CLASSIC && visits.count > 1 && (
               <p className="returning-line">
                 欢迎回来，这是你第 {visits.count} 次来到邮局。
               </p>
@@ -439,10 +472,14 @@ export default function App() {
           {snapshot?.sentCount || collection.totalSent
             ? `· 本次 ${snapshot?.sentCount ?? 0} 封 · 累计 ${collection.totalSent} 封`
             : ""}
-          <br />
-          <span>
-            {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
-          </span>
+          {!CLASSIC && (
+            <>
+              <br />
+              <span>
+                {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
+              </span>
+            </>
+          )}
         </p>
       </SceneOverlay>
       <CloudRadio

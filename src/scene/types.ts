@@ -2,6 +2,7 @@ import type { SeasonName } from "./systems/season";
 import type { HotspotId } from "./systems/interactions";
 import type { SceneEventKind } from "./systems/events";
 import type { StampId, StoredReply } from "./systems/postcards";
+import type { FestivalKind } from "./systems/festival";
 
 export type Speed = 0 | 1 | 4 | 12;
 export type QualityLevel = "high" | "medium" | "low";
@@ -37,6 +38,7 @@ export interface SceneSnapshot {
   repliesWaiting: number;
   stamps: StampId[];
   sound: boolean;
+  festival: FestivalKind | null;
 }
 export type SceneNotice =
   | { type: "tap"; id: HotspotId; text: string }
@@ -61,6 +63,7 @@ export interface SceneController {
   setSoundVolume(volume: number): void;
   clearCollection(): void;
   visitDays(days: number): void;
+  setCalendarContext(kind: FestivalKind | null, stamp: StampId | null): void;
   sendLetter(message: string): boolean;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
   poke(id: HotspotId): void;
@@ -79,5 +82,7 @@ export interface SceneOptions {
     stamps?: StampId[];
     replies?: StoredReply[];
     eventWeights?: Partial<Record<SceneEventKind, number>>;
+    festival?: FestivalKind | null;
+    limitedStamp?: StampId | null;
   };
 }

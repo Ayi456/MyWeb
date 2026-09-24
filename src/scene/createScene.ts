@@ -33,6 +33,7 @@ import {
 } from "./systems/postcards";
 import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
+import { updateFestival } from "./systems/festival";
 
 const SEASON_NOTICES = {
   spring: "春天回来了，樱花又开了。",
@@ -125,6 +126,8 @@ export function createScene(
         options.initial?.eventWeights,
       ),
       director = createEventDirector(objects, ctx.U);
+    let festival = options.initial?.festival ?? null,
+      limitedStamp = options.initial?.limitedStamp ?? null;
     const delivery = createLetterDelivery(ctx, () => {
       flight.depart();
       ledger.deliver();
@@ -175,6 +178,7 @@ export function createScene(
       repliesWaiting: 0,
       stamps: [],
       sound: false,
+      festival,
     };
     stamps.onEarn((id) => {
       const stamp = STAMPS.find((s) => s.id === id)!;
@@ -231,6 +235,7 @@ export function createScene(
         repliesWaiting: ledger.owed,
         stamps: [...stamps.earned],
         sound: ambience.enabled,
+        festival,
       };
       listeners.forEach((listener) => listener(snapshot));
       // Non-sensitive diagnostics only. Never include letters or personal text here.
@@ -325,6 +330,7 @@ export function createScene(
           night: snapshot.night,
           season: weights,
           hour: clock.hour,
+          festival,
         });
         if (started) {
           notify({
@@ -340,6 +346,7 @@ export function createScene(
         }
         director.update(scheduler, dt, clock.time);
         snapshot.night = dayNight(clock.hour, weights, director.rain);
+        updateFestival(objects, festival, snapshot.night);
         const nextSound: SoundState = {
           rain: director.rain,
           night: snapshot.night,
@@ -364,7 +371,7 @@ export function createScene(
         }
         wasMoored = moored;
         if (postcard.update(dt)) {
-          const reply = ledger.arrive(seasons.name, clock.time);
+          const reply = ledger.arrive(seasons.name, clock.time, festival);
           if (reply) {
             ambience.play("chime");
             notify({ type: "reply", text: reply.text, season: reply.season });
@@ -528,12 +535,19 @@ export function createScene(
         stamps.visitDays(days);
         emit();
       },
+      setCalendarContext(kind, stamp) {
+        festival = kind;
+        limitedStamp = stamp;
+        snapshot.festival = kind;
+        emit();
+      },
       sendLetter(message) {
         const sent = delivery.send(message);
         if (sent) {
           interactions.moments.send.hit();
           ambience.play("send");
           stamps.award("sakura");
+          if (limitedStamp) stamps.award(limitedStamp);
         }
         emit();
         return sent;
