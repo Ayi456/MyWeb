@@ -73,6 +73,7 @@ export interface SceneController {
   setRealTime(on: boolean): void;
   setYear(year: number): void;
   sendLetter(message: string): boolean;
+  captureFrame(): Promise<Blob>;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
   poke(id: HotspotId): void;
   /** Start a surprise now (debug and tests). */

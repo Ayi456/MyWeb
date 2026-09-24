@@ -10,11 +10,13 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
 import { PostcardPanel, type Reply } from "./components/PostcardPanel";
+import { PhotoDialog } from "./components/PhotoDialog";
 import { NoticeStack } from "./components/NoticeStack";
 import { Guide } from "./components/Guide";
 import { nextGuideStep, type GuideStep } from "./components/guideState";
 import { hotspotForKey } from "./components/hotspotKeys";
-import { decodeReply, encodeReply } from "./scene/systems/postcards";
+import { STAMPS, decodeReply, encodeReply } from "./scene/systems/postcards";
+import { composePostcard, shareOrDownloadPostcard } from "./share/postcard";
 import {
   emptyCollection,
   loadCollection,
@@ -56,6 +58,7 @@ export default function App() {
   const [attempt, setAttempt] = useState(0),
     [mailOpen, setMailOpen] = useState(false),
     [postcardsOpen, setPostcardsOpen] = useState(false),
+    [photoOpen, setPhotoOpen] = useState(false),
     [hidden, setHidden] = useState(false),
     [timeCollapsed, setTimeCollapsed] = useState(() =>
       readPreference("time-collapsed", "spring-post-office:time-collapsed"),
@@ -67,6 +70,7 @@ export default function App() {
       readPreference("captions", CAPTIONS_KEY),
     );
   const [collection, setCollection] = useState(loadCollection);
+  const [lastLetter, setLastLetter] = useState("");
   const [visits, setVisits] = useState(loadVisits);
   const visitsRef = useRef(visits);
   const visitRecorded = useRef(false);
@@ -179,7 +183,7 @@ export default function App() {
       clearTimeout(done);
     };
   }, [ready]);
-  const blocked = mailOpen || helpOpen || postcardsOpen;
+  const blocked = mailOpen || helpOpen || postcardsOpen || photoOpen;
   useEffect(() => {
     if (!ready || guideDone || guideStep || hidden || blocked || error) return;
     const timer = setTimeout(() => {
@@ -437,6 +441,7 @@ export default function App() {
         onSound={() => setSound(!(snapshot?.sound ?? false))}
         onHelp={() => setHelpOpen((v) => !v)}
         onPostcards={() => setPostcardsOpen(true)}
+        onPhoto={() => setPhotoOpen(true)}
         helpOpen={helpOpen}
         replyCount={replies.length}
       >
@@ -557,6 +562,7 @@ export default function App() {
           onSend={(message) => {
             const sent = controller.current?.sendLetter(message) ?? false;
             if (sent) {
+              setLastLetter(message);
               updateCollection((current) => ({
                 ...current,
                 totalSent: Math.min(10_000_000, current.totalSent + 1),
@@ -593,6 +599,27 @@ export default function App() {
           onClose={() => setPostcardsOpen(false)}
         />
       )}
+      {photoOpen && (
+        <PhotoDialog
+          hasLetter={!!lastLetter}
+          onClose={() => setPhotoOpen(false)}
+          onExport={async (includeLetter) => {
+            const frame = await controller.current?.captureFrame();
+            if (!frame) throw new Error("画面还没准备好，请稍后重试。");
+            const date = new Date();
+            const stamp = STAMPS.find(
+              (item) => item.id === snapshot?.stamps.at(-1),
+            );
+            const postcard = await composePostcard(frame, {
+              season: snapshot?.season ?? "spring",
+              date,
+              stamp: stamp?.label ?? "✿",
+              letter: includeLetter ? lastLetter : undefined,
+            });
+            await shareOrDownloadPostcard(postcard, date);
+          }}
+        />
+      )}
       {error ? (
         <ErrorFallback
           message={error}
@@ -600,6 +627,7 @@ export default function App() {
             setMailOpen(false);
             setHelpOpen(false);
             setPostcardsOpen(false);
+            setPhotoOpen(false);
             setAttempt((v) => v + 1);
           }}
         />

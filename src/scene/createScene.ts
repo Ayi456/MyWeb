@@ -53,6 +53,10 @@ export function createScene(
   let disposed = false,
     failed = false,
     frameID = 0;
+  let pendingCapture: {
+    resolve: (blob: Blob) => void;
+    reject: (error: Error) => void;
+  } | null = null;
   let render: ReturnType<typeof createRenderer> | undefined;
   const listeners = new Set<(snapshot: SceneSnapshot) => void>();
   const noticeListeners = new Set<(notice: SceneNotice) => void>();
@@ -80,6 +84,8 @@ export function createScene(
   function dispose() {
     if (disposed) return;
     disposed = true;
+    pendingCapture?.reject(new Error("场景已关闭，无法拍照。"));
+    pendingCapture = null;
     cancelAnimationFrame(frameID);
     for (const cleanup of cleanups.reverse()) cleanup();
     tracker.track(ctx.scene);
@@ -308,6 +314,8 @@ export function createScene(
     function fail(error: unknown) {
       if (failed || disposed) return;
       failed = true;
+      pendingCapture?.reject(new Error("画面暂时无法拍照，请稍后重试。"));
+      pendingCapture = null;
       cancelAnimationFrame(frameID);
       options.onError(
         error instanceof Error
@@ -424,6 +432,14 @@ export function createScene(
             (CONFIG.fogDensity / Math.max(1, 1.3 / camera.camera.aspect)) *
             (1 + director.rain * 0.6 + weights[3] * 0.15);
         pipeline.render(ctx.scene, camera.camera);
+        if (pendingCapture) {
+          const capture = pendingCapture;
+          pendingCapture = null;
+          canvas.toBlob((blob) => {
+            if (blob) capture.resolve(blob);
+            else capture.reject(new Error("画面导出失败，请重试。"));
+          }, "image/png");
+        }
         frames++;
         if (!snapshot.ready) {
           snapshot.ready = true;
@@ -602,6 +618,15 @@ export function createScene(
         }
         emit();
         return sent;
+      },
+      captureFrame() {
+        if (disposed || failed || document.hidden)
+          return Promise.reject(new Error("画面暂时不可拍照。"));
+        if (pendingCapture)
+          return Promise.reject(new Error("正在拍照，请稍等。"));
+        return new Promise<Blob>((resolve, reject) => {
+          pendingCapture = { resolve, reject };
+        });
       },
       poke(id) {
         tap(id);

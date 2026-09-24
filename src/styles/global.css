@@ -106,8 +106,8 @@ button {
   position: absolute;
   right: 32px;
   top: 43%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 38px);
   gap: 10px;
   pointer-events: auto;
 }
@@ -619,6 +619,7 @@ input[type="range"] {
     right: 16px;
     gap: 9px;
     top: 42%;
+    grid-template-columns: repeat(2, 36px);
   }
   .round {
     width: 36px;

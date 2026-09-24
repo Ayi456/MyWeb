@@ -542,6 +542,7 @@ textarea {
     top: 90px;
     gap: 3px;
     right: 15px;
+    grid-template-columns: repeat(2, 44px);
   }
   .round {
     width: 44px;
@@ -871,6 +872,29 @@ textarea {
   width: 18px;
   height: 18px;
   accent-color: #b87f91;
+}
+.camera-icon {
+  width: 19px;
+  height: 19px;
+  vertical-align: -3px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.photo-letter-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 20px 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.photo-letter-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: #b87f91;
+  flex: none;
 }
 @media (max-width: 850px) {
   .seasons button {

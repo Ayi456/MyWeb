@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SceneSnapshot } from "../scene/types";
+import { PhotoButton } from "./PhotoButton";
 export function SceneOverlay({
   snapshot,
   hidden,
@@ -11,6 +12,7 @@ export function SceneOverlay({
   onSound,
   onHelp,
   onPostcards,
+  onPhoto,
   helpOpen,
   replyCount,
   children,
@@ -26,6 +28,7 @@ export function SceneOverlay({
   onSound: () => void;
   onHelp: () => void;
   onPostcards: () => void;
+  onPhoto: () => void;
   helpOpen: boolean;
   replyCount: number;
   children: ReactNode;
@@ -109,6 +112,7 @@ export function SceneOverlay({
             >
               {snapshot?.sound ? "♫" : "♪"}
             </button>
+            <PhotoButton onClick={onPhoto} disabled={!snapshot?.ready} />
           </>
         )}
         <button
