@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import type { SceneController, SceneSnapshot } from "../scene/types";
+import type {
+  SceneController,
+  SceneOptions,
+  SceneSnapshot,
+} from "../scene/types";
 
 export function useSceneController(
   canvas: RefObject<HTMLCanvasElement | null>,
   attempt: number,
   onMailbox: () => void,
+  getInitial?: () => SceneOptions["initial"],
 ) {
   const controller = useRef<SceneController | null>(null);
   const [snapshot, setSnapshot] = useState<SceneSnapshot | null>(null);
@@ -22,6 +27,7 @@ export function useSceneController(
           if (cancelled || !canvas.current) return;
           owned = createScene(canvas.current, {
             onMailbox,
+            initial: getInitial?.(),
             onError: (message) => {
               if (!cancelled) setError(message);
             },
@@ -49,6 +55,6 @@ export function useSceneController(
       owned?.dispose();
       if (controller.current === owned) controller.current = null;
     };
-  }, [canvas, attempt, onMailbox]);
+  }, [canvas, attempt, onMailbox, getInitial]);
   return { controller, snapshot, error };
 }

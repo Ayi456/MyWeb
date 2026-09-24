@@ -1,7 +1,7 @@
 import type { SeasonName } from "./systems/season";
 import type { HotspotId } from "./systems/interactions";
 import type { SceneEventKind } from "./systems/events";
-import type { StampId } from "./systems/postcards";
+import type { StampId, StoredReply } from "./systems/postcards";
 
 export type Speed = 0 | 1 | 4 | 12;
 export type QualityLevel = "high" | "medium" | "low";
@@ -59,6 +59,7 @@ export interface SceneController {
   nudge(id: HotspotId, amount: number, pop?: boolean): void;
   setCaptions(on: boolean): void;
   setSoundVolume(volume: number): void;
+  clearCollection(): void;
   sendLetter(message: string): boolean;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
   poke(id: HotspotId): void;
@@ -73,4 +74,5 @@ export interface SceneOptions {
   onError: (message: string) => void;
   /** Start on the final framing instead of gliding in (tests, screenshots). */
   skipArrival?: boolean;
+  initial?: { stamps?: StampId[]; replies?: StoredReply[]; visitDays?: number };
 }

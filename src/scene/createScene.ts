@@ -105,6 +105,8 @@ export function createScene(
     const stamps = new StampBook(),
       ledger = new ReplyLedger(),
       postcard = createPostcardFlight(objects);
+    stamps.from(options.initial?.stamps);
+    ledger.restore(options.initial?.replies);
     const camera = createCamera<HotspotId>(
       canvas,
       interactions.hits,
@@ -513,6 +515,11 @@ export function createScene(
       },
       setSoundVolume(volume) {
         ambience.setVolume(volume);
+      },
+      clearCollection() {
+        stamps.clear();
+        ledger.received = [];
+        emit();
       },
       sendLetter(message) {
         const sent = delivery.send(message);

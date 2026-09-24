@@ -45,6 +45,37 @@ export const STAMPS = [
   },
 ] as const;
 export type StampId = (typeof STAMPS)[number]["id"];
+export interface StoredReply {
+  season: SeasonName;
+  index: number;
+  at: number;
+}
+export function decodeReply(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Record<string, unknown>;
+  if (
+    typeof item.season !== "string" ||
+    !(item.season in REPLIES) ||
+    !Number.isInteger(item.index) ||
+    !Number.isFinite(item.at) ||
+    Number(item.at) < 0
+  )
+    return null;
+  const season = item.season as SeasonName;
+  const index = Number(item.index);
+  const text = REPLIES[season][index];
+  return text ? { text, season, at: Number(item.at) } : null;
+}
+export function encodeReply(reply: {
+  text: string;
+  season: SeasonName;
+  at: number;
+}): StoredReply | null {
+  const index = REPLIES[reply.season]?.indexOf(reply.text) ?? -1;
+  return index >= 0 && Number.isFinite(reply.at)
+    ? { season: reply.season, index, at: reply.at }
+    : null;
+}
 
 /** Replies that come back with the ship once a letter has gone out. */
 export class ReplyLedger {
@@ -53,6 +84,15 @@ export class ReplyLedger {
   received: { text: string; season: SeasonName; at: number }[] = [];
   private cursor = 0;
   constructor(private random: () => number = Math.random) {}
+  restore(list: unknown) {
+    this.received = Array.isArray(list)
+      ? list.slice(-40).flatMap((item) => {
+          const reply = decodeReply(item);
+          return reply ? [reply] : [];
+        })
+      : [];
+    return this.received;
+  }
   deliver() {
     this.owed++;
   }
@@ -74,6 +114,24 @@ export class StampBook {
   touched = new Set<string>();
   seasons = new Set<SeasonName>();
   private listeners = new Set<(id: StampId) => void>();
+  toJSON(): StampId[] {
+    return [...this.earned];
+  }
+  /** Restore directly, without replaying sounds or onEarn notifications. */
+  from(json: unknown) {
+    const valid = new Set<StampId>(STAMPS.map((stamp) => stamp.id));
+    this.earned = new Set(
+      Array.isArray(json)
+        ? json.filter((id): id is StampId => valid.has(id))
+        : [],
+    );
+    return this.toJSON();
+  }
+  clear() {
+    this.earned.clear();
+    this.touched.clear();
+    this.seasons.clear();
+  }
   onEarn(listener: (id: StampId) => void) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STAMPS } from "../scene/systems/postcards";
 import type { StampId } from "../scene/systems/postcards";
 import type { SeasonName } from "../scene/systems/season";
@@ -9,17 +9,23 @@ export interface Reply {
   season: SeasonName;
   at: number;
 }
-/** Replies and stamps live only in React state for this page load. */
 export function PostcardPanel({
   replies,
+  oldReplies,
   stamps,
+  totalSent,
+  onClear,
   onClose,
 }: {
   replies: Reply[];
+  oldReplies: Reply[];
   stamps: StampId[];
+  totalSent: number;
+  onClear: () => void;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
   useEffect(() => {
     const node = dialog.current,
       lastFocus =
@@ -51,6 +57,7 @@ export function PostcardPanel({
         </button>
         <div className="eyebrow">POSTCARDS FROM AFAR</div>
         <h2 id="postcard-title">信箱与集章</h2>
+        <p className="collection-count">累计放飞 {totalSent} 封心意</p>
         <div className="stamp-grid" role="list" aria-label="邮戳收集">
           {STAMPS.map((s) => {
             const got = stamps.includes(s.id);
@@ -67,7 +74,7 @@ export function PostcardPanel({
             );
           })}
         </div>
-        <h3>收到的回信</h3>
+        <h3>本次收到的回信</h3>
         {replies.length ? (
           <ul className="reply-list">
             {[...replies].reverse().map((r, i) => (
@@ -84,7 +91,46 @@ export function PostcardPanel({
             邮筒里就会多一张明信片。
           </p>
         )}
-        <div className="fine">回信与邮戳只保存在当前页面，刷新后清空。</div>
+        {oldReplies.length > 0 && (
+          <>
+            <h3>以前收到的回信</h3>
+            <ul className="reply-list">
+              {[...oldReplies].reverse().map((r, i) => (
+                <li key={`old-${r.at}-${i}`}>
+                  <span className="reply-season">
+                    {SEASON_LABELS[r.season]}
+                  </span>
+                  {r.text}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <div className="fine">
+          邮戳、回信和累计计数保存在此设备。寄出的信件文字不会保存。
+        </div>
+        <div className="collection-actions">
+          {confirmClear ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  onClear();
+                  setConfirmClear(false);
+                }}
+              >
+                确认清空收藏
+              </button>
+              <button type="button" onClick={() => setConfirmClear(false)}>
+                取消
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setConfirmClear(true)}>
+              清空收藏
+            </button>
+          )}
+        </div>
       </section>
     </dialog>
   );

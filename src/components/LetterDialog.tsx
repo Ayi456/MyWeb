@@ -124,7 +124,7 @@ export function LetterDialog({
         <div className="fine" id="privacy-note">
           这是虚拟邮局，文字不会发送到外部服务。
           <br />
-          仅留在当前页面内存中，刷新后清空。
+          信件文字仅留在当前页面内存中，刷新后清空。邮戳与回信可保存在此设备。
         </div>
       </section>
     </dialog>

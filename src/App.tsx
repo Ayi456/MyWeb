@@ -14,6 +14,15 @@ import { NoticeStack } from "./components/NoticeStack";
 import { Guide } from "./components/Guide";
 import { nextGuideStep, type GuideStep } from "./components/guideState";
 import { hotspotForKey } from "./components/hotspotKeys";
+import { decodeReply, encodeReply } from "./scene/systems/postcards";
+import {
+  emptyCollection,
+  loadCollection,
+  readPreference,
+  saveCollection,
+  writePreference,
+  type Collection,
+} from "./persist/storage";
 import {
   pruneNotices,
   pushNotice,
@@ -32,25 +41,39 @@ export default function App() {
     [mailOpen, setMailOpen] = useState(false),
     [postcardsOpen, setPostcardsOpen] = useState(false),
     [hidden, setHidden] = useState(false),
-    [timeCollapsed, setTimeCollapsed] = useState(() => {
-      try {
-        return (
-          localStorage.getItem("spring-post-office:time-collapsed") === "true"
-        );
-      } catch {
-        return false;
-      }
-    }),
+    [timeCollapsed, setTimeCollapsed] = useState(() =>
+      readPreference("time-collapsed", "spring-post-office:time-collapsed"),
+    ),
     [helpOpen, setHelpOpen] = useState(false),
     [notices, setNotices] = useState<QueuedNotice[]>([]),
     [replies, setReplies] = useState<Reply[]>([]),
-    [captions, setCaptions] = useState(() => {
-      try {
-        return localStorage.getItem(CAPTIONS_KEY) === "true";
-      } catch {
-        return false;
-      }
-    });
+    [captions, setCaptions] = useState(() =>
+      readPreference("captions", CAPTIONS_KEY),
+    );
+  const [collection, setCollection] = useState(loadCollection);
+  const collectionRef = useRef(collection);
+  const [oldReplies, setOldReplies] = useState<Reply[]>(() =>
+    collection.replies.flatMap((entry) => {
+      const reply = decodeReply(entry);
+      return reply ? [reply] : [];
+    }),
+  );
+  const updateCollection = useCallback(
+    (change: (value: Collection) => Collection) => {
+      const next = change(collectionRef.current);
+      collectionRef.current = next;
+      setCollection(next);
+      saveCollection(next);
+    },
+    [],
+  );
+  const getInitial = useCallback(
+    () => ({
+      stamps: collectionRef.current.stamps,
+      replies: collectionRef.current.replies,
+    }),
+    [],
+  );
   const soundPref = useRef(false);
   const [loaderGone, setLoaderGone] = useState(false);
   const [guideDone, setGuideDone] = useState(() => {
@@ -68,6 +91,7 @@ export default function App() {
     canvas,
     attempt,
     openMail,
+    getInitial,
   );
   const wind = useWindInput(
     controller,
@@ -75,14 +99,7 @@ export default function App() {
   );
   const closeMail = useCallback(() => setMailOpen(false), []);
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        "spring-post-office:time-collapsed",
-        String(timeCollapsed),
-      );
-    } catch {
-      // Keep the toggle usable when browser storage is unavailable.
-    }
+    writePreference("time-collapsed", timeCollapsed);
   }, [timeCollapsed]);
   // Keep the loader mounted through its 0.7 s fade while the camera glides in,
   // and stagger the chrome in only during that window so H toggles stay instant.
@@ -153,11 +170,7 @@ export default function App() {
   );
   useEffect(() => {
     controller.current?.setCaptions(captions);
-    try {
-      localStorage.setItem(CAPTIONS_KEY, String(captions));
-    } catch {
-      // Keep captions usable without storage.
-    }
+    writePreference("captions", captions);
   }, [captions, controller, snapshot?.ready]);
   // Taps replace each other; events, replies and stamps stack briefly.
   useEffect(() => {
@@ -172,17 +185,27 @@ export default function App() {
           text: n.text,
           action: "mailbox",
         });
-        setReplies((list) => [
-          ...list,
-          { text: n.text, season: n.season, at: Date.now() },
-        ]);
-      } else if (n.type === "stamp")
+        const reply = { text: n.text, season: n.season, at: Date.now() };
+        setReplies((list) => [...list, reply]);
+        const saved = encodeReply(reply);
+        if (saved)
+          updateCollection((current) => ({
+            ...current,
+            replies: [...current.replies, saved].slice(-40),
+          }));
+      } else if (n.type === "stamp") {
         notify({ kind: "keep", tone: "stamp", text: n.text });
-      else if (n.type === "sound")
+        updateCollection((current) => ({
+          ...current,
+          stamps: current.stamps.includes(n.id)
+            ? current.stamps
+            : [...current.stamps, n.id],
+        }));
+      } else if (n.type === "sound")
         notify({ kind: "tap", tone: "sound", text: n.text });
       else notify({ kind: n.type === "tap" ? "tap" : "event", text: n.text });
     });
-  }, [controller, snapshot?.ready, notify]);
+  }, [controller, snapshot?.ready, notify, updateCollection]);
   useEffect(() => {
     if (!notices.length) return;
     const next = Math.min(...notices.map((n) => n.until)) - Date.now();
@@ -195,7 +218,7 @@ export default function App() {
   // Sound needs a user gesture; remember the preference and re-arm on the first click.
   useEffect(() => {
     try {
-      soundPref.current = localStorage.getItem(SOUND_KEY) === "true";
+      soundPref.current = readPreference("sound", SOUND_KEY);
     } catch {
       soundPref.current = false;
     }
@@ -211,11 +234,11 @@ export default function App() {
   const setSound = useCallback(
     (on: boolean) => {
       controller.current?.setSound(on);
+      writePreference("sound", on);
       try {
-        localStorage.setItem(SOUND_KEY, String(on));
         localStorage.setItem(SOUND_ASKED_KEY, "true");
       } catch {
-        // Preference simply does not persist.
+        // Keep the toggle usable without storage.
       }
       soundPref.current = on;
     },
@@ -331,9 +354,9 @@ export default function App() {
             <div className="tiny">TODAY'S LITTLE JOURNEY</div>
             <p>{snapshot?.journey ?? "飞艇正在等一封信。"}</p>
             <p>
-              {snapshot?.sentCount
-                ? `已放飞 ${String(snapshot.sentCount).padStart(2, "0")} 封心意${
-                    snapshot.repliesWaiting
+              {snapshot?.sentCount || collection.totalSent
+                ? `本次已放飞 ${String(snapshot?.sentCount ?? 0).padStart(2, "0")} 封 · 累计 ${collection.totalSent} 封${
+                    snapshot?.repliesWaiting
                       ? ` · ${snapshot.repliesWaiting} 封回信在路上`
                       : ""
                   }`
@@ -361,7 +384,9 @@ export default function App() {
         </footer>
         <p className="mobile-journey">
           {snapshot?.journey}{" "}
-          {snapshot?.sentCount ? `· 已放飞 ${snapshot.sentCount} 封` : ""}
+          {snapshot?.sentCount || collection.totalSent
+            ? `· 本次 ${snapshot?.sentCount ?? 0} 封 · 累计 ${collection.totalSent} 封`
+            : ""}
         </p>
       </SceneOverlay>
       <CloudRadio
@@ -390,7 +415,11 @@ export default function App() {
           paused={snapshot?.speed === 0}
           onSend={(message) => {
             const sent = controller.current?.sendLetter(message) ?? false;
-            if (sent)
+            if (sent) {
+              updateCollection((current) => ({
+                ...current,
+                totalSent: Math.min(10_000_000, current.totalSent + 1),
+              }));
               notify(
                 snapshot?.speed === 0
                   ? {
@@ -403,6 +432,7 @@ export default function App() {
                       action: "ride",
                     },
               );
+            }
             return sent;
           }}
         />
@@ -410,7 +440,15 @@ export default function App() {
       {postcardsOpen && (
         <PostcardPanel
           replies={replies}
+          oldReplies={oldReplies}
           stamps={snapshot?.stamps ?? []}
+          totalSent={collection.totalSent}
+          onClear={() => {
+            controller.current?.clearCollection();
+            setReplies([]);
+            setOldReplies([]);
+            updateCollection(() => emptyCollection());
+          }}
           onClose={() => setPostcardsOpen(false)}
         />
       )}

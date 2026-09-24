@@ -832,6 +832,25 @@ textarea {
   color: #9c8089;
   margin: 4px 0 10px;
 }
+.collection-count {
+  margin: 4px 0 12px;
+  font-size: 11px;
+  color: #9b7482;
+}
+.collection-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.collection-actions button {
+  border: 1px solid #d6a8b6;
+  border-radius: 8px;
+  background: #fffaf2;
+  color: #8b6575;
+  padding: 6px 10px;
+  font-size: 11px;
+}
 .sound-label input {
   width: 18px;
   height: 18px;
@@ -864,14 +883,14 @@ textarea {
     font-size: 13px;
   }
   .stamp-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 5px;
   }
   .stamp-slot span {
-    display: none;
+    display: block;
   }
   .stamp-slot {
-    min-height: 44px;
+    min-height: 62px;
   }
 }
 @media (max-height: 540px) and (orientation: landscape) {
