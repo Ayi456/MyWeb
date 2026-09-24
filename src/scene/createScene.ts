@@ -102,6 +102,7 @@ export function createScene(
     render = pipeline; // Created first so unavailable WebGL fails quickly.
     // Geometry ownership stays at the scene level until all systems are detached.
     const objects = createWorld(ctx);
+    objects.moonPhaseUniform.value = options.initial?.moonPhase ?? 0.5;
     const interactions = createInteractions(ctx, objects);
     cleanups.push(() => interactions.dispose());
     const stamps = new StampBook(),
@@ -193,6 +194,7 @@ export function createScene(
       sound: false,
       festival,
       realTime,
+      moonPhase: objects.moonPhaseUniform.value,
     };
     stamps.onEarn((id) => {
       const stamp = STAMPS.find((s) => s.id === id)!;
@@ -251,6 +253,7 @@ export function createScene(
         sound: ambience.enabled,
         festival,
         realTime,
+        moonPhase: objects.moonPhaseUniform.value,
       };
       listeners.forEach((listener) => listener(snapshot));
       // Non-sensitive diagnostics only. Never include letters or personal text here.
@@ -568,9 +571,11 @@ export function createScene(
         stamps.visitDays(days);
         emit();
       },
-      setCalendarContext(kind, stamp) {
+      setCalendarContext(kind, stamp, phase) {
         festival = kind;
         limitedStamp = stamp;
+        if (phase !== undefined && Number.isFinite(phase))
+          objects.moonPhaseUniform.value = Math.max(0, Math.min(1, phase));
         snapshot.festival = kind;
         emit();
       },

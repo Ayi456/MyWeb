@@ -53,14 +53,27 @@ export function createNightSky(ctx: SceneContext) {
     -35,
   );
   sun.castShadow = false;
+  const moonPhaseUniform = { value: 0.5 };
   const moon = mesh(
     new T.IcosahedronGeometry(1.1, 2),
-    new T.MeshBasicMaterial({ color: "#fff0d1" }),
+    new T.ShaderMaterial({
+      uniforms: {
+        uPhase: moonPhaseUniform,
+        uColor: { value: new T.Color("#fff0d1") },
+      },
+      vertexShader: `varying vec3 vNormalView;
+void main(){vNormalView=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+      fragmentShader: `uniform float uPhase;uniform vec3 uColor;varying vec3 vNormalView;
+void main(){float angle=uPhase*6.2831853;vec3 lightDir=vec3(sin(angle),0.,-cos(angle));float lit=smoothstep(-.06,.06,dot(normalize(vNormalView),lightDir));gl_FragColor=vec4(uColor*mix(.11,1.,lit),1.);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+}`,
+    }),
     scene,
     20,
     18,
     -35,
   );
   moon.castShadow = false;
-  return { fireflies, starsMat, sun, moon };
+  return { fireflies, starsMat, sun, moon, moonPhaseUniform };
 }

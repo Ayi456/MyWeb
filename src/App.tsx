@@ -31,6 +31,7 @@ import {
 } from "./content/calendar";
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
 import { sceneFromSearch } from "./content/realTime";
+import { moonPhase } from "./content/moon";
 import {
   FESTIVAL_GREETING,
   festivalForDate,
@@ -106,6 +107,9 @@ export default function App() {
       eventWeights: CLASSIC ? {} : eventWeights(date),
       festival: CLASSIC ? null : festivalForDate(date),
       limitedStamp: CLASSIC ? null : limitedStampForDate(date),
+      moonPhase: CLASSIC
+        ? 0.5
+        : moonPhase(date, festivalForDate(date) === "midAutumn"),
       realTime: !CLASSIC && !linked && readPreference("real-time"),
       hour: SCENE_LINK.hour ?? undefined,
       year: SCENE_LINK.year ?? undefined,
@@ -291,8 +295,12 @@ export default function App() {
   }, [controller, snapshot?.ready, visits.days.length]);
   useEffect(() => {
     if (snapshot?.ready)
-      controller.current?.setCalendarContext(festival, limitedStamp);
-  }, [controller, snapshot?.ready, festival, limitedStamp]);
+      controller.current?.setCalendarContext(
+        festival,
+        limitedStamp,
+        CLASSIC ? 0.5 : moonPhase(today, festival === "midAutumn"),
+      );
+  }, [controller, snapshot?.ready, festival, limitedStamp, today]);
   const announcedTerm = useRef("");
   useEffect(() => {
     if (

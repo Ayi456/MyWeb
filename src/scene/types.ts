@@ -40,6 +40,7 @@ export interface SceneSnapshot {
   sound: boolean;
   festival: FestivalKind | null;
   realTime: boolean;
+  moonPhase: number;
 }
 export type SceneNotice =
   | { type: "tap"; id: HotspotId; text: string }
@@ -64,7 +65,11 @@ export interface SceneController {
   setSoundVolume(volume: number): void;
   clearCollection(): void;
   visitDays(days: number): void;
-  setCalendarContext(kind: FestivalKind | null, stamp: StampId | null): void;
+  setCalendarContext(
+    kind: FestivalKind | null,
+    stamp: StampId | null,
+    phase?: number,
+  ): void;
   setRealTime(on: boolean): void;
   setYear(year: number): void;
   sendLetter(message: string): boolean;
@@ -90,5 +95,6 @@ export interface SceneOptions {
     hour?: number;
     year?: number;
     realTime?: boolean;
+    moonPhase?: number;
   };
 }
