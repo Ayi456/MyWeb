@@ -8,6 +8,9 @@ export function HelpPanel({
   onSound,
   captions,
   onCaptions,
+  realTime,
+  onRealTime,
+  classic,
   onRestartGuide,
   onPoke,
   onClose,
@@ -18,6 +21,9 @@ export function HelpPanel({
   onSound: (on: boolean) => void;
   captions: boolean;
   onCaptions: (on: boolean) => void;
+  realTime: boolean;
+  onRealTime: (on: boolean) => void;
+  classic: boolean;
   onRestartGuide: () => void;
   onPoke: (id: HotspotId) => void;
   onClose: () => void;
@@ -65,6 +71,16 @@ export function HelpPanel({
       <p>
         季节按钮切换春夏秋冬，四季也会随时间自然轮换。云鲸、热气球、太阳雨和流星会不定期出现。
       </p>
+      {!classic && (
+        <label className="quality-label sound-label">
+          <input
+            type="checkbox"
+            checked={realTime}
+            onChange={(e) => onRealTime(e.target.checked)}
+          />
+          跟随现实时间与季节（默认关闭）
+        </label>
+      )}
       <label className="quality-label">
         画质{" "}
         <select

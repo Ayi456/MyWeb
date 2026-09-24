@@ -5,12 +5,16 @@ export function TimeControls({
   onToggle,
   onSpeed,
   onHour,
+  onRealTime,
+  classic,
 }: {
   snapshot: SceneSnapshot | null;
   collapsed: boolean;
   onToggle: () => void;
   onSpeed: (v: Speed) => void;
   onHour: (v: number) => void;
+  onRealTime: (on: boolean) => void;
+  classic: boolean;
 }) {
   const hour = snapshot?.hour ?? 16.33,
     speed = snapshot?.speed ?? 1;
@@ -84,6 +88,17 @@ export function TimeControls({
           aria-valuetext={`${phase} ${time}`}
           onChange={(e) => onHour(Number(e.target.value))}
         />
+        {!classic && (
+          <label className="real-time-toggle">
+            <input
+              type="checkbox"
+              checked={snapshot?.realTime ?? false}
+              disabled={!snapshot?.ready}
+              onChange={(e) => onRealTime(e.target.checked)}
+            />
+            跟随现实时间与季节
+          </label>
+        )}
       </div>
     </section>
   );

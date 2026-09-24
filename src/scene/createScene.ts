@@ -34,6 +34,7 @@ import {
 import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
 import { updateFestival } from "./systems/festival";
+import { realLocalHour, realSeasonYear } from "../content/realTime";
 
 const SEASON_NOTICES = {
   spring: "春天回来了，樱花又开了。",
@@ -126,6 +127,18 @@ export function createScene(
         options.initial?.eventWeights,
       ),
       director = createEventDirector(objects, ctx.U);
+    let realTime = !!options.initial?.realTime;
+    if (realTime) {
+      clock.setHour(realLocalHour());
+      clock.hourSource = realLocalHour;
+      seasons.setYear(realSeasonYear());
+      seasons.hold = true;
+    } else {
+      if (options.initial?.hour !== undefined)
+        clock.setHour(options.initial.hour);
+      if (options.initial?.year !== undefined)
+        seasons.setYear(options.initial.year);
+    }
     let festival = options.initial?.festival ?? null,
       limitedStamp = options.initial?.limitedStamp ?? null;
     const delivery = createLetterDelivery(ctx, () => {
@@ -179,6 +192,7 @@ export function createScene(
       stamps: [],
       sound: false,
       festival,
+      realTime,
     };
     stamps.onEarn((id) => {
       const stamp = STAMPS.find((s) => s.id === id)!;
@@ -236,6 +250,7 @@ export function createScene(
         stamps: [...stamps.earned],
         sound: ambience.enabled,
         festival,
+        realTime,
       };
       listeners.forEach((listener) => listener(snapshot));
       // Non-sensitive diagnostics only. Never include letters or personal text here.
@@ -311,6 +326,7 @@ export function createScene(
         ctx.U.uCloudTravel.value = windSystem.cloudTravel;
         ctx.U.uPetalTime.value = petalTime;
         // Seasons drift with the simulation clock; colours only rewrite when the blend moves.
+        if (realTime && dt > 0) seasons.setYear(realSeasonYear());
         seasons.advance(dt);
         const weights = seasons.weights;
         ctx.U.uSeason.value.fromArray(weights);
@@ -464,6 +480,21 @@ export function createScene(
       { signal: events.signal },
     );
     frameID = requestAnimationFrame(animate);
+    function applyRealTime(on: boolean) {
+      realTime = on;
+      clock.hourSource = on ? realLocalHour : null;
+      seasons.hold = on;
+      if (on) {
+        clock.setHour(realLocalHour());
+        seasons.setYear(realSeasonYear());
+        lastSeason = seasons.index;
+        stamps.season(seasons.name);
+        ctx.U.uSeason.value.fromArray(seasons.weights);
+        ctx.seasonal.apply(seasons.weights, true);
+      }
+      snapshot.night = dayNight(clock.hour, seasons.weights, director.rain);
+      emit();
+    }
     return {
       setSpeed(speed) {
         if (![0, 1, 4, 12].includes(speed)) return;
@@ -472,12 +503,14 @@ export function createScene(
         emit();
       },
       setTimeOfDay(hour) {
+        if (realTime) applyRealTime(false);
         clock.setHour(hour);
         snapshot.night = dayNight(clock.hour, seasons.weights, director.rain);
         camera.interact();
         emit();
       },
       setSeason(index) {
+        if (realTime) applyRealTime(false);
         seasons.set(index);
         lastSeason = seasons.index;
         stamps.season(seasons.name);
@@ -539,6 +572,19 @@ export function createScene(
         festival = kind;
         limitedStamp = stamp;
         snapshot.festival = kind;
+        emit();
+      },
+      setRealTime(on) {
+        applyRealTime(on);
+      },
+      setYear(year) {
+        if (realTime) applyRealTime(false);
+        seasons.setYear(year);
+        lastSeason = seasons.index;
+        stamps.season(seasons.name);
+        ctx.U.uSeason.value.fromArray(seasons.weights);
+        ctx.seasonal.apply(seasons.weights, true);
+        snapshot.night = dayNight(clock.hour, seasons.weights, director.rain);
         emit();
       },
       sendLetter(message) {

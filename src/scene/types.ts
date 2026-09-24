@@ -39,6 +39,7 @@ export interface SceneSnapshot {
   stamps: StampId[];
   sound: boolean;
   festival: FestivalKind | null;
+  realTime: boolean;
 }
 export type SceneNotice =
   | { type: "tap"; id: HotspotId; text: string }
@@ -64,6 +65,8 @@ export interface SceneController {
   clearCollection(): void;
   visitDays(days: number): void;
   setCalendarContext(kind: FestivalKind | null, stamp: StampId | null): void;
+  setRealTime(on: boolean): void;
+  setYear(year: number): void;
   sendLetter(message: string): boolean;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
   poke(id: HotspotId): void;
@@ -84,5 +87,8 @@ export interface SceneOptions {
     eventWeights?: Partial<Record<SceneEventKind, number>>;
     festival?: FestivalKind | null;
     limitedStamp?: StampId | null;
+    hour?: number;
+    year?: number;
+    realTime?: boolean;
   };
 }

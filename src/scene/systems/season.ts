@@ -35,7 +35,9 @@ export function seasonWeights(
 /** Seasons advance with the simulation clock, so pause freezes them too. */
 export class SeasonClock {
   year: number = CONFIG.initialYear;
+  hold = false;
   advance(dt: number) {
+    if (this.hold) return this.year;
     const step = Math.max(0, Number.isFinite(dt) ? dt : 0);
     this.year = (this.year + step / CONFIG.secondsPerSeason) % 4;
     return this.year;
@@ -44,6 +46,10 @@ export class SeasonClock {
   set(index: number) {
     if (!Number.isFinite(index)) return;
     this.year = (((Math.floor(index) % 4) + 4) % 4) + 0.08;
+  }
+  setYear(year: number) {
+    if (!Number.isFinite(year)) return;
+    this.year = ((year % 4) + 4) % 4;
   }
   get index() {
     return Math.floor(this.year) as 0 | 1 | 2 | 3;

@@ -6,11 +6,17 @@ export class SimulationClock {
   speed: Speed = 1;
   time = 0;
   hour: number = CONFIG.initialHour;
+  hourSource: (() => number) | null = null;
   advance(realDelta: number) {
     const dt =
       Math.max(0, Number.isFinite(realDelta) ? realDelta : 0) * this.speed;
     this.time += dt;
-    this.hour = wrapHour(this.hour + dt * CONFIG.hoursPerSecond);
+    if (dt > 0) {
+      const sourced = this.hourSource?.();
+      this.hour = Number.isFinite(sourced)
+        ? wrapHour(sourced!)
+        : wrapHour(this.hour + dt * CONFIG.hoursPerSecond);
+    }
     return dt;
   }
   setHour(hour: number) {

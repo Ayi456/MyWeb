@@ -53,6 +53,22 @@ describe("the shared simulation clock", () => {
     expect(c.hour).toBe(5);
     expect(c.time).toBe(0);
   });
+  it("sources local hour while moving, then freezes sourced hour on pause", () => {
+    const c = new SimulationClock();
+    let hour = 21.5;
+    c.hourSource = () => hour;
+    c.advance(1);
+    expect(c.hour).toBe(21.5);
+    expect(c.time).toBe(1);
+    c.speed = 0;
+    hour = 22.5;
+    c.advance(60);
+    expect(c.hour).toBe(21.5);
+    expect(c.time).toBe(1);
+    c.speed = 1;
+    c.advance(1);
+    expect(c.hour).toBe(22.5);
+  });
 });
 it("reproduces the reference LCG exactly", () => {
   const a = seededRandom(CONFIG.seed),

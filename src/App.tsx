@@ -30,6 +30,7 @@ import {
   solarTerm,
 } from "./content/calendar";
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
+import { sceneFromSearch } from "./content/realTime";
 import {
   FESTIVAL_GREETING,
   festivalForDate,
@@ -47,7 +48,8 @@ const SOUND_KEY = "spring-post-office:sound";
 const SOUND_ASKED_KEY = "spring-post-office:sound-asked";
 const CAPTIONS_KEY = "spring-post-office:captions";
 const GUIDE_KEY = "spring-post-office:guide-done";
-const CLASSIC = new URLSearchParams(location.search).get("classic") === "1";
+const SCENE_LINK = sceneFromSearch(location.search);
+const CLASSIC = SCENE_LINK.classic;
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [attempt, setAttempt] = useState(0),
@@ -97,12 +99,16 @@ export default function App() {
   );
   const getInitial = useCallback(() => {
     const date = new Date();
+    const linked = SCENE_LINK.hour !== null || SCENE_LINK.year !== null;
     return {
       stamps: collectionRef.current.stamps,
       replies: collectionRef.current.replies,
       eventWeights: CLASSIC ? {} : eventWeights(date),
       festival: CLASSIC ? null : festivalForDate(date),
       limitedStamp: CLASSIC ? null : limitedStampForDate(date),
+      realTime: !CLASSIC && !linked && readPreference("real-time"),
+      hour: SCENE_LINK.hour ?? undefined,
+      year: SCENE_LINK.year ?? undefined,
     };
   }, []);
   const soundPref = useRef(false);
@@ -219,6 +225,29 @@ export default function App() {
       setNotices((list) => pushNotice(list, notice, Date.now())),
     [],
   );
+  const setRealTime = useCallback(
+    (on: boolean) => {
+      if (CLASSIC) return;
+      controller.current?.setRealTime(on);
+      writePreference("real-time", on);
+      if (on) {
+        const hour = new Date().getHours();
+        notify({
+          kind: "event",
+          text:
+            hour >= 20 || hour < 5
+              ? "已跟随现实。此刻是星夜，可以拖动时间滑块回到白天。"
+              : "已跟随现实，岛上的时辰与季节会随你所在的时间变化。",
+        });
+      }
+    },
+    [controller, notify],
+  );
+  const stopRealTime = useCallback(() => {
+    if (!snapshot?.realTime) return;
+    writePreference("real-time", false);
+    notify({ kind: "event", text: "已退出跟随现实，岛上的时间继续自然流动。" });
+  }, [snapshot?.realTime, notify]);
   useEffect(() => {
     controller.current?.setCaptions(captions);
     writePreference("captions", captions);
@@ -411,6 +440,9 @@ export default function App() {
             onSound={setSound}
             captions={captions}
             onCaptions={setCaptions}
+            realTime={snapshot?.realTime ?? false}
+            onRealTime={setRealTime}
+            classic={CLASSIC}
             onRestartGuide={() => {
               setTreeTapped(false);
               setGuideSentBaseline(snapshot?.sentCount ?? 0);
@@ -451,14 +483,22 @@ export default function App() {
           <div className="time-stack">
             <SeasonControls
               snapshot={snapshot}
-              onSeason={(i) => controller.current?.setSeason(i)}
+              onSeason={(i) => {
+                stopRealTime();
+                controller.current?.setSeason(i);
+              }}
             />
             <TimeControls
               snapshot={snapshot}
               collapsed={timeCollapsed}
               onToggle={() => setTimeCollapsed((v) => !v)}
               onSpeed={(v) => controller.current?.setSpeed(v)}
-              onHour={(v) => controller.current?.setTimeOfDay(v)}
+              onHour={(v) => {
+                stopRealTime();
+                controller.current?.setTimeOfDay(v);
+              }}
+              onRealTime={setRealTime}
+              classic={CLASSIC}
             />
           </div>
           <ActionControls

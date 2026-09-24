@@ -6,6 +6,7 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "tests/visual",
   testMatch: "**/*.visual.ts",
+  workers: 2,
   timeout: 60_000,
   expect: {
     timeout: 30_000,

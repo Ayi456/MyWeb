@@ -95,6 +95,18 @@ textarea {
   margin: 2px 0 0;
   background: transparent;
 }
+.real-time-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.real-time-toggle input {
+  accent-color: #be8291;
+}
 .breeze {
   user-select: none;
   -webkit-user-select: none;
