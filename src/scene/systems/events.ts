@@ -44,7 +44,10 @@ export class EventScheduler {
   active: { kind: SceneEventKind; age: number } | null = null;
   countdown: number;
   last: SceneEventKind | null = null;
-  constructor(private random: () => number = Math.random) {
+  constructor(
+    private random: () => number = Math.random,
+    private weights: Partial<Record<SceneEventKind, number>> = {},
+  ) {
     this.countdown =
       CONFIG.events.firstDelay[0] + this.span(CONFIG.events.firstDelay);
   }
@@ -76,9 +79,21 @@ export class EventScheduler {
       this.countdown = 8;
       return null;
     }
-    return this.start(
-      options[Math.floor(this.random() * options.length) % options.length],
-    );
+    const weights = options.map((kind) => {
+      const value = this.weights[kind] ?? 1;
+      return Number.isFinite(value) ? Math.max(0, value) : 1;
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    if (total <= 0) {
+      this.countdown = 8;
+      return null;
+    }
+    let roll = this.random() * total;
+    for (let i = 0; i < options.length; i++) {
+      roll -= weights[i];
+      if (roll < 0) return this.start(options[i]);
+    }
+    return this.start(options[options.length - 1]);
   }
   get progress() {
     return this.active

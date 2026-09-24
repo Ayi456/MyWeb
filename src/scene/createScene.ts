@@ -120,7 +120,10 @@ export function createScene(
       seasons = new SeasonClock(),
       windSystem = new WindSystem(),
       flight = new AirshipFlight(),
-      scheduler = new EventScheduler(),
+      scheduler = new EventScheduler(
+        Math.random,
+        options.initial?.eventWeights,
+      ),
       director = createEventDirector(objects, ctx.U);
     const delivery = createLetterDelivery(ctx, () => {
       flight.depart();
@@ -519,6 +522,10 @@ export function createScene(
       clearCollection() {
         stamps.clear();
         ledger.received = [];
+        emit();
+      },
+      visitDays(days) {
+        stamps.visitDays(days);
         emit();
       },
       sendLetter(message) {

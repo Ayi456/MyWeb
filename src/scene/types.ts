@@ -60,6 +60,7 @@ export interface SceneController {
   setCaptions(on: boolean): void;
   setSoundVolume(volume: number): void;
   clearCollection(): void;
+  visitDays(days: number): void;
   sendLetter(message: string): boolean;
   /** Trigger a hotspot as if tapped; used by tests and keyboard shortcuts. */
   poke(id: HotspotId): void;
@@ -74,5 +75,9 @@ export interface SceneOptions {
   onError: (message: string) => void;
   /** Start on the final framing instead of gliding in (tests, screenshots). */
   skipArrival?: boolean;
-  initial?: { stamps?: StampId[]; replies?: StoredReply[]; visitDays?: number };
+  initial?: {
+    stamps?: StampId[];
+    replies?: StoredReply[];
+    eventWeights?: Partial<Record<SceneEventKind, number>>;
+  };
 }

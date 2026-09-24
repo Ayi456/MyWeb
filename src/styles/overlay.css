@@ -400,6 +400,10 @@ textarea {
     font-size: 10px;
     letter-spacing: 1px;
     opacity: 0.85;
+    line-height: 1.5;
+  }
+  .mobile-journey span {
+    opacity: 0.85;
   }
   .diagnostics {
     right: 24px;

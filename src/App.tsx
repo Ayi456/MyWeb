@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SceneCanvas } from "./components/SceneCanvas";
 import { SceneOverlay } from "./components/SceneOverlay";
 import { TimeControls } from "./components/TimeControls";
@@ -23,6 +23,13 @@ import {
   writePreference,
   type Collection,
 } from "./persist/storage";
+import {
+  dailyLine,
+  eventWeights,
+  localDateKey,
+  solarTerm,
+} from "./content/calendar";
+import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
 import {
   pruneNotices,
   pushNotice,
@@ -51,6 +58,13 @@ export default function App() {
       readPreference("captions", CAPTIONS_KEY),
     );
   const [collection, setCollection] = useState(loadCollection);
+  const [visits, setVisits] = useState(loadVisits);
+  const visitsRef = useRef(visits);
+  const visitRecorded = useRef(false);
+  const [today, setToday] = useState(() => new Date());
+  const todayKey = localDateKey(today);
+  const term = useMemo(() => solarTerm(today), [today]);
+  const lineToday = term ? `${term.name} · ${term.line}` : dailyLine(today);
   const collectionRef = useRef(collection);
   const [oldReplies, setOldReplies] = useState<Reply[]>(() =>
     collection.replies.flatMap((entry) => {
@@ -71,6 +85,7 @@ export default function App() {
     () => ({
       stamps: collectionRef.current.stamps,
       replies: collectionRef.current.replies,
+      eventWeights: eventWeights(new Date()),
     }),
     [],
   );
@@ -98,6 +113,26 @@ export default function App() {
     mailOpen || postcardsOpen || !snapshot?.ready || !!error,
   );
   const closeMail = useCallback(() => setMailOpen(false), []);
+  useEffect(() => {
+    if (visitRecorded.current) return;
+    visitRecorded.current = true;
+    const next = recordVisit(visitsRef.current, new Date());
+    visitsRef.current = next;
+    setVisits(next);
+    saveVisits(next);
+  }, []);
+  useEffect(() => {
+    const nextMidnight = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1,
+    );
+    const timer = setTimeout(
+      () => setToday(new Date()),
+      Math.max(1000, nextMidnight.getTime() - Date.now() + 50),
+    );
+    return () => clearTimeout(timer);
+  }, [today]);
   useEffect(() => {
     writePreference("time-collapsed", timeCollapsed);
   }, [timeCollapsed]);
@@ -206,6 +241,15 @@ export default function App() {
       else notify({ kind: n.type === "tap" ? "tap" : "event", text: n.text });
     });
   }, [controller, snapshot?.ready, notify, updateCollection]);
+  useEffect(() => {
+    if (snapshot?.ready) controller.current?.visitDays(visits.days.length);
+  }, [controller, snapshot?.ready, visits.days.length]);
+  const announcedTerm = useRef("");
+  useEffect(() => {
+    if (!snapshot?.ready || !term || announcedTerm.current === todayKey) return;
+    announcedTerm.current = todayKey;
+    notify({ kind: "event", text: `今天是${term.name}。${term.line}` });
+  }, [snapshot?.ready, todayKey, term, notify]);
   useEffect(() => {
     if (!notices.length) return;
     const next = Math.min(...notices.map((n) => n.until)) - Date.now();
@@ -353,6 +397,14 @@ export default function App() {
           <div className="notes">
             <div className="tiny">TODAY'S LITTLE JOURNEY</div>
             <p>{snapshot?.journey ?? "飞艇正在等一封信。"}</p>
+            <p className="almanac-line">
+              {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
+            </p>
+            {visits.count > 1 && (
+              <p className="returning-line">
+                欢迎回来，这是你第 {visits.count} 次来到邮局。
+              </p>
+            )}
             <p>
               {snapshot?.sentCount || collection.totalSent
                 ? `本次已放飞 ${String(snapshot?.sentCount ?? 0).padStart(2, "0")} 封 · 累计 ${collection.totalSent} 封${
@@ -387,6 +439,10 @@ export default function App() {
           {snapshot?.sentCount || collection.totalSent
             ? `· 本次 ${snapshot?.sentCount ?? 0} 封 · 累计 ${collection.totalSent} 封`
             : ""}
+          <br />
+          <span>
+            {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
+          </span>
         </p>
       </SceneOverlay>
       <CloudRadio

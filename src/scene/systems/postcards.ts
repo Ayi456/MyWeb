@@ -43,6 +43,12 @@ export const STAMPS = [
     title: "万物邮戳",
     hint: "和岛上 8 种事物打过招呼",
   },
+  {
+    id: "regular",
+    label: "常",
+    title: "常客邮戳",
+    hint: "在 3 个不同日期来访",
+  },
 ] as const;
 export type StampId = (typeof STAMPS)[number]["id"];
 export interface StoredReply {
@@ -149,6 +155,9 @@ export class StampBook {
   season(name: SeasonName) {
     this.seasons.add(name);
     if (this.seasons.size >= 4) this.award("seasons");
+  }
+  visitDays(days: number) {
+    if (days >= 3) this.award("regular");
   }
 }
 /** Animates the returning postcard from the moored ship into the mailbox. */
