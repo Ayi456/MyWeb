@@ -1,6 +1,6 @@
 import * as T from "three";
 import { CONFIG } from "../config";
-import type { CameraPreset } from "../types";
+import type { CameraPreset, CameraView } from "../types";
 import { HIT_LAYER } from "../systems/interactions";
 
 export interface HitTarget<Id extends string = string> {
@@ -32,6 +32,7 @@ export function createCamera<Id extends string>(
   let followTarget: T.Object3D | null = null,
     followOffset = 0.55,
     followTime = 0;
+  let presetName: CameraPreset | null = "reset";
   const pointers = new Map<number, { x: number; y: number }>();
   let pointerStart: { x: number; y: number; moved: boolean } | null = null;
   const raycaster = new T.Raycaster(),
@@ -80,14 +81,31 @@ export function createCamera<Id extends string>(
     pointerActive = false;
     interact();
   }
-  function preset(value: CameraPreset) {
+  function preset(value: CameraPreset, instant = false) {
     followTarget = null;
+    presetName = value;
     targetAz = value === "tree" ? 0.31 : CONFIG.camera.azimuth;
     targetEl = value === "tree" ? 0.26 : CONFIG.camera.elevation;
     targetDistance = value === "tree" ? 17 : CONFIG.camera.distance;
     targetFocus.fromArray(
       value === "tree" ? [-0.4, 2.25, 0.2] : CONFIG.camera.focus,
     );
+    if (instant) {
+      az = targetAz;
+      el = targetEl;
+      distance = targetDistance;
+      focus.copy(targetFocus);
+    }
+    takeOver();
+  }
+  function setShareView(value: CameraView) {
+    followTarget = null;
+    presetName = null;
+    az = targetAz = value.azimuth;
+    el = targetEl = value.elevation;
+    distance = targetDistance = value.distance;
+    focus.fromArray(value.focus);
+    targetFocus.copy(focus);
     takeOver();
   }
   function screenToRay(e: { clientX: number; clientY: number }) {
@@ -102,6 +120,7 @@ export function createCamera<Id extends string>(
     "pointerdown",
     (e) => {
       if (blocked) return;
+      if (!followTarget) presetName = null;
       canvas.focus({ preventScroll: true });
       canvas.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -192,6 +211,7 @@ export function createCamera<Id extends string>(
     (e) => {
       if (blocked) return;
       e.preventDefault();
+      if (!followTarget) presetName = null;
       targetDistance = T.MathUtils.clamp(
         targetDistance * Math.exp(e.deltaY * 0.001),
         limits.minDistance,
@@ -219,6 +239,7 @@ export function createCamera<Id extends string>(
       )
         return;
       e.preventDefault();
+      if (!followTarget) presetName = null;
       const turn = (d: number) => {
         if (followTarget) followOffset += d;
         else targetAz += d;
@@ -250,6 +271,18 @@ export function createCamera<Id extends string>(
   return {
     camera,
     preset,
+    setShareView,
+    get sharePreset() {
+      return followTarget ? "ride" : presetName;
+    },
+    get shareView(): CameraView {
+      return {
+        azimuth: Math.atan2(Math.sin(targetAz), Math.cos(targetAz)),
+        elevation: targetEl,
+        distance: targetDistance,
+        focus: [targetFocus.x, targetFocus.y, targetFocus.z],
+      };
+    },
     interact,
     resetInput,
     pointerWorld,
@@ -277,6 +310,7 @@ export function createCamera<Id extends string>(
       followTarget = target;
       followTime = 0;
       if (target) {
+        presetName = "ride";
         followOffset = 0.55;
         targetEl = 0.22;
         targetDistance = 9.5;
@@ -309,6 +343,7 @@ export function createCamera<Id extends string>(
         playing &&
         now - lastInput > CONFIG.autoOrbitDelay;
       if (autoOrbit) targetAz += dt * 0.018;
+      if (autoOrbit) presetName = null;
       const damping = reducedMotion ? 1 : 1 - Math.exp(-dt * 7);
       az = T.MathUtils.lerp(
         az,

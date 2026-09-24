@@ -13,6 +13,7 @@ export function SceneOverlay({
   onHelp,
   onPostcards,
   onPhoto,
+  onCopy,
   helpOpen,
   replyCount,
   children,
@@ -29,6 +30,7 @@ export function SceneOverlay({
   onHelp: () => void;
   onPostcards: () => void;
   onPhoto: () => void;
+  onCopy: () => void;
   helpOpen: boolean;
   replyCount: number;
   children: ReactNode;
@@ -113,6 +115,21 @@ export function SceneOverlay({
               {snapshot?.sound ? "♫" : "♪"}
             </button>
             <PhotoButton onClick={onPhoto} disabled={!snapshot?.ready} />
+            <button
+              className="round"
+              aria-label="复制此刻链接"
+              title="复制此刻链接"
+              disabled={!snapshot?.ready}
+              onClick={onCopy}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="camera-icon"
+              >
+                <path d="M9 15l6-6M8.5 9H7a4 4 0 0 0 0 8h4a4 4 0 0 0 3.5-2M15.5 15H17a4 4 0 0 0 0-8h-4a4 4 0 0 0-3.5 2" />
+              </svg>
+            </button>
           </>
         )}
         <button

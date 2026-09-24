@@ -32,7 +32,7 @@ import {
   solarTerm,
 } from "./content/calendar";
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
-import { sceneFromSearch } from "./content/realTime";
+import { buildSceneLink, parseSceneLink } from "./content/sceneLink";
 import { moonPhase } from "./content/moon";
 import {
   FESTIVAL_GREETING,
@@ -51,7 +51,7 @@ const SOUND_KEY = "spring-post-office:sound";
 const SOUND_ASKED_KEY = "spring-post-office:sound-asked";
 const CAPTIONS_KEY = "spring-post-office:captions";
 const GUIDE_KEY = "spring-post-office:guide-done";
-const SCENE_LINK = sceneFromSearch(location.search);
+const SCENE_LINK = parseSceneLink(location.search);
 const CLASSIC = SCENE_LINK.classic;
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -104,7 +104,12 @@ export default function App() {
   );
   const getInitial = useCallback(() => {
     const date = new Date();
-    const linked = SCENE_LINK.hour !== null || SCENE_LINK.year !== null;
+    const linked =
+      SCENE_LINK.hour !== null ||
+      SCENE_LINK.year !== null ||
+      SCENE_LINK.cameraPreset !== null ||
+      SCENE_LINK.cameraView !== null ||
+      SCENE_LINK.event !== null;
     return {
       stamps: collectionRef.current.stamps,
       replies: collectionRef.current.replies,
@@ -117,6 +122,9 @@ export default function App() {
       realTime: !CLASSIC && !linked && readPreference("real-time"),
       hour: SCENE_LINK.hour ?? undefined,
       year: SCENE_LINK.year ?? undefined,
+      cameraPreset: SCENE_LINK.cameraPreset ?? undefined,
+      cameraView: SCENE_LINK.cameraView ?? undefined,
+      event: SCENE_LINK.event ?? undefined,
     };
   }, []);
   const soundPref = useRef(false);
@@ -427,6 +435,31 @@ export default function App() {
   };
   const ride = () =>
     controller.current?.setCameraPreset(snapshot?.riding ? "reset" : "ride");
+  const copyMoment = async () => {
+    if (!snapshot?.ready) return;
+    const url = buildSceneLink(location.href, snapshot);
+    try {
+      if (navigator.clipboard?.writeText)
+        await navigator.clipboard.writeText(url);
+      else {
+        const field = document.createElement("textarea");
+        field.value = url;
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand("copy");
+        field.remove();
+        if (!copied) throw new Error("复制失败");
+      }
+      notify({ kind: "event", text: "这一刻的链接已复制，可以寄给远方。" });
+    } catch {
+      notify({
+        kind: "event",
+        text: "链接暂时无法复制，请检查浏览器剪贴板权限。",
+      });
+    }
+  };
   return (
     <>
       <SceneCanvas key={attempt} canvasRef={canvas} />
@@ -442,6 +475,7 @@ export default function App() {
         onHelp={() => setHelpOpen((v) => !v)}
         onPostcards={() => setPostcardsOpen(true)}
         onPhoto={() => setPhotoOpen(true)}
+        onCopy={() => void copyMoment()}
         helpOpen={helpOpen}
         replyCount={replies.length}
       >

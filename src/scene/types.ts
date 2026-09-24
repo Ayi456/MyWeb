@@ -8,6 +8,12 @@ export type Speed = 0 | 1 | 4 | 12;
 export type QualityLevel = "high" | "medium" | "low";
 export type QualityMode = "auto" | QualityLevel;
 export type CameraPreset = "reset" | "tree" | "ride";
+export interface CameraView {
+  azimuth: number;
+  elevation: number;
+  distance: number;
+  focus: [number, number, number];
+}
 export interface SceneSnapshot {
   ready: boolean;
   hour: number;
@@ -41,6 +47,8 @@ export interface SceneSnapshot {
   festival: FestivalKind | null;
   realTime: boolean;
   moonPhase: number;
+  cameraPreset: CameraPreset | null;
+  cameraView: CameraView;
 }
 export type SceneNotice =
   | { type: "tap"; id: HotspotId; text: string }
@@ -97,5 +105,8 @@ export interface SceneOptions {
     year?: number;
     realTime?: boolean;
     moonPhase?: number;
+    cameraPreset?: CameraPreset;
+    cameraView?: CameraView;
+    event?: SceneEventKind;
   };
 }

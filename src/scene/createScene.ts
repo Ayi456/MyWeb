@@ -124,7 +124,13 @@ export function createScene(
       (id) => interactions.impulses[id].hit(id === "tree" ? 0.05 : 0.12),
     );
     cleanups.push(() => camera.dispose());
-    if (!options.skipArrival) camera.arrive();
+    if (options.initial?.cameraView)
+      camera.setShareView(options.initial.cameraView);
+    else if (options.initial?.cameraPreset === "ride")
+      camera.follow(objects.airship);
+    else if (options.initial?.cameraPreset)
+      camera.preset(options.initial.cameraPreset, true);
+    else if (!options.skipArrival) camera.arrive();
     const clock = new SimulationClock(),
       seasons = new SeasonClock(),
       windSystem = new WindSystem(),
@@ -134,6 +140,7 @@ export function createScene(
         options.initial?.eventWeights,
       ),
       director = createEventDirector(objects, ctx.U);
+    if (options.initial?.event) scheduler.start(options.initial.event);
     let realTime = !!options.initial?.realTime;
     if (realTime) {
       clock.setHour(realLocalHour());
@@ -201,6 +208,8 @@ export function createScene(
       festival,
       realTime,
       moonPhase: objects.moonPhaseUniform.value,
+      cameraPreset: camera.sharePreset,
+      cameraView: camera.shareView,
     };
     stamps.onEarn((id) => {
       const stamp = STAMPS.find((s) => s.id === id)!;
@@ -260,6 +269,8 @@ export function createScene(
         festival,
         realTime,
         moonPhase: objects.moonPhaseUniform.value,
+        cameraPreset: camera.sharePreset,
+        cameraView: camera.shareView,
       };
       listeners.forEach((listener) => listener(snapshot));
       // Non-sensitive diagnostics only. Never include letters or personal text here.
