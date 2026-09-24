@@ -11,6 +11,8 @@ import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
 import { PostcardPanel, type Reply } from "./components/PostcardPanel";
 import { NoticeStack } from "./components/NoticeStack";
+import { Guide } from "./components/Guide";
+import { nextGuideStep, type GuideStep } from "./components/guideState";
 import { hotspotForKey } from "./components/hotspotKeys";
 import {
   pruneNotices,
@@ -23,6 +25,7 @@ import { isControl, useWindInput } from "./hooks/useWindInput";
 const SOUND_KEY = "spring-post-office:sound";
 const SOUND_ASKED_KEY = "spring-post-office:sound-asked";
 const CAPTIONS_KEY = "spring-post-office:captions";
+const GUIDE_KEY = "spring-post-office:guide-done";
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [attempt, setAttempt] = useState(0),
@@ -50,6 +53,16 @@ export default function App() {
     });
   const soundPref = useRef(false);
   const [loaderGone, setLoaderGone] = useState(false);
+  const [guideDone, setGuideDone] = useState(() => {
+    try {
+      return localStorage.getItem(GUIDE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [guideStep, setGuideStep] = useState<GuideStep | null>(null);
+  const [treeTapped, setTreeTapped] = useState(false);
+  const [guideSentBaseline, setGuideSentBaseline] = useState(0);
   const openMail = useCallback(() => setMailOpen(true), []);
   const { controller, snapshot, error } = useSceneController(
     canvas,
@@ -90,6 +103,47 @@ export default function App() {
   }, [ready]);
   const blocked = mailOpen || helpOpen || postcardsOpen;
   useEffect(() => {
+    if (!ready || guideDone || guideStep || hidden || blocked || error) return;
+    const timer = setTimeout(() => {
+      controller.current?.resetOrbitFlag();
+      controller.current?.nudge("tree", 0.2);
+      setGuideSentBaseline(0);
+      setGuideStep("tree");
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [ready, guideDone, guideStep, hidden, blocked, error, controller]);
+  const finishGuide = useCallback(() => {
+    setGuideStep(null);
+    setGuideDone(true);
+    try {
+      localStorage.setItem(GUIDE_KEY, "true");
+    } catch {
+      // The guide still stays dismissed for this visit.
+    }
+  }, []);
+  useEffect(() => {
+    if (!guideStep) return;
+    const next = nextGuideStep(guideStep, {
+      treeTapped,
+      orbited: snapshot?.orbited ?? false,
+      sentCount: snapshot?.sentCount ?? 0,
+      sentBaseline: guideSentBaseline,
+    });
+    if (next === guideStep) return;
+    controller.current?.nudge("tree", 0.35, true);
+    if (guideStep === "tree") controller.current?.resetOrbitFlag();
+    if (next) setGuideStep(next);
+    else finishGuide();
+  }, [
+    guideStep,
+    treeTapped,
+    snapshot?.orbited,
+    snapshot?.sentCount,
+    guideSentBaseline,
+    controller,
+    finishGuide,
+  ]);
+  useEffect(() => {
     controller.current?.setInteractionBlocked(blocked);
   }, [controller, blocked, snapshot?.ready]);
   const notify = useCallback(
@@ -110,6 +164,7 @@ export default function App() {
     const scene = controller.current;
     if (!scene || !snapshot?.ready) return;
     return scene.onNotice((n) => {
+      if (n.type === "tap" && n.id === "tree") setTreeTapped(true);
       if (n.type === "reply") {
         notify({
           kind: "keep",
@@ -168,7 +223,7 @@ export default function App() {
   );
   useEffect(() => {
     const element = canvas.current;
-    if (!element || !ready) return;
+    if (!element || !ready || guideStep) return;
     const invite = () => {
       let asked = false;
       try {
@@ -190,7 +245,7 @@ export default function App() {
     };
     element.addEventListener("pointerdown", invite, { once: true });
     return () => element.removeEventListener("pointerdown", invite);
-  }, [attempt, ready, notify]);
+  }, [attempt, ready, guideStep, notify]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (
@@ -258,6 +313,15 @@ export default function App() {
             onSound={setSound}
             captions={captions}
             onCaptions={setCaptions}
+            onRestartGuide={() => {
+              setTreeTapped(false);
+              setGuideSentBaseline(snapshot?.sentCount ?? 0);
+              controller.current?.resetOrbitFlag();
+              controller.current?.nudge("tree", 0.2);
+              setGuideDone(false);
+              setGuideStep("tree");
+              setHelpOpen(false);
+            }}
             onPoke={(id) => controller.current?.poke(id)}
             onClose={() => setHelpOpen(false)}
           />
@@ -317,6 +381,9 @@ export default function App() {
           else controller.current?.setCameraPreset("ride");
         }}
       />
+      {guideStep && !hidden && !blocked && !error && (
+        <Guide step={guideStep} onSkip={finishGuide} onWrite={openMail} />
+      )}
       {mailOpen && (
         <LetterDialog
           onClose={closeMail}

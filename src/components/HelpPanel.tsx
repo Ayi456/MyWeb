@@ -8,6 +8,7 @@ export function HelpPanel({
   onSound,
   captions,
   onCaptions,
+  onRestartGuide,
   onPoke,
   onClose,
 }: {
@@ -17,6 +18,7 @@ export function HelpPanel({
   onSound: (on: boolean) => void;
   captions: boolean;
   onCaptions: (on: boolean) => void;
+  onRestartGuide: () => void;
   onPoke: (id: HotspotId) => void;
   onClose: () => void;
 }) {
@@ -57,6 +59,9 @@ export function HelpPanel({
       <p>
         寄出的信送达后，飞艇会从灯塔带回一张明信片，落进邮筒。点邮票图章查看回信与集章。
       </p>
+      <button type="button" className="guide-restart" onClick={onRestartGuide}>
+        重看三步引导
+      </button>
       <p>
         季节按钮切换春夏秋冬，四季也会随时间自然轮换。云鲸、热气球、太阳雨和流星会不定期出现。
       </p>

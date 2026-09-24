@@ -247,6 +247,68 @@ textarea {
   letter-spacing: 0.03em;
   background: #fffaf0c9;
 }
+.guide {
+  position: fixed;
+  z-index: 8;
+  top: 34%;
+  left: max(42px, env(safe-area-inset-left));
+  width: min(320px, calc(100vw - 100px));
+  padding: 15px 18px;
+  border: 1px solid #fff8;
+  border-radius: 14px;
+  background: #fff8efd9;
+  box-shadow: 0 10px 36px #70505c28;
+  color: #684f5d;
+  backdrop-filter: blur(8px);
+}
+.guide-count {
+  font:
+    10px/1.4 Arial,
+    sans-serif;
+  letter-spacing: 1.5px;
+  color: #a27384;
+}
+.guide p {
+  margin: 10px 0 13px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.guide-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.guide-actions button,
+.guide-restart {
+  border: 1px solid #d7a9b7;
+  border-radius: 10px;
+  background: #fffaf2;
+  color: #8b6575;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.guide-actions button:last-child {
+  border-color: transparent;
+  background: transparent;
+}
+.guide-touch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .guide-pointer {
+    display: none;
+  }
+  .guide-touch {
+    display: inline;
+  }
+}
+@media (max-width: 600px) {
+  .guide {
+    top: 24%;
+    left: 20px;
+    width: min(270px, calc(100vw - 85px));
+  }
+}
 .notice button {
   pointer-events: auto;
   margin-left: 10px;

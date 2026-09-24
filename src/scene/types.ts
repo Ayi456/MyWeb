@@ -27,6 +27,7 @@ export interface SceneSnapshot {
   geometries: number;
   textures: number;
   autoOrbit: boolean;
+  orbited: boolean;
   season: SeasonName;
   /** 0..1 progress through the current season. */
   seasonProgress: number;
@@ -53,6 +54,9 @@ export interface SceneController {
   setQuality(mode: QualityMode): void;
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;
+  resetOrbitFlag(): void;
+  /** Trigger a gentle hotspot reaction without a tap notice or stamp. */
+  nudge(id: HotspotId, amount: number, pop?: boolean): void;
   setCaptions(on: boolean): void;
   setSoundVolume(volume: number): void;
   sendLetter(message: string): boolean;

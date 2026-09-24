@@ -161,6 +161,7 @@ export function createScene(
       geometries: 0,
       textures: 0,
       autoOrbit: false,
+      orbited: false,
       season: seasons.name,
       seasonProgress: seasons.year % 1,
       riding: false,
@@ -216,6 +217,7 @@ export function createScene(
         quality: quality.mode,
         actualQuality: quality.level,
         autoOrbit: camera.autoOrbit,
+        orbited: camera.orbited,
         season: seasons.name,
         seasonProgress: seasons.year % 1,
         riding: camera.following,
@@ -497,6 +499,14 @@ export function createScene(
       setSound(on) {
         ambience.enable(on);
         emit();
+      },
+      resetOrbitFlag() {
+        camera.resetOrbitFlag();
+        emit();
+      },
+      nudge(id, amount, pop = false) {
+        interactions.impulses[id].hit(amount);
+        if (pop) ambience.play("pop");
       },
       setCaptions(on) {
         captions = on;

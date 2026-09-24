@@ -43,6 +43,7 @@ export function createCamera<Id extends string>(
     pointerWorld = new T.Vector3(),
     hoverPoint = new T.Vector3();
   let pointerActive = false;
+  let orbited = false;
   // Opening shot: a timed ease layered on top of the damped values, since the
   // damping alone settles within a second and would hide behind the loader.
   let arrival: { t: number; duration: number } | null = null;
@@ -126,6 +127,7 @@ export function createCamera<Id extends string>(
       }
       const previous = pointers.get(e.pointerId);
       if (!previous || blocked) return;
+      if (e.clientX !== previous.x || e.clientY !== previous.y) orbited = true;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (
         pointerStart &&
@@ -195,6 +197,7 @@ export function createCamera<Id extends string>(
         limits.minDistance,
         limits.maxDistance,
       );
+      if (e.deltaY !== 0) orbited = true;
       takeOver();
     },
     { ...opts, passive: false },
@@ -236,6 +239,7 @@ export function createCamera<Id extends string>(
         limits.minElevation,
         limits.maxElevation,
       );
+      orbited = true;
       takeOver();
     },
     opts,
@@ -254,6 +258,12 @@ export function createCamera<Id extends string>(
     },
     get autoOrbit() {
       return autoOrbit;
+    },
+    get orbited() {
+      return orbited;
+    },
+    resetOrbitFlag() {
+      orbited = false;
     },
     get following() {
       return !!followTarget;
