@@ -23,6 +23,8 @@ async function readRadio<T>(query: string, signal: AbortSignal): Promise<T> {
   return body as T;
 }
 
+const OFFLINE_TEXT = "离线中 · 岛上一切照常，电台等网络回来再播。";
+
 function formatTime(seconds: number) {
   const value = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
@@ -64,6 +66,7 @@ export function CloudRadio({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.3);
   const [playMode, setPlayMode] = useState<"order" | "loop" | "random">("loop");
+  const [offline, setOffline] = useState(() => !navigator.onLine);
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const intent = useRef(false);
@@ -78,7 +81,7 @@ export function CloudRadio({
   const track = playlist?.tracks[index];
 
   useEffect(() => {
-    if (!open || playlist) return;
+    if (!open || playlist || offline) return;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20_000);
     let active = true;
@@ -98,11 +101,29 @@ export function CloudRadio({
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [open, playlist, retry]);
+  }, [open, playlist, retry, offline]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
+
+  // The island runs offline from the service worker cache; only the radio
+  // needs the network, so it waits quietly and reconnects when it returns.
+  useEffect(() => {
+    const update = () => {
+      setOffline(!navigator.onLine);
+      if (navigator.onLine) {
+        setPlaylistError("");
+        setRetry((v) => v + 1);
+      }
+    };
+    addEventListener("online", update);
+    addEventListener("offline", update);
+    return () => {
+      removeEventListener("online", update);
+      removeEventListener("offline", update);
+    };
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -133,6 +154,11 @@ export function CloudRadio({
   // failed track, back off, and stop after a few misses in a row.
   function fail(id: string, text: string, autoplay: boolean, retryAfter = 0) {
     loaded.current = "";
+    // Offline is not the track's fault: don't mark it or burn the skip budget.
+    if (!navigator.onLine) {
+      clearTimeout(skipTimer.current);
+      return setMessage(OFFLINE_TEXT);
+    }
     // A broken source both rejects play() and fires <audio> error; count once.
     const now = Date.now();
     if (lastFail.current.id === id && now - lastFail.current.at < 1000) return;
@@ -242,7 +268,7 @@ export function CloudRadio({
   }
 
   const status =
-    message ||
+    (offline && !playing ? OFFLINE_TEXT : message) ||
     (busy
       ? "正在接收云端的旋律…"
       : trial
@@ -304,6 +330,7 @@ export function CloudRadio({
           <RadioIcon playing={playing} />
           <span>云上电台</span>
           {playing && <span className="radio-on-air">正在播放</span>}
+          {offline && !playing && <span className="radio-on-air">离线中</span>}
           <span className="radio-chevron" aria-hidden="true">
             {open ? "−" : "+"}
           </span>
@@ -318,9 +345,11 @@ export function CloudRadio({
             {!playlist ? (
               <>
                 <p className="radio-status" role="status">
-                  {playlistError || "正在接收公开歌单…"}
+                  {offline
+                    ? OFFLINE_TEXT
+                    : playlistError || "正在接收公开歌单…"}
                 </p>
-                {playlistError && (
+                {playlistError && !offline && (
                   <button
                     className="radio-retry"
                     onClick={() => {

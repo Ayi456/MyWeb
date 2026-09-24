@@ -25,4 +25,15 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Plain JS so it stays out of the DOM tsconfig; the build prepends these.
+    files: ["src/pwa/sw.js"],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        VERSION: "readonly",
+        PRECACHE: "readonly",
+      },
+    },
+  },
 );
