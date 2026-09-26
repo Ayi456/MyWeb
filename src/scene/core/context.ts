@@ -36,6 +36,8 @@ export function createContext() {
     uBurst: { value: 0 },
     /** Rain shower strength 0..1 from the event system. */
     uRain: { value: 0 },
+    /** Cloud-sea rise during the morning mist event, 0..1. */
+    uTide: { value: 0 },
     /** Firefly brightness, strongest on summer nights. */
     uFirefly: { value: 1 },
     /** Ripple strength on the spring pool after a tap. */

@@ -11,7 +11,11 @@ export function createFestive(ctx: SceneContext) {
   festivalLanterns.position.set(...VILLAGE_ISLAND.center);
   festivalLanterns.visible = false;
   world.add(festivalLanterns);
-  const lanternMat = new T.MeshBasicMaterial({ color: "#ffd49a", fog: false });
+  const lanternMat = new T.MeshBasicMaterial({
+    color: "#ffd49a",
+    fog: false,
+    transparent: true,
+  });
   lanternMat.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = U.uTime;
     shader.vertexShader = "uniform float uTime;\n" + shader.vertexShader;
@@ -75,5 +79,10 @@ export function createFestive(ctx: SceneContext) {
   festivalStarBridge.name = "qixi-star-bridge";
   festivalStarBridge.visible = false;
   scene.add(festivalStarBridge);
-  return { festivalLanterns, festivalRedLanterns, festivalStarBridge };
+  return {
+    festivalLanterns,
+    festivalLanternMat: lanternMat,
+    festivalRedLanterns,
+    festivalStarBridge,
+  };
 }

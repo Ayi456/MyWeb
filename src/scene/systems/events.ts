@@ -9,6 +9,9 @@ export const EVENT_KINDS = [
   "shootingStar",
   "whale",
   "balloon",
+  "skyLanterns",
+  "seaMist",
+  "thunderstorm",
 ] as const;
 export type SceneEventKind = (typeof EVENT_KINDS)[number];
 
@@ -23,19 +26,29 @@ export const EVENT_NOTICES: Record<SceneEventKind, string> = {
   shootingStar: "有流星划过，快许个愿。",
   whale: "云鲸从远方游来了，慢慢地，慢慢地。",
   balloon: "一只热气球飘过群岛，上面有人在挥手。",
+  skyLanterns: "温泉村放起了一串孔明灯，慢慢飘进夜色里。",
+  seaMist: "晨雾漫上来了，云海涨过了岛基。",
+  thunderstorm: "远处响起夏夜的雷，雨下得密了。",
 };
 const DURATION: Record<SceneEventKind, number> = {
   shower: 26,
   shootingStar: 3.2,
   whale: 48,
   balloon: 44,
+  skyLanterns: 40,
+  seaMist: 50,
+  thunderstorm: 36,
 };
 /** Which events fit the moment. Snow already falls in winter, so no rain then. */
 export function eligibleEvents(ctx: EventContext): SceneEventKind[] {
   const out: SceneEventKind[] = ["whale"];
   if (ctx.night > 0.6) out.push("shootingStar");
+  // Mid-autumn already fills the village sky with lanterns.
+  if (ctx.night > 0.6 && ctx.festival !== "midAutumn") out.push("skyLanterns");
   if (ctx.night < 0.4) out.push("balloon");
   if (ctx.night < 0.6 && ctx.season[3] < 0.5) out.push("shower");
+  if (ctx.hour >= 4.5 && ctx.hour < 8.5) out.push("seaMist");
+  if (ctx.night > 0.5 && ctx.season[1] > 0.5) out.push("thunderstorm");
   return out;
 }
 /**
@@ -121,29 +134,113 @@ const balloonCurve = new T.CatmullRomCurve3([
 ]);
 const starOrigin = new T.Vector3(),
   starTangent = new T.Vector3();
+const smooth = T.MathUtils.smoothstep;
+/** Rises over the first `edge` of an event, holds, then falls over the last. */
+export function eventEnvelope(t: number, edge: number) {
+  return smooth(t, 0, edge) * (1 - smooth(t, 1 - edge, 1));
+}
+/**
+ * Lightning brightness `age` seconds after a strike: a sharp double flicker,
+ * or with reduced motion a single slow swell that never flashes.
+ */
+export function lightningFlash(age: number, calm: boolean) {
+  if (age < 0) return 0;
+  if (calm) return age < 2.4 ? Math.sin((age / 2.4) * Math.PI) * 0.35 : 0;
+  const second = age > 0.18 ? Math.exp(-(age - 0.18) * 12) * 0.6 : 0;
+  return Math.exp(-age * 9) + second;
+}
 /** Drives the visitor objects and weather uniforms for the active event. */
 export function createEventDirector(
-  o: WorldObjects,
-  U: { uRain: { value: number } },
+  o: Pick<
+    WorldObjects,
+    | "rain"
+    | "rainbowBoost"
+    | "whale"
+    | "whaleTail"
+    | "whaleSpout"
+    | "balloon"
+    | "shootingStar"
+    | "shootingStarMat"
+  >,
+  U: { uRain: { value: number }; uTide: { value: number } },
+  onThunder: () => void = () => {},
+  random: () => number = Math.random,
 ) {
   let rainTarget = 0,
     rain = 0,
     boost = 0,
-    starSeed = 0;
+    starSeed = 0,
+    tide = 0,
+    heavy = 0,
+    lanterns = 0,
+    flash = 0,
+    strikeIn = 2,
+    strikeAge = Infinity,
+    thunderIn = Infinity;
   const position = new T.Vector3(),
     tangent = new T.Vector3();
   return {
     get rain() {
       return rain;
     },
-    update(scheduler: EventScheduler, dt: number, simTime: number) {
+    /** How far the cloud sea has risen, 0..1. */
+    get tide() {
+      return tide;
+    },
+    /** Extra rain loudness during a thunderstorm, 0..1. */
+    get heavy() {
+      return heavy;
+    },
+    /** Sky-lantern visibility for the lantern release, 0..1. */
+    get lanterns() {
+      return lanterns;
+    },
+    /** Lightning brightness for the sky and hemisphere light, 0..1. */
+    get flash() {
+      return flash;
+    },
+    update(
+      scheduler: EventScheduler,
+      dt: number,
+      simTime: number,
+      calm = false,
+    ) {
       const active = scheduler.active,
         t = scheduler.progress;
-      rainTarget = active?.kind === "shower" ? Math.sin(t * Math.PI) ** 0.6 : 0;
+      const storm = active?.kind === "thunderstorm";
+      rainTarget =
+        active?.kind === "shower"
+          ? Math.sin(t * Math.PI) ** 0.6
+          : storm
+            ? eventEnvelope(t, 0.2)
+            : 0;
       rain += (rainTarget - rain) * (1 - Math.exp(-dt * 1.2));
       if (rain < 0.002) rain = 0;
       U.uRain.value = rain;
       o.rain.visible = rain > 0.01;
+      heavy += ((storm ? 1 : 0) - heavy) * (1 - Math.exp(-dt * 0.8));
+      if (heavy < 0.002) heavy = 0;
+      // Strikes only in the heart of the storm; thunder follows a moment later.
+      strikeAge += dt;
+      if (storm && t > 0.15 && t < 0.85) {
+        strikeIn -= dt;
+        if (strikeIn <= 0) {
+          strikeAge = 0;
+          thunderIn = 0.8 + random() * 1.6;
+          strikeIn = 5 + random() * 6;
+        }
+      } else if (!storm) strikeIn = 2;
+      thunderIn -= dt;
+      if (thunderIn <= 0) {
+        thunderIn = Infinity;
+        onThunder();
+      }
+      flash = lightningFlash(strikeAge, calm);
+      const mist = active?.kind === "seaMist" ? eventEnvelope(t, 0.3) : 0;
+      tide += (mist - tide) * (1 - Math.exp(-dt * 0.9));
+      if (tide < 0.002) tide = 0;
+      U.uTide.value = tide;
+      lanterns = active?.kind === "skyLanterns" ? eventEnvelope(t, 0.12) : 0;
       // A rainbow lingers after the shower has passed, then fades.
       if (active?.kind === "shower" && t > 0.6)
         boost = Math.min(0.5, boost + dt * 0.25);
@@ -182,7 +279,7 @@ export function createEventDirector(
       const star = o.shootingStar;
       if (active?.kind === "shootingStar") {
         if (!star.visible) {
-          starSeed = Math.random();
+          starSeed = random();
           // Streaks cross the upper third of the default framing, above the islands.
           starOrigin.set(-4 + starSeed * 18, 15 + starSeed * 4, -34);
           starTangent.set(-9 - starSeed * 3, -3.2, 0);

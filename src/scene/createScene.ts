@@ -72,6 +72,7 @@ export function createScene(
     pop: "啵，岛上的朋友回应了",
     stamp: "咚，一枚邮戳落下",
     whale: "远处传来云鲸的歌声",
+    thunder: "轰隆，远处的雷声",
   };
   function emitSound(key: string, label: string) {
     if (!captions) return;
@@ -139,7 +140,9 @@ export function createScene(
         Math.random,
         options.initial?.eventWeights,
       ),
-      director = createEventDirector(objects, ctx.U);
+      director = createEventDirector(objects, ctx.U, () =>
+        ambience.play("thunder"),
+      );
     if (options.initial?.event) scheduler.start(options.initial.event);
     let realTime = !!options.initial?.realTime;
     if (realTime) {
@@ -285,6 +288,10 @@ export function createScene(
           flightTime: flight.time,
           year: seasons.year,
           camera: camera.camera.position.toArray(),
+          tide: director.tide,
+          lanterns: director.lanterns,
+          heavyRain: director.heavy,
+          lightning: director.flash,
         });
     }
     function resize() {
@@ -382,9 +389,14 @@ export function createScene(
           if (started === "whale") stamps.award("whale");
           emit();
         }
-        director.update(scheduler, dt, clock.time);
-        snapshot.night = dayNight(clock.hour, weights, director.rain);
-        updateFestival(objects, festival, snapshot.night);
+        director.update(scheduler, dt, clock.time, reducedMotion);
+        snapshot.night = dayNight(
+          clock.hour,
+          weights,
+          director.rain,
+          director.flash,
+        );
+        updateFestival(objects, festival, snapshot.night, director.lanterns);
         const nextSound: SoundState = {
           rain: director.rain,
           night: snapshot.night,
@@ -431,7 +443,13 @@ export function createScene(
           );
         else pointerTarget.w = 0;
         pointer.lerp(pointerTarget, 1 - Math.exp(-realDt * 6));
-        ambience.update(motionWind, snapshot.night, director.rain, weights);
+        ambience.update(
+          motionWind,
+          snapshot.night,
+          director.rain,
+          weights,
+          director.heavy,
+        );
         camera.update(realDt, now, clock.speed !== 0, reducedMotion);
         // Portrait framing pulls the camera back: keep sky coverage and atmospheric contrast.
         const portrait = camera.camera.aspect < 1;
@@ -441,7 +459,7 @@ export function createScene(
         if (ctx.scene.fog instanceof T.FogExp2)
           ctx.scene.fog.density =
             (CONFIG.fogDensity / Math.max(1, 1.3 / camera.camera.aspect)) *
-            (1 + director.rain * 0.6 + weights[3] * 0.15);
+            (1 + director.rain * 0.6 + weights[3] * 0.15 + director.tide * 0.9);
         pipeline.render(ctx.scene, camera.camera);
         if (pendingCapture) {
           const capture = pendingCapture;

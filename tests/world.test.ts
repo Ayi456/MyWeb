@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { SeasonClock, seasonWeights } from "../src/scene/systems/season";
-import { EventScheduler, eligibleEvents } from "../src/scene/systems/events";
+import {
+  EventScheduler,
+  eligibleEvents,
+  eventEnvelope,
+  lightningFlash,
+} from "../src/scene/systems/events";
 import { ReplyLedger, StampBook } from "../src/scene/systems/postcards";
 import { Impulse } from "../src/scene/systems/interactions";
 import { CONFIG } from "../src/scene/config";
@@ -98,8 +103,56 @@ describe("surprise events", () => {
   };
   it("offers weather and visitors that fit the moment", () => {
     expect(eligibleEvents(day)).toEqual(["whale", "balloon", "shower"]);
-    expect(eligibleEvents(night)).toEqual(["whale", "shootingStar"]);
+    expect(eligibleEvents(night)).toEqual([
+      "whale",
+      "shootingStar",
+      "skyLanterns",
+    ]);
     expect(eligibleEvents(winter)).not.toContain("shower");
+  });
+  it("keeps the three newer events to their own hours and seasons", () => {
+    expect(eligibleEvents({ ...day, hour: 6 })).toContain("seaMist");
+    expect(eligibleEvents({ ...day, hour: 9 })).not.toContain("seaMist");
+    const summerNight = {
+      ...night,
+      season: [0, 1, 0, 0] as [number, number, number, number],
+    };
+    expect(eligibleEvents(summerNight)).toContain("thunderstorm");
+    expect(eligibleEvents(night)).not.toContain("thunderstorm");
+    expect(eligibleEvents({ ...summerNight, night: 0 })).not.toContain(
+      "thunderstorm",
+    );
+    // Mid-autumn already has its own lanterns in the sky.
+    expect(eligibleEvents({ ...night, festival: "midAutumn" })).not.toContain(
+      "skyLanterns",
+    );
+  });
+  it("rises, holds and settles back for mist and lantern envelopes", () => {
+    expect(eventEnvelope(0, 0.3)).toBe(0);
+    expect(eventEnvelope(0.5, 0.3)).toBe(1);
+    expect(eventEnvelope(1, 0.3)).toBe(0);
+    expect(eventEnvelope(0.15, 0.3)).toBeGreaterThan(0);
+    expect(eventEnvelope(0.15, 0.3)).toBeLessThan(1);
+  });
+  it("flickers lightning but swells gently with reduced motion", () => {
+    expect(lightningFlash(-1, false)).toBe(0);
+    expect(lightningFlash(0, false)).toBe(1);
+    // A second, smaller flicker after the first has faded.
+    expect(lightningFlash(0.19, false)).toBeGreaterThan(
+      lightningFlash(0.17, false),
+    );
+    expect(lightningFlash(2, false)).toBeLessThan(0.01);
+    const calm = Array.from({ length: 49 }, (_, i) =>
+      lightningFlash(i * 0.05, true),
+    );
+    expect(calm[0]).toBe(0);
+    expect(Math.max(...calm)).toBeLessThanOrEqual(0.35);
+    // One rise and one fall: no flicker.
+    const peak = calm.indexOf(Math.max(...calm));
+    for (let i = 1; i < calm.length; i++)
+      if (i <= peak) expect(calm[i]).toBeGreaterThanOrEqual(calm[i - 1]);
+      else expect(calm[i]).toBeLessThanOrEqual(calm[i - 1]);
+    expect(lightningFlash(2.5, true)).toBe(0);
   });
   it("waits, runs one event at a time, then rests before the next", () => {
     const s = new EventScheduler(() => 0);

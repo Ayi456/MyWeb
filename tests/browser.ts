@@ -1,5 +1,6 @@
 /** Browser-only integration harness; Vite does not include it in dist. */
 import { createScene } from "../src/scene/createScene";
+import { EVENT_KINDS, type SceneEventKind } from "../src/scene/systems/events";
 import type { SceneController, SceneSnapshot } from "../src/scene/types";
 const report = document.querySelector<HTMLPreElement>("#report")!;
 const params = new URLSearchParams(location.search);
@@ -59,13 +60,8 @@ if (params.get("mode") === "visual") {
     preset === "tree" ? "tree" : preset === "ride" ? "ride" : "reset",
   );
   const event = params.get("event");
-  if (
-    event === "shower" ||
-    event === "whale" ||
-    event === "balloon" ||
-    event === "shootingStar"
-  )
-    controller!.triggerEvent(event);
+  if (EVENT_KINDS.includes(event as SceneEventKind))
+    controller!.triggerEvent(event as SceneEventKind);
   // Let visitors and camera settle by running the simulation for N sim-seconds.
   if (params.has("settle")) {
     const target = Number(params.get("settle"));

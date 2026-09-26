@@ -39,7 +39,8 @@ const warmSun = new T.Color("#ffd4bd"),
   daySun = new T.Color("#fff1dc");
 const NO_SEASON: SeasonWeights = [1, 0, 0, 0];
 const rainTop = new T.Color(0.62, 0.64, 0.7),
-  rainBottom = new T.Color(0.78, 0.78, 0.82);
+  rainBottom = new T.Color(0.78, 0.78, 0.82),
+  lightning = new T.Color(0.86, 0.87, 1);
 export function createDayNight(ctx: SceneContext, o: WorldObjects) {
   const skyTop = new T.Color(),
     skyBottom = new T.Color(),
@@ -51,7 +52,12 @@ export function createDayNight(ctx: SceneContext, o: WorldObjects) {
       if (season[k]) tint.add(scratch.copy(set[k]).multiplyScalar(season[k]));
     return tint;
   };
-  return (hour: number, season: SeasonWeights = NO_SEASON, rain = 0) => {
+  return (
+    hour: number,
+    season: SeasonWeights = NO_SEASON,
+    rain = 0,
+    flash = 0,
+  ) => {
     const angle = ((hour - 6) / 24) * Math.PI * 2,
       altitude = Math.sin(angle),
       night = 1 - T.MathUtils.smoothstep(altitude, -0.14, 0.33);
@@ -72,11 +78,15 @@ export function createDayNight(ctx: SceneContext, o: WorldObjects) {
     const grey = 0.4 * rain;
     skyTop.lerp(rainTop, grey);
     skyBottom.lerp(rainBottom, grey);
+    // Lightning washes the sky pale for a moment.
+    skyTop.lerp(lightning, flash * 0.55);
+    skyBottom.lerp(lightning, flash * 0.4);
     ctx.U.uNight.value = night;
     o.skyUniforms.top.value.copy(skyTop);
     o.skyUniforms.bottom.value.copy(skyBottom);
     ctx.scene.fog!.color.copy(skyBottom);
-    o.hemi.intensity = T.MathUtils.lerp(1.6, 0.95, night) * (1 - rain * 0.25);
+    o.hemi.intensity =
+      T.MathUtils.lerp(1.6, 0.95, night) * (1 - rain * 0.25) + flash * 1.4;
     o.hemi.color.copy(dayHemi).lerp(nightHemi, night);
     o.hemi.groundColor.copy(dayGround).lerp(nightGround, night);
     o.sunLight.intensity =

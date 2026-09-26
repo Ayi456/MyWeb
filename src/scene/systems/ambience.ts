@@ -6,7 +6,15 @@
 import type { SeasonWeights } from "./season";
 
 export type SoundName =
-  "send" | "chime" | "bell" | "splash" | "rustle" | "pop" | "stamp" | "whale";
+  | "send"
+  | "chime"
+  | "bell"
+  | "splash"
+  | "rustle"
+  | "pop"
+  | "stamp"
+  | "whale"
+  | "thunder";
 
 export class Ambience {
   onCue?: (name: SoundName) => void;
@@ -102,7 +110,13 @@ export class Ambience {
   /** Continuous layers follow wind, night, rain and season. Throttled so
    *  AudioParam automation events do not pile up over a long session. */
   private lastUpdate = 0;
-  update(wind: number, night: number, rain: number, season: SeasonWeights) {
+  update(
+    wind: number,
+    night: number,
+    rain: number,
+    season: SeasonWeights,
+    heavy = 0,
+  ) {
     if (!this.ctx || !this.enabled) return;
     const now = performance.now();
     if (now - this.lastUpdate < 180) return;
@@ -120,7 +134,7 @@ export class Ambience {
       t,
       0.4,
     );
-    this.rain?.gain.gain.setTargetAtTime(rain * 0.07, t, 0.6);
+    this.rain?.gain.gain.setTargetAtTime(rain * (0.07 + heavy * 0.05), t, 0.6);
     const cricket = night * (0.35 + summer * 0.65) * (1 - winter) * (1 - rain);
     this.crickets?.gain.gain.setTargetAtTime(cricket * 0.012, t, 0.8);
   }
@@ -198,6 +212,10 @@ export class Ambience {
       case "whale":
         this.tone(110, t, 2.6, 0.06);
         this.tone(138, t + 0.6, 2.2, 0.04);
+        break;
+      case "thunder":
+        this.burst(t, 3, 0.16, 90, 0.7);
+        this.burst(t + 0.3, 2.4, 0.09, 170, 0.8);
         break;
     }
   }

@@ -53,8 +53,12 @@ export function updateFestival(
   objects: WorldObjects,
   kind: FestivalKind | null,
   night: number,
+  lanternRelease = 0,
 ) {
-  objects.festivalLanterns.visible = kind === "midAutumn" && night > 0.3;
+  // The lantern release event borrows the mid-autumn lanterns and fades them.
+  const midAutumn = kind === "midAutumn" && night > 0.3;
+  objects.festivalLanterns.visible = midAutumn || lanternRelease > 0.01;
+  objects.festivalLanternMat.opacity = midAutumn ? 1 : lanternRelease;
   objects.festivalRedLanterns.visible = kind === "lantern";
   objects.festivalStarBridge.visible = kind === "qixi" && night > 0.4;
   objects.moon.scale.setScalar(kind === "midAutumn" ? 1.18 : 1);

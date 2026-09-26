@@ -12,11 +12,14 @@ export function createClouds(ctx: SceneContext) {
   cloudMat.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.uTime;
     s.uniforms.uCloudTravel = U.uCloudTravel;
+    s.uniforms.uTide = U.uTide;
     s.vertexShader =
-      "uniform float uTime;\nuniform float uCloudTravel;\n" + s.vertexShader;
+      "uniform float uTime;\nuniform float uCloudTravel;\nuniform float uTide;\n" +
+      s.vertexShader;
+    // uTide lifts the whole sea for the morning mist, in world units.
     s.vertexShader = s.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\ntransformed.y+=sin(instanceMatrix[3].x*.18+uTime*.08)*.11;\ntransformed.x+=(mod(instanceMatrix[3].x+uCloudTravel+34.,68.)-34.-instanceMatrix[3].x)/instanceMatrix[0].x;",
+      "#include <begin_vertex>\ntransformed.y+=sin(instanceMatrix[3].x*.18+uTime*.08)*.11;\ntransformed.x+=(mod(instanceMatrix[3].x+uCloudTravel+34.,68.)-34.-instanceMatrix[3].x)/instanceMatrix[0].x;\ntransformed.y+=uTide*(1.7+.35*sin(instanceMatrix[3].z*.3+uTime*.2))/instanceMatrix[1].y;",
     );
   };
   const cloudBatch = new Batch(scene, cloudMat);
