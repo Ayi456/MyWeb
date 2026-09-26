@@ -12,6 +12,7 @@ import { createCamera } from "./core/camera";
 import { ResourceTracker } from "./core/resourceTracker";
 import { SimulationClock } from "./core/simulationClock";
 import { createWorld } from "./objects/createWorld";
+import { updateAurora } from "./objects/aurora";
 import { updateAmbient } from "./systems/ambient";
 import { createDayNight } from "./systems/dayNight";
 import { AirshipFlight } from "./systems/airshipFlight";
@@ -24,6 +25,7 @@ import {
   EVENT_NOTICES,
   EventScheduler,
   createEventDirector,
+  eventEnvelope,
 } from "./systems/events";
 import {
   ReplyLedger,
@@ -292,6 +294,8 @@ export function createScene(
           lanterns: director.lanterns,
           heavyRain: director.heavy,
           lightning: director.flash,
+          aurora: objects.auroraMat.uniforms.uStrength.value,
+          auroraMotion: objects.auroraMat.uniforms.uMotion.value,
         });
     }
     function resize() {
@@ -397,6 +401,16 @@ export function createScene(
           director.flash,
         );
         updateFestival(objects, festival, snapshot.night, director.lanterns);
+        updateAurora(
+          objects,
+          scheduler.active?.kind === "aurora"
+            ? eventEnvelope(scheduler.progress, 0.2)
+            : 0,
+          weights[3],
+          snapshot.night,
+          director.rain,
+          reducedMotion,
+        );
         const nextSound: SoundState = {
           rain: director.rain,
           night: snapshot.night,

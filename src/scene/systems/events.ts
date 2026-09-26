@@ -12,6 +12,7 @@ export const EVENT_KINDS = [
   "skyLanterns",
   "seaMist",
   "thunderstorm",
+  "aurora",
 ] as const;
 export type SceneEventKind = (typeof EVENT_KINDS)[number];
 
@@ -29,6 +30,7 @@ export const EVENT_NOTICES: Record<SceneEventKind, string> = {
   skyLanterns: "温泉村放起了一串孔明灯，慢慢飘进夜色里。",
   seaMist: "晨雾漫上来了，云海涨过了岛基。",
   thunderstorm: "远处响起夏夜的雷，雨下得密了。",
+  aurora: "冬夜的北方天空，泛起了绿紫色的极光。",
 };
 const DURATION: Record<SceneEventKind, number> = {
   shower: 26,
@@ -38,6 +40,7 @@ const DURATION: Record<SceneEventKind, number> = {
   skyLanterns: 40,
   seaMist: 50,
   thunderstorm: 36,
+  aurora: 56,
 };
 /** Which events fit the moment. Snow already falls in winter, so no rain then. */
 export function eligibleEvents(ctx: EventContext): SceneEventKind[] {
@@ -49,6 +52,7 @@ export function eligibleEvents(ctx: EventContext): SceneEventKind[] {
   if (ctx.night < 0.6 && ctx.season[3] < 0.5) out.push("shower");
   if (ctx.hour >= 4.5 && ctx.hour < 8.5) out.push("seaMist");
   if (ctx.night > 0.5 && ctx.season[1] > 0.5) out.push("thunderstorm");
+  if (ctx.night > 0.6 && ctx.season[3] > 0.5) out.push("aurora");
   return out;
 }
 /**
