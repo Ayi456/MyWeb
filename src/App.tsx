@@ -501,6 +501,10 @@ export default function App() {
               setHelpOpen(false);
             }}
             onPoke={(id) => controller.current?.poke(id)}
+            onVisit={(preset) => {
+              controller.current?.setCameraPreset(preset);
+              setHelpOpen(false);
+            }}
             onClose={() => setHelpOpen(false)}
           />
         )}

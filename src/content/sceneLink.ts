@@ -2,8 +2,8 @@ import { EVENT_KINDS, type SceneEventKind } from "../scene/systems/events";
 import { SEASONS } from "../scene/systems/season";
 import type { CameraPreset, CameraView, SceneSnapshot } from "../scene/types";
 import { sceneFromSearch } from "./realTime";
+import { CAMERA_PRESETS } from "../scene/core/cameraViews";
 
-const PRESETS: CameraPreset[] = ["reset", "tree", "ride"];
 const CAMERA_BOUNDS: [number, number][] = [
   [-Math.PI, Math.PI],
   [0.08, 1.08],
@@ -47,7 +47,7 @@ export function parseSceneLink(search: string) {
   return {
     ...base,
     cameraPreset:
-      !base.classic && PRESETS.includes(presetText as CameraPreset)
+      !base.classic && CAMERA_PRESETS.includes(presetText as CameraPreset)
         ? (presetText as CameraPreset)
         : null,
     cameraView: base.classic ? null : cameraFromText(params.get("cam")),

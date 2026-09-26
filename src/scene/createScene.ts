@@ -9,6 +9,7 @@ import type {
 import { createContext } from "./core/context";
 import { createRenderer } from "./core/renderer";
 import { createCamera } from "./core/camera";
+import { HOTSPOT_VIEWS } from "./core/cameraViews";
 import { ResourceTracker } from "./core/resourceTracker";
 import { SimulationClock } from "./core/simulationClock";
 import { createWorld } from "./objects/createWorld";
@@ -131,6 +132,14 @@ export function createScene(
       (id) => tap(id),
       // A light nudge on hover; the tree gets less so petals stay calm.
       (id) => interactions.impulses[id].hit(id === "tree" ? 0.05 : 0.12),
+      (id) => {
+        const view = HOTSPOT_VIEWS[id];
+        if (view === "ride") {
+          camera.follow(objects.airship);
+          rodeStamp = false;
+        } else camera.preset(view);
+        emit();
+      },
     );
     cleanups.push(() => camera.dispose());
     if (options.initial?.cameraView)

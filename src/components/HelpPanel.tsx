@@ -1,4 +1,5 @@
-import type { QualityMode } from "../scene/types";
+import type { CameraPreset, QualityMode } from "../scene/types";
+import { ISLAND_VIEWS } from "../scene/core/cameraViews";
 import type { HotspotId } from "../scene/systems/interactions";
 import { KEY_HOTSPOTS, keyLabel } from "./hotspotKeys";
 export function HelpPanel({
@@ -13,6 +14,7 @@ export function HelpPanel({
   classic,
   onRestartGuide,
   onPoke,
+  onVisit,
   onClose,
 }: {
   quality: QualityMode;
@@ -26,6 +28,7 @@ export function HelpPanel({
   classic: boolean;
   onRestartGuide: () => void;
   onPoke: (id: HotspotId) => void;
+  onVisit: (preset: CameraPreset) => void;
   onClose: () => void;
 }) {
   return (
@@ -65,6 +68,16 @@ export function HelpPanel({
       <p>
         寄出的信送达后，飞艇会从灯塔带回一张明信片，落进邮筒。点邮票图章查看回信与集章。
       </p>
+      <p>
+        双击岛上的角落，镜头会慢慢靠近。闲置一会儿，会沿着群岛缓慢巡游；操作、打开面板或暂停会停下。
+      </p>
+      <div className="hotspot-keys" role="group" aria-label="去看看群岛">
+        {ISLAND_VIEWS.map(({ preset, label }) => (
+          <button key={preset} type="button" onClick={() => onVisit(preset)}>
+            去看{label}
+          </button>
+        ))}
+      </div>
       <button type="button" className="guide-restart" onClick={onRestartGuide}>
         重看三步引导
       </button>

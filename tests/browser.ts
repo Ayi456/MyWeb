@@ -1,6 +1,8 @@
 /** Browser-only integration harness; Vite does not include it in dist. */
 import { createScene } from "../src/scene/createScene";
 import { EVENT_KINDS, type SceneEventKind } from "../src/scene/systems/events";
+import { CAMERA_PRESETS } from "../src/scene/core/cameraViews";
+import type { CameraPreset } from "../src/scene/types";
 import type { SceneController, SceneSnapshot } from "../src/scene/types";
 const report = document.querySelector<HTMLPreElement>("#report")!;
 const params = new URLSearchParams(location.search);
@@ -43,8 +45,17 @@ function start(
     onError,
     skipArrival: true,
     initial:
-      params.get("mode") === "visual" && params.has("season")
-        ? { year: Number(params.get("season")) + 0.08 }
+      params.get("mode") === "visual"
+        ? {
+            year: params.has("season")
+              ? Number(params.get("season")) + 0.08
+              : undefined,
+            cameraPreset: CAMERA_PRESETS.includes(
+              params.get("preset") as CameraPreset,
+            )
+              ? (params.get("preset") as CameraPreset)
+              : "reset",
+          }
         : undefined,
   });
   controller.subscribe((s) => {
@@ -58,10 +69,6 @@ if (params.get("mode") === "visual") {
   controller!.setSpeed(0);
   controller!.setTimeOfDay(Number(params.get("hour") ?? 16.33));
   controller!.setQuality("high");
-  const preset = params.get("preset");
-  controller!.setCameraPreset(
-    preset === "tree" ? "tree" : preset === "ride" ? "ride" : "reset",
-  );
   const event = params.get("event");
   if (EVENT_KINDS.includes(event as SceneEventKind))
     controller!.triggerEvent(event as SceneEventKind);

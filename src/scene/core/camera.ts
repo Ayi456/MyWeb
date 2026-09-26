@@ -2,6 +2,7 @@ import * as T from "three";
 import { CONFIG } from "../config";
 import type { CameraPreset, CameraView } from "../types";
 import { HIT_LAYER } from "../systems/interactions";
+import { CAMERA_VIEWS, sampleTour, nearestTourTime } from "./cameraViews";
 
 export interface HitTarget<Id extends string = string> {
   object: T.Object3D;
@@ -12,6 +13,7 @@ export function createCamera<Id extends string>(
   hits: HitTarget<Id>[],
   onTap: (id: Id) => void,
   onHover: (id: Id) => void = () => {},
+  onVisit: (id: Id) => void = () => {},
 ) {
   const camera = new T.PerspectiveCamera(37, 1, 0.1, 150);
   const abort = new AbortController();
@@ -33,6 +35,9 @@ export function createCamera<Id extends string>(
     followOffset = 0.55,
     followTime = 0;
   let presetName: CameraPreset | null = "reset";
+  let tourTime = 0;
+  let tourEntry: { from: CameraView; age: number } | null = null;
+  let flight: { from: CameraView; to: CameraView; age: number } | null = null;
   const pointers = new Map<number, { x: number; y: number }>();
   let pointerStart: { x: number; y: number; moved: boolean } | null = null;
   const raycaster = new T.Raycaster(),
@@ -58,8 +63,13 @@ export function createCamera<Id extends string>(
     if (id) onHover(id);
   }
   function pick(): Id | null {
+    const visible = (object: T.Object3D): boolean => {
+      for (let node: T.Object3D | null = object; node; node = node.parent)
+        if (!node.visible) return false;
+      return true;
+    };
     const found = raycaster.intersectObjects(
-      hits.map((h) => h.object),
+      hits.filter((h) => visible(h.object)).map((h) => h.object),
       false,
     );
     return found.length
@@ -69,10 +79,12 @@ export function createCamera<Id extends string>(
   const interact = () => {
     lastInput = performance.now();
     autoOrbit = false;
+    tourTime = 0;
   };
   // Direct camera input (not API calls like setWind) also ends the opening glide.
   const takeOver = () => {
     arrival = null;
+    flight = null;
     interact();
   };
   function resetInput() {
@@ -82,21 +94,28 @@ export function createCamera<Id extends string>(
     interact();
   }
   function preset(value: CameraPreset, instant = false) {
+    if (value === "ride") return;
+    const view = CAMERA_VIEWS[value];
+    if (!view) return;
+    const from: CameraView = {
+      azimuth: az,
+      elevation: el,
+      distance,
+      focus: [focus.x, focus.y, focus.z],
+    };
+    takeOver();
     followTarget = null;
     presetName = value;
-    targetAz = value === "tree" ? 0.31 : CONFIG.camera.azimuth;
-    targetEl = value === "tree" ? 0.26 : CONFIG.camera.elevation;
-    targetDistance = value === "tree" ? 17 : CONFIG.camera.distance;
-    targetFocus.fromArray(
-      value === "tree" ? [-0.4, 2.25, 0.2] : CONFIG.camera.focus,
-    );
+    targetAz = shortest(az, view.azimuth);
+    targetEl = view.elevation;
+    targetDistance = view.distance;
+    targetFocus.fromArray(view.focus);
     if (instant) {
       az = targetAz;
       el = targetEl;
       distance = targetDistance;
       focus.copy(targetFocus);
-    }
-    takeOver();
+    } else flight = { from, to: { ...view, azimuth: targetAz }, age: 0 };
   }
   function setShareView(value: CameraView) {
     followTarget = null;
@@ -116,6 +135,17 @@ export function createCamera<Id extends string>(
     );
     raycaster.setFromCamera(mouse, camera);
   }
+  canvas.addEventListener(
+    "dblclick",
+    (e) => {
+      if (blocked) return;
+      e.preventDefault();
+      screenToRay(e);
+      const id = pick();
+      if (id) onVisit(id);
+    },
+    opts,
+  );
   canvas.addEventListener(
     "pointerdown",
     (e) => {
@@ -266,6 +296,9 @@ export function createCamera<Id extends string>(
     opts,
   );
   window.addEventListener("blur", resetInput, opts);
+  // UI gestures also stop the tour, including sound and copy-link buttons.
+  window.addEventListener("pointerdown", interact, opts);
+  window.addEventListener("keydown", interact, opts);
   const shortest = (from: number, to: number) =>
     from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
   return {
@@ -276,11 +309,17 @@ export function createCamera<Id extends string>(
       return followTarget ? "ride" : presetName;
     },
     get shareView(): CameraView {
+      const dest = flight?.to;
       return {
-        azimuth: Math.atan2(Math.sin(targetAz), Math.cos(targetAz)),
-        elevation: targetEl,
-        distance: targetDistance,
-        focus: [targetFocus.x, targetFocus.y, targetFocus.z],
+        azimuth: Math.atan2(
+          Math.sin(dest?.azimuth ?? targetAz),
+          Math.cos(dest?.azimuth ?? targetAz),
+        ),
+        elevation: dest?.elevation ?? targetEl,
+        distance: dest?.distance ?? targetDistance,
+        focus: dest
+          ? [...dest.focus]
+          : [targetFocus.x, targetFocus.y, targetFocus.z],
       };
     },
     interact,
@@ -335,15 +374,69 @@ export function createCamera<Id extends string>(
         targetAz = shortest(targetAz, behind);
         az = shortest(az, targetAz);
       }
+      const wasTouring = autoOrbit;
       autoOrbit =
         !pointers.size &&
         !blocked &&
         !reducedMotion &&
         !followTarget &&
+        !flight &&
         playing &&
         now - lastInput > CONFIG.autoOrbitDelay;
-      if (autoOrbit) targetAz += dt * 0.018;
-      if (autoOrbit) presetName = null;
+      if (autoOrbit) {
+        if (!wasTouring) {
+          const from: CameraView = {
+            azimuth: az,
+            elevation: el,
+            distance,
+            focus: [focus.x, focus.y, focus.z],
+          };
+          tourTime = nearestTourTime(from);
+          tourEntry = { from, age: 0 };
+        }
+        tourTime += dt;
+        const view = sampleTour(tourTime);
+        targetAz = shortest(targetAz, view.azimuth);
+        targetEl = view.elevation;
+        targetDistance = view.distance;
+        targetFocus.fromArray(view.focus);
+        if (tourEntry) {
+          tourEntry.age += dt;
+          const t = T.MathUtils.smoothstep(tourEntry.age / 2.8, 0, 1);
+          const from = tourEntry.from;
+          targetAz = T.MathUtils.lerp(
+            from.azimuth,
+            shortest(from.azimuth, view.azimuth),
+            t,
+          );
+          targetEl = T.MathUtils.lerp(from.elevation, view.elevation, t);
+          targetDistance = T.MathUtils.lerp(from.distance, view.distance, t);
+          targetFocus.set(...from.focus).lerp(new T.Vector3(...view.focus), t);
+          if (t === 1) tourEntry = null;
+        }
+        presetName = null;
+      }
+      if (flight) {
+        flight.age += dt;
+        const t = reducedMotion
+          ? 1
+          : T.MathUtils.smoothstep(flight.age / 1.8, 0, 1);
+        targetAz = T.MathUtils.lerp(flight.from.azimuth, flight.to.azimuth, t);
+        targetEl = T.MathUtils.lerp(
+          flight.from.elevation,
+          flight.to.elevation,
+          t,
+        );
+        targetDistance = T.MathUtils.lerp(
+          flight.from.distance,
+          flight.to.distance,
+          t,
+        );
+        targetFocus
+          .set(...flight.from.focus)
+          .lerp(new T.Vector3(...flight.to.focus), t);
+        if (t === 1) flight = null;
+      }
       const damping = reducedMotion ? 1 : 1 - Math.exp(-dt * 7);
       az = T.MathUtils.lerp(
         az,
