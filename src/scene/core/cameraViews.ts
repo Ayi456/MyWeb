@@ -68,6 +68,7 @@ export const HOTSPOT_VIEWS: Record<HotspotId, CameraPreset> = {
   lighthouse: "lighthouse",
   teahouse: "teahouse",
   village: "village",
+  gramophone: "garden",
 };
 export const ISLAND_VIEWS = [
   { preset: "garden", label: "花园岛" },

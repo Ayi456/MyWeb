@@ -67,6 +67,7 @@ export interface SceneController {
   setQuality(mode: QualityMode): void;
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;
+  setRadioPlaying(on: boolean): void;
   resetOrbitFlag(): void;
   /** Trigger a gentle hotspot reaction without a tap notice or stamp. */
   nudge(id: HotspotId, amount: number, pop?: boolean): void;

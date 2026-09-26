@@ -13,6 +13,7 @@ export const KEY_HOTSPOTS: { id: HotspotId; label: string }[] = [
   { id: "lighthouse", label: "灯塔" },
   { id: "teahouse", label: "茶山" },
   { id: "village", label: "温泉村" },
+  { id: "gramophone", label: "花园留声机" },
 ];
 
 /** Digit1..Digit9 then Digit0 reach the first ten hotspots. */

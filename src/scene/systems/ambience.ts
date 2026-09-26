@@ -14,7 +14,8 @@ export type SoundName =
   | "pop"
   | "stamp"
   | "whale"
-  | "thunder";
+  | "thunder"
+  | "foghorn";
 
 export class Ambience {
   onCue?: (name: SoundName) => void;
@@ -216,6 +217,11 @@ export class Ambience {
       case "thunder":
         this.burst(t, 3, 0.16, 90, 0.7);
         this.burst(t + 0.3, 2.4, 0.09, 170, 0.8);
+        break;
+      case "foghorn":
+        this.tone(98, t, 2.2, 0.045);
+        this.tone(147, t + 0.12, 1.9, 0.025);
+        this.tone(196, t + 0.05, 1.8, 0.012, "triangle");
         break;
     }
   }

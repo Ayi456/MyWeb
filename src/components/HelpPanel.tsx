@@ -53,7 +53,7 @@ export function HelpPanel({
         数字键 1–0 · 点一点岛上的角落
       </p>
       <p>
-        岛上的樱花树、灯笼、写信的小兔、猫咪、风车、门铃、水池、飞艇、灯塔、茶山和温泉村都可以点一点，它们会回应你。鼠标划过树冠，花瓣会被拨开。
+        岛上的樱花树、灯笼、写信的小兔、猫咪、风车、门铃、水池、飞艇、灯塔、茶山和温泉村都可以点一点，它们会回应你。花园的留声机可以播放或暂停云上电台。鼠标划过树冠，花瓣会被拨开。
       </p>
       <div className="hotspot-keys" role="group" aria-label="点一点岛上的角落">
         {KEY_HOTSPOTS.map(({ id, label }, i) => (
@@ -117,7 +117,7 @@ export function HelpPanel({
           checked={sound}
           onChange={(e) => onSound(e.target.checked)}
         />
-        环境音效（风声、虫鸣、雨声、互动提示音）
+        环境音效（风声、虫鸣、雨声、灯塔低鸣、互动提示音）
       </label>
       <label className="quality-label sound-label">
         <input

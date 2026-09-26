@@ -14,6 +14,7 @@ import { ResourceTracker } from "./core/resourceTracker";
 import { SimulationClock } from "./core/simulationClock";
 import { createWorld } from "./objects/createWorld";
 import { updateAurora } from "./objects/aurora";
+import { updateGramophone } from "./objects/gramophone";
 import { updateAmbient } from "./systems/ambient";
 import { createDayNight } from "./systems/dayNight";
 import { AirshipFlight } from "./systems/airshipFlight";
@@ -36,6 +37,7 @@ import {
 } from "./systems/postcards";
 import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
+import { Foghorn, foghornWeather } from "./systems/foghorn";
 import { updateFestival } from "./systems/festival";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
@@ -70,6 +72,8 @@ export function createScene(
   const listeners = new Set<(snapshot: SceneSnapshot) => void>();
   const noticeListeners = new Set<(notice: SceneNotice) => void>();
   const ambience = new Ambience();
+  const foghorn = new Foghorn();
+  let radioPlaying = false;
   let captions = false;
   const lastCue = new Map<string, number>();
   const soundLabels: Record<SoundName, string> = {
@@ -82,6 +86,7 @@ export function createScene(
     stamp: "咚，一枚邮戳落下",
     whale: "远处传来云鲸的歌声",
     thunder: "轰隆，远处的雷声",
+    foghorn: "呜——灯塔在夜雾中低鸣，替归船报平安",
   };
   function emitSound(key: string, label: string) {
     if (!captions) return;
@@ -329,6 +334,10 @@ export function createScene(
           aurora: objects.auroraMat.uniforms.uStrength.value,
           auroraMotion: objects.auroraMat.uniforms.uMotion.value,
           treeBurst: ctx.U.uBurst.value,
+          gramophonePlaying: radioPlaying,
+          gramophoneRotation: objects.gramophoneRecord.rotation.y,
+          foghornCount: foghorn.count,
+          foghornRemaining: foghorn.remaining,
         });
     }
     function resize() {
@@ -456,6 +465,19 @@ export function createScene(
         for (const cue of soundCues(previousSound, nextSound))
           emitSound(cue, cue);
         previousSound = nextSound;
+        if (
+          foghorn.update(
+            dt,
+            foghornWeather(
+              snapshot.night,
+              director.rain,
+              director.tide,
+              weights[3],
+            ),
+          )
+        )
+          ambience.play("foghorn");
+        updateGramophone(objects, dt, radioPlaying, reducedMotion);
         const route = flight.update(objects, dt, clock.time, motionWind);
         snapshot.journey = journeyLine(route.phase, scriptContext());
         ctx.U.uShip.value.copy(objects.airship.position);
@@ -653,6 +675,9 @@ export function createScene(
       nudge(id, amount, pop = false) {
         interactions.impulses[id].hit(amount);
         if (pop) ambience.play("pop");
+      },
+      setRadioPlaying(on) {
+        radioPlaying = on;
       },
       setCaptions(on) {
         captions = on;

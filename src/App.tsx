@@ -9,7 +9,7 @@ import { HelpPanel } from "./components/HelpPanel";
 import { TreasureHunt } from "./components/TreasureHunt";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
-import { CloudRadio } from "./components/CloudRadio";
+import { CloudRadio, type RadioControl } from "./components/CloudRadio";
 import { PostcardPanel, type Reply } from "./components/PostcardPanel";
 import { PhotoDialog } from "./components/PhotoDialog";
 import { NoticeStack } from "./components/NoticeStack";
@@ -66,6 +66,8 @@ const SCENE_LINK = parseSceneLink(location.search);
 const CLASSIC = SCENE_LINK.classic;
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const radioControl = useRef<RadioControl>(null);
+  const [radioPlaying, setRadioPlaying] = useState(false);
   const [attempt, setAttempt] = useState(0),
     [mailOpen, setMailOpen] = useState(false),
     [postcardsOpen, setPostcardsOpen] = useState(false),
@@ -318,6 +320,11 @@ export default function App() {
     const scene = controller.current;
     if (!scene || !snapshot?.ready) return;
     return scene.onNotice((n) => {
+      if (n.type === "tap" && n.id === "gramophone") {
+        setHelpOpen(false);
+        setHidden(false);
+        radioControl.current?.toggleFromIsland();
+      }
       if (n.type === "tap" && n.id === "tree") setTreeTapped(true);
       if (n.type === "reply") {
         notify({
@@ -376,6 +383,9 @@ export default function App() {
   useEffect(() => {
     if (snapshot?.ready) controller.current?.visitDays(visits.days.length);
   }, [controller, snapshot?.ready, visits.days.length]);
+  useEffect(() => {
+    if (snapshot?.ready) controller.current?.setRadioPlaying(radioPlaying);
+  }, [controller, snapshot?.ready, radioPlaying]);
   useEffect(() => {
     if (snapshot?.ready)
       controller.current?.setCalendarContext(
@@ -661,6 +671,8 @@ export default function App() {
         </p>
       </SceneOverlay>
       <CloudRadio
+        controlRef={radioControl}
+        onPlaybackChange={setRadioPlaying}
         hidden={hidden || !snapshot?.ready || !!error || blocked}
         night={(snapshot?.night ?? 0) > 0.63}
         onCaption={

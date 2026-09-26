@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from "react";
 import type { RadioPlayback, RadioPlaylist } from "../music/types";
 import { nextPlayable, skipDelay } from "../music/skipPolicy";
 import "../styles/radio.css";
@@ -42,14 +49,22 @@ function RadioIcon({ playing = false }: { playing?: boolean }) {
   );
 }
 
+export interface RadioControl {
+  toggleFromIsland(): void;
+}
+
 export function CloudRadio({
   hidden,
   night,
   onCaption,
+  controlRef,
+  onPlaybackChange,
 }: {
   hidden: boolean;
   night: boolean;
   onCaption?: (text: string) => void;
+  controlRef?: Ref<RadioControl>;
+  onPlaybackChange?: (playing: boolean) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [open, setOpen] = useState(false);
@@ -70,6 +85,7 @@ export function CloudRadio({
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const intent = useRef(false);
+  const pendingPlay = useRef(false);
   const loaded = useRef("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const skipTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -93,7 +109,10 @@ export function CloudRadio({
         }
       })
       .catch(() => {
-        if (active) setPlaylistError("电台暂时连接不上，请稍后重试。");
+        if (active) {
+          pendingPlay.current = false;
+          setPlaylistError("电台暂时连接不上，请稍后重试。");
+        }
       })
       .finally(() => clearTimeout(timeout));
     return () => {
@@ -112,6 +131,7 @@ export function CloudRadio({
   useEffect(() => {
     const update = () => {
       setOffline(!navigator.onLine);
+      if (!navigator.onLine) pendingPlay.current = false;
       if (navigator.onLine) {
         setPlaylistError("");
         setRetry((v) => v + 1);
@@ -141,12 +161,15 @@ export function CloudRadio({
   }, []);
 
   function cancel() {
+    pendingPlay.current = false;
     generation.current++;
     request.current?.abort();
     clearTimeout(timer.current);
     clearTimeout(skipTimer.current);
     intent.current = false;
     audioRef.current?.pause();
+    setPlaying(false);
+    onPlaybackChange?.(false);
     setBusy(false);
   }
 
@@ -238,6 +261,37 @@ export function CloudRadio({
     }
   }
 
+  const playPending = useEffectEvent(() => {
+    if (!pendingPlay.current) return;
+    pendingPlay.current = false;
+    void play(indexRef.current);
+  });
+  useEffect(() => {
+    if (playlist) playPending();
+  }, [playlist]);
+
+  useImperativeHandle(controlRef, () => ({
+    toggleFromIsland() {
+      setOpen(true);
+      if (playing || busy || pendingPlay.current) {
+        cancel();
+        setMessage("");
+        return;
+      }
+      if (!navigator.onLine) {
+        setMessage(OFFLINE_TEXT);
+        return;
+      }
+      userAction();
+      if (playlist) void play(indexRef.current);
+      else {
+        pendingPlay.current = true;
+        setPlaylistError("");
+        setRetry((value) => value + 1);
+      }
+    },
+  }));
+
   function move(step: number, autoplay = intent.current) {
     if (!playlist) return;
     cancel();
@@ -285,10 +339,15 @@ export function CloudRadio({
         onPlaying={() => {
           failures.current = 0;
           setPlaying(true);
+          onPlaybackChange?.(true);
           if (track)
             onCaption?.(`电台正在播放：${track.name} · ${track.artist}`);
         }}
-        onPause={() => setPlaying(false)}
+        onPause={() => {
+          setPlaying(false);
+          onPlaybackChange?.(false);
+        }}
+        onWaiting={() => onPlaybackChange?.(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onDurationChange={(e) =>
           setDuration(
