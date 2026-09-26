@@ -3,6 +3,7 @@ import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
 import type { SeasonName } from "./season";
 import type { FestivalKind } from "./festival";
+import type { SceneEventKind } from "./events";
 
 export const REPLIES: Record<SeasonName, string[]> = {
   spring: [
@@ -11,6 +12,14 @@ export const REPLIES: Record<SeasonName, string[]> = {
     "春天很长，慢慢走，别急着抵达。",
     "远方一切都好，只是有点想念樱花。",
     "回信裹着一点月饼香，月亮替你照亮了邮路。",
+    "来时遇见一头云鲸，它替你的春日问候唱了几句。",
+    "云鲸和飞艇并肩走了一段，樱花香一直留到灯塔。",
+    "来时碰上太阳雨，雨停以后，樱花把路照亮了。",
+    "那场雨把信封打湿了一角，里面的问候还是暖的。",
+    "回信写在灯笼底下，邮差托月光带给你。",
+    "春夜很静，小兔替你的问候多添了一句晚安。",
+    "天刚亮，樱花树下的邮局就收到你的问候。",
+    "清晨的云还没醒，邮差已经把回信带上船。",
   ],
   summer: [
     "这里的夏夜有很多萤火虫，像散落的小灯。",
@@ -18,6 +27,14 @@ export const REPLIES: Record<SeasonName, string[]> = {
     "茶山的茶新采了一茬，给你留了一罐。",
     "海一样的云，今天格外蓝。",
     "回信裹着一点月饼香，月亮替你照亮了邮路。",
+    "来时遇见云鲸，它把一阵夏夜的凉风带到船边。",
+    "云鲸替飞艇让出邮路，也听见了你的问候。",
+    "那场太阳雨刚停，回信带着雨后的清凉。",
+    "雷雨留在了远方，邮差把干燥的问候放在怀里。",
+    "萤火虫亮起来的时候，我借着小灯写完了回信。",
+    "夏夜的虫鸣没停，晚安已经随着飞艇出发。",
+    "晨光照到茶山时，你的信也到了。",
+    "清晨还不热，邮差先把这封回信送上了船。",
   ],
   autumn: [
     "枫叶红了，邮差的口袋里装满了叶子。",
@@ -25,6 +42,14 @@ export const REPLIES: Record<SeasonName, string[]> = {
     "村里在晒柿子，甜味飘到了云上。",
     "落叶铺了一路，走起来沙沙响。",
     "回信裹着一点月饼香，月亮替你照亮了邮路。",
+    "云鲸从红叶后游过，替你的问候领了一段路。",
+    "来时遇见云鲸，邮差说秋天的云也会唱歌。",
+    "那阵雨洗亮了红叶，回信也沾了一点秋天的颜色。",
+    "雨声停下以后，邮局听见了你寄来的那句话。",
+    "秋夜的灯很暖，这封回信写得比平时慢一点。",
+    "灯塔守着夜航的船，我托它把晚安一起带给你。",
+    "清晨的风翻过红叶，也翻开了你的信。",
+    "村里刚开窗，邮差已经带着回信走过小桥。",
   ],
   winter: [
     "下雪了。信到的时候，还带着一点温度。",
@@ -32,8 +57,39 @@ export const REPLIES: Record<SeasonName, string[]> = {
     "灯塔的光在雪夜里更亮，像是替你守着。",
     "冬天很安静，正好把你的话反复读。",
     "回信裹着一点月饼香，月亮替你照亮了邮路。",
+    "来时遇见云鲸，它把雪云推开，替飞艇留了一条路。",
+    "云鲸的歌穿过雪夜，你的问候也平安到了。",
+    "路上那场雨早已停了，回信到时，岛上开始落雪。",
+    "邮差把雨后的回信收好，带进了冬天的暖灯里。",
+    "雪夜的灯还亮着，回信里替你留了一点温度。",
+    "温泉村已经安静下来，我借着窗里的光写一句晚安。",
+    "天刚亮，邮差扫开码头的雪，把回信送上船。",
+    "清晨很冷，读到你的问候时，邮局暖了一点。",
   ],
 };
+
+export interface ReplyContext {
+  lastEvent?: SceneEventKind | null;
+  night?: number;
+  hour?: number;
+  festival?: FestivalKind | null;
+}
+/** Original indices 0–4 stay stable for already-saved collections. */
+export function pickReply(season: SeasonName, ctx: ReplyContext, cursor = 0) {
+  const indices =
+    ctx.festival === "midAutumn"
+      ? [4]
+      : ctx.lastEvent === "whale"
+        ? [5, 6]
+        : ctx.lastEvent === "shower" || ctx.lastEvent === "thunderstorm"
+          ? [7, 8]
+          : (ctx.night ?? 0) > 0.6
+            ? [9, 10]
+            : (ctx.hour ?? 12) >= 4.5 && (ctx.hour ?? 12) < 8.5
+              ? [11, 12]
+              : [0, 1, 2, 3];
+  return REPLIES[season][indices[cursor % indices.length]];
+}
 export const STAMPS = [
   { id: "sakura", label: "樱", title: "樱花邮戳", hint: "寄出第一封信" },
   { id: "beacon", label: "塔", title: "灯塔邮戳", hint: "收到第一封回信" },
@@ -150,14 +206,19 @@ export class ReplyLedger {
     this.owed++;
   }
   /** Called when the ship moors at the main dock. Returns the new reply. */
-  arrive(season: SeasonName, at: number, festival: FestivalKind | null = null) {
+  arrive(
+    season: SeasonName,
+    at: number,
+    festival: FestivalKind | null = null,
+    context: ReplyContext = {},
+  ) {
     if (this.owed <= 0) return null;
     this.owed--;
-    const lines = REPLIES[season];
-    const text =
-      festival === "midAutumn"
-        ? lines[4]
-        : lines[(this.cursor++ + Math.floor(this.random() * 2)) % 4];
+    const text = pickReply(
+      season,
+      { ...context, festival },
+      this.cursor++ + Math.floor(this.random() * 2),
+    );
     const reply = { text, season, at };
     this.received.push(reply);
     if (this.received.length > 40) this.received.shift();

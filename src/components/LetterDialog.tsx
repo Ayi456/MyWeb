@@ -3,10 +3,12 @@ export function LetterDialog({
   onClose,
   onSend,
   paused,
+  invitation,
 }: {
   onClose: () => void;
   onSend: (message: string) => boolean;
   paused: boolean;
+  invitation: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     input = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +70,7 @@ export function LetterDialog({
         <div className="eyebrow">A LITTLE NOTE, A LONG WAY HOME</div>
         <h2 id="letter-title">寄一封春天</h2>
         <p id="letter-description">
-          写给想念的人，
+          {invitation}
           <br />
           也可以写给未来的自己。
         </p>

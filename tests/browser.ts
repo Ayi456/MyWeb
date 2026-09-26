@@ -42,6 +42,10 @@ function start(
     onMailbox: () => {},
     onError,
     skipArrival: true,
+    initial:
+      params.get("mode") === "visual" && params.has("season")
+        ? { year: Number(params.get("season")) + 0.08 }
+        : undefined,
   });
   controller.subscribe((s) => {
     snapshot = s;
@@ -53,7 +57,6 @@ if (params.get("mode") === "visual") {
   start();
   controller!.setSpeed(0);
   controller!.setTimeOfDay(Number(params.get("hour") ?? 16.33));
-  if (params.has("season")) controller!.setSeason(Number(params.get("season")));
   controller!.setQuality("high");
   const preset = params.get("preset");
   controller!.setCameraPreset(

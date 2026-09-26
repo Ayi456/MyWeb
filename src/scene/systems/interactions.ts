@@ -33,24 +33,6 @@ export class Impulse {
   }
 }
 
-export const HOTSPOT_LINES: Record<HotspotId, string[]> = {
-  mailbox: [],
-  tree: ["樱花树抖了抖肩膀，落下一阵花雨。", "树说：慢慢来，春天不着急。"],
-  lantern: ["灯笼轻轻晃了晃，像在打招呼。", "风铃般的一声，灯笼笑了。"],
-  writer: ["写信的小兔抬起头，冲你眨了眨眼。", "「这封信，写给谁呢？」"],
-  cat: ["猫咪翻了个身，尾巴甩得更欢了。", "猫咪：喵。（意思是别打扰它晒太阳）"],
-  windmill: [
-    "风车转得飞快，把云都搅成了糖。",
-    "一阵好风，风车忍不住多转了几圈。",
-  ],
-  bell: ["叮——邮局的铃响了，有人来取信。", "铃声传得很远，灯塔那边也听见了。"],
-  pool: ["水面荡开一圈圈涟漪。", "一颗小石子，惊动了整片春水。"],
-  airship: ["飞艇上的邮差向你挥了挥手。", "「下一站，樱花树下！」"],
-  lighthouse: ["灯塔闪了一下，像是在回信。", "远方的光，替谁守着夜。"],
-  teahouse: ["茶山上飘来一缕茶香。", "亭子里的灯亮了，有人在等雨停。"],
-  village: ["温泉冒着热气，村里的窗都亮了。", "小桥那头，有人在泡脚聊天。"],
-};
-
 export function createInteractions(ctx: SceneContext, o: WorldObjects) {
   const hits: { object: T.Object3D; id: HotspotId }[] = [];
   const hitMat = new T.MeshBasicMaterial({ visible: false });
@@ -92,24 +74,21 @@ export function createInteractions(ctx: SceneContext, o: WorldObjects) {
   ) as Record<HotspotId, Impulse>;
   /** Reactions that are not tied to a tap: a letter going out, a reply landing. */
   const moments = { send: new Impulse(), reply: new Impulse() };
-  let windmillSpin = 0,
-    lineIndex = 0;
+  let windmillSpin = 0;
   const writerBaseY = o.writer.g.position.y,
     tailBase = o.tail.rotation.y;
-  const listeners = new Set<(id: HotspotId, line: string) => void>();
+  const listeners = new Set<(id: HotspotId) => void>();
   return {
     hits,
     impulses,
     moments,
-    onTap(listener: (id: HotspotId, line: string) => void) {
+    onTap(listener: (id: HotspotId) => void) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
     tap(id: HotspotId) {
       impulses[id].hit();
-      const lines = HOTSPOT_LINES[id];
-      const line = lines.length ? lines[lineIndex++ % lines.length] : "";
-      listeners.forEach((l) => l(id, line));
+      listeners.forEach((l) => l(id));
     },
     /** Apply after updateAmbient so reactions layer on top of idle motion. */
     update(dt: number, simTime: number) {

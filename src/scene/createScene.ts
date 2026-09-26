@@ -37,6 +37,12 @@ import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
 import { updateFestival } from "./systems/festival";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
+import {
+  pickLine,
+  journeyLine,
+  type LineCursors,
+  type ScriptContext,
+} from "./systems/script";
 
 const SEASON_NOTICES = {
   spring: "春天回来了，樱花又开了。",
@@ -242,7 +248,24 @@ export function createScene(
                 : "pop",
       );
     }
-    interactions.onTap((id, text) => {
+    let lineCursors: LineCursors = {};
+    function scriptContext(): ScriptContext {
+      return {
+        season: seasons.name,
+        hour: clock.hour,
+        night: snapshot.night,
+        rain: director.rain,
+        event: scheduler.active?.kind ?? null,
+        wind: windSystem.value,
+        sentCount: delivery.sentCount,
+        replyCount: ledger.received.length,
+        stamps: [...stamps.earned],
+        riding: camera.following,
+      };
+    }
+    interactions.onTap((id) => {
+      const { text, cursors } = pickLine(id, scriptContext(), lineCursors);
+      lineCursors = cursors;
       if (text) notify({ type: "tap", id, text });
     });
     let baseInstances = 0;
@@ -296,6 +319,7 @@ export function createScene(
           lightning: director.flash,
           aurora: objects.auroraMat.uniforms.uStrength.value,
           auroraMotion: objects.auroraMat.uniforms.uMotion.value,
+          treeBurst: ctx.U.uBurst.value,
         });
     }
     function resize() {
@@ -333,6 +357,19 @@ export function createScene(
       pointer = ctx.U.uPointer.value;
     ctx.seasonal.apply(seasons.weights, true);
     ctx.U.uSeason.value.fromArray(seasons.weights);
+    function seasonChanged() {
+      if (seasons.index === lastSeason) return;
+      lastSeason = seasons.index;
+      stamps.season(seasons.name);
+      interactions.impulses.tree.hit(reducedMotion ? 0.12 : 1.2);
+      ambience.play("rustle");
+      notify({
+        type: "season",
+        season: seasons.name,
+        text: SEASON_NOTICES[seasons.name],
+      });
+      emit();
+    }
     function fail(error: unknown) {
       if (failed || disposed) return;
       failed = true;
@@ -364,16 +401,7 @@ export function createScene(
         const weights = seasons.weights;
         ctx.U.uSeason.value.fromArray(weights);
         ctx.seasonal.apply(weights);
-        if (seasons.index !== lastSeason) {
-          lastSeason = seasons.index;
-          stamps.season(seasons.name);
-          notify({
-            type: "season",
-            season: seasons.name,
-            text: SEASON_NOTICES[seasons.name],
-          });
-          emit();
-        }
+        seasonChanged();
         // Occasional surprises.
         const started = scheduler.update(dt, {
           night: snapshot.night,
@@ -420,9 +448,7 @@ export function createScene(
           emitSound(cue, cue);
         previousSound = nextSound;
         const route = flight.update(objects, dt, clock.time, motionWind);
-        snapshot.journey = camera.following
-          ? `你正跟着飞艇。${route.journey}`
-          : route.journey;
+        snapshot.journey = journeyLine(route.phase, scriptContext());
         ctx.U.uShip.value.copy(objects.airship.position);
         updateAmbient(objects, clock.time, motionWind, route.phase, windSystem);
         interactions.update(dt, clock.time);
@@ -435,7 +461,11 @@ export function createScene(
         }
         wasMoored = moored;
         if (postcard.update(dt)) {
-          const reply = ledger.arrive(seasons.name, clock.time, festival);
+          const reply = ledger.arrive(seasons.name, clock.time, festival, {
+            lastEvent: scheduler.last,
+            night: snapshot.night,
+            hour: clock.hour,
+          });
           if (reply) {
             ambience.play("chime");
             notify({ type: "reply", text: reply.text, season: reply.season });
@@ -549,7 +579,7 @@ export function createScene(
       if (on) {
         clock.setHour(realLocalHour());
         seasons.setYear(realSeasonYear());
-        lastSeason = seasons.index;
+        seasonChanged();
         stamps.season(seasons.name);
         ctx.U.uSeason.value.fromArray(seasons.weights);
         ctx.seasonal.apply(seasons.weights, true);
@@ -574,7 +604,7 @@ export function createScene(
       setSeason(index) {
         if (realTime) applyRealTime(false);
         seasons.set(index);
-        lastSeason = seasons.index;
+        seasonChanged();
         stamps.season(seasons.name);
         ctx.U.uSeason.value.fromArray(seasons.weights);
         ctx.seasonal.apply(seasons.weights, true);
@@ -644,7 +674,7 @@ export function createScene(
       setYear(year) {
         if (realTime) applyRealTime(false);
         seasons.setYear(year);
-        lastSeason = seasons.index;
+        seasonChanged();
         stamps.season(seasons.name);
         ctx.U.uSeason.value.fromArray(seasons.weights);
         ctx.seasonal.apply(seasons.weights, true);

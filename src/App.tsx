@@ -34,6 +34,7 @@ import {
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
 import { buildSceneLink, parseSceneLink } from "./content/sceneLink";
 import { moonPhase } from "./content/moon";
+import { letterPrompt } from "./scene/systems/script";
 import {
   FESTIVAL_GREETING,
   festivalForDate,
@@ -593,6 +594,11 @@ export default function App() {
         <LetterDialog
           onClose={closeMail}
           paused={snapshot?.speed === 0}
+          invitation={letterPrompt(
+            snapshot?.season ?? "spring",
+            snapshot?.night ?? 0,
+            snapshot?.rain ?? 0,
+          )}
           onSend={(message) => {
             const sent = controller.current?.sendLetter(message) ?? false;
             if (sent) {
