@@ -1,5 +1,6 @@
 import { type SceneContext, TAU } from "../core/context";
 import { GRASS, GRASS_RIM, LEAF } from "./seasonalColors";
+import { MAIN_ISLAND } from "../worldLayout";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createIsland(ctx: SceneContext) {
@@ -7,11 +8,11 @@ export function createIsland(ctx: SceneContext) {
   // A floating, layered chunk of springtime: irregular grass rim, exposed pink stone, hanging roots.
   const terrain = new Batch(world, rockMat),
     grass = new Batch();
-  const step = 0.29;
+  const { step, radius, gridOrigin } = MAIN_ISLAND;
   const walkTiles: { x: number; z: number; y: number }[] = [];
-  for (let x = -4.1; x <= 4.1; x += step)
-    for (let z = -3.04; z <= 3.04; z += step) {
-      const d = (x / 3.95) ** 2 + (z / 2.9) ** 2,
+  for (let x = gridOrigin[0]; x <= -gridOrigin[0]; x += step)
+    for (let z = gridOrigin[1]; z <= -gridOrigin[1]; z += step) {
+      const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2,
         edge = 1 + 0.044 * Math.sin(x * 4 + z * 3);
       if (d > edge) continue;
       const y = ground(x, z),
@@ -34,8 +35,8 @@ export function createIsland(ctx: SceneContext) {
       }
       const pathZ = 0.85 + 0.31 * Math.sin(x * 1.15),
         isPath =
-          (x > -0.9 && x < 3.52 && Math.abs(z - pathZ) < 0.23) ||
-          (x < -0.75 && x > -2.7 && Math.abs(z - 1.13) < 0.18);
+          (x > -0.9 && x < 4.6 && Math.abs(z - pathZ) < 0.23) ||
+          (x < -0.75 && x > -3.35 && Math.abs(z - 1.45) < 0.18);
       if (isPath)
         grass.add(
           x,
@@ -90,8 +91,8 @@ export function createIsland(ctx: SceneContext) {
   for (let i = 0; i < 24; i++) {
     const a = (i * TAU) / 24,
       r = range(0.9, 1.01),
-      x = Math.cos(a) * 3.75 * r,
-      z = Math.sin(a) * 2.77 * r,
+      x = Math.cos(a) * radius[0] * 0.95 * r,
+      z = Math.sin(a) * radius[1] * 0.95 * r,
       top = ground(x, z) - 0.1;
     const n = 4 + Math.floor(rand() * 9);
     for (let j = 0; j < n; j++) {

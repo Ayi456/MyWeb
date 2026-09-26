@@ -2,6 +2,7 @@ import * as T from "three";
 import { CONFIG } from "../config";
 import type { SceneContext } from "../core/context";
 import { createEnvelope } from "../objects/envelope";
+import { MAIN_MAILBOX } from "../worldLayout";
 
 export class DeliveryProgress {
   age = 0;
@@ -34,7 +35,11 @@ export function createLetterDelivery(
 ) {
   const makeEnvelope = createEnvelope(ctx);
   const flights: { g: T.Group; clock: DeliveryProgress }[] = [];
-  const start = new T.Vector3(2.35, 2.16, 1.25),
+  const start = new T.Vector3(
+      MAIN_MAILBOX.x,
+      ctx.ground(MAIN_MAILBOX.x, MAIN_MAILBOX.z) + 0.98,
+      MAIN_MAILBOX.z + 0.22,
+    ),
     target = new T.Vector3();
   let sentCount = 0,
     deliveredCount = 0;

@@ -466,6 +466,7 @@ textarea {
   }
   .time-panel {
     max-width: none;
+    width: 100%;
     padding: 9px 10px 5px;
   }
   .time-top {
@@ -506,6 +507,9 @@ textarea {
   .mobile-journey {
     bottom: max(199px, calc(env(safe-area-inset-bottom) + 184px));
     margin: 0;
+  }
+  .overlay:has(.time-panel:not(.time-panel-collapsed)) .mobile-journey {
+    bottom: max(246px, calc(env(safe-area-inset-bottom) + 231px));
   }
   .hint {
     bottom: 226px;

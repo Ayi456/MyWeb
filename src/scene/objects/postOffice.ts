@@ -6,7 +6,7 @@ export function createPostOffice(ctx: SceneContext) {
   const { world, lampMat, Batch, mesh, ground, paperTexture } = ctx;
   // Postal cottage, cedar framework, individually stepped terracotta tiles and a brass bell.
   const house = new T.Group();
-  house.position.set(1.22, ground(1.22, 0.15) + 0.1, 0.15);
+  house.position.set(1.85, ground(1.85, 0.15) + 0.1, 0.15);
   world.add(house);
   const hb = new Batch(house);
   hb.add(0, 0.58, 0, 1.78, 1.16, 1.35, "#fff0d0");

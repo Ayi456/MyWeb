@@ -1,6 +1,7 @@
 import * as T from "three";
 import { type SceneContext, TAU, PI } from "../core/context";
 import { seededRandom } from "../utils/seededRandom";
+import { createCloudWhale } from "./cloudWhale";
 
 /**
  * Occasional visitors and weather used by the event system. Everything is
@@ -9,62 +10,9 @@ import { seededRandom } from "../utils/seededRandom";
 export function createVisitors(ctx: SceneContext) {
   const { scene, Batch, U, rod } = ctx;
   const random = seededRandom(577215);
-  const range = (a: number, b: number) => a + (b - a) * random();
-
-  // Cloud whale: a long, gentle voxel body with a paler belly and a tail that beats.
-  const whale = new T.Group();
-  whale.visible = false;
-  scene.add(whale);
-  const body = new Batch(whale);
-  for (let x = -2.6; x <= 2.2; x += 0.3)
-    for (let y = -0.75; y <= 0.75; y += 0.3)
-      for (let z = -0.75; z <= 0.75; z += 0.3) {
-        const taper =
-          x > 0 ? 1 - (x / 2.4) ** 2 * 0.7 : 1 - ((x + 0.4) / 2.6) ** 2 * 0.4;
-        const d = (y / (0.78 * taper)) ** 2 + (z / (0.78 * taper)) ** 2;
-        if (d > 1 || d < 0.45) continue;
-        body.add(x, y, z, 0.31, 0.31, 0.31, y < -0.25 ? "#f4ecf1" : "#aab0d6");
-      }
-  body.add(1.2, 0.65, 0, 0.2, 0.3, 0.2, "#aab0d6");
-  for (const s of [-1, 1]) {
-    body.add(1.35, -0.1, s * 0.48, 0.14, 0.08, 0.14, "#4d475f");
-    body.add(
-      0.4,
-      -0.5,
-      s * 0.95,
-      0.8,
-      0.1,
-      0.45,
-      "#9ea4cc",
-      0,
-      s * 0.35,
-      s * -0.4,
-    );
-  }
-  body.build(false);
-  const tail = new T.Group();
-  tail.position.set(-2.6, 0, 0);
-  whale.add(tail);
-  const tb = new Batch(tail);
-  tb.add(-0.45, 0, 0, 0.9, 0.24, 0.3, "#aab0d6");
-  tb.add(-1.0, 0, 0, 0.5, 0.12, 1.4, "#9ea4cc");
-  tb.build(false);
-  const spout = new T.Group();
-  spout.position.set(1.2, 0.85, 0);
-  whale.add(spout);
-  const sp = new Batch(spout);
-  for (let i = 0; i < 7; i++)
-    sp.add(
-      range(-0.25, 0.25),
-      0.15 + i * 0.16,
-      range(-0.2, 0.2),
-      0.18 - i * 0.01,
-      0.16,
-      0.18 - i * 0.01,
-      "#ffffff",
-    );
-  sp.build(false);
-  spout.visible = false;
+  const cloudWhale = createCloudWhale(ctx);
+  // Preserve the weather seed sequence previously used by the spout.
+  for (let i = 0; i < 14; i++) random();
 
   // Hot-air balloon: striped envelope, wicker basket, a tiny passenger lantern.
   const balloon = new T.Group();
@@ -156,9 +104,7 @@ export function createVisitors(ctx: SceneContext) {
   postcard.rotation.y = PI / 4;
 
   return {
-    whale,
-    whaleTail: tail,
-    whaleSpout: spout,
+    ...cloudWhale,
     balloon,
     shootingStar,
     shootingStarMat: starMat,

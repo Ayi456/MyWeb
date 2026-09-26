@@ -6,7 +6,7 @@ export function createFurniture(ctx: SceneContext, tree: T.Group) {
   const { world, Batch, line, ground } = ctx;
   // Furniture under the tree and a gently swinging seat.
   const bench = new T.Group();
-  bench.position.set(-1.72, ground(-1.72, 1.1) + 0.12, 1.1);
+  bench.position.set(-1.35, ground(-1.35, 1.85) + 0.12, 1.85);
   bench.rotation.y = 0.1;
   world.add(bench);
   const bn = new Batch(bench);

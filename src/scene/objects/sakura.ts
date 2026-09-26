@@ -7,7 +7,7 @@ export function createSakura(ctx: SceneContext) {
   const { world, rand, range, Batch, rod, ground } = ctx;
   // The cherry tree is a voxel union of seven broad, asymmetrical blossom crowns.
   const tree = new T.Group();
-  tree.position.set(-1.15, ground(-1.15, -0.48) + 0.1, -0.48);
+  tree.position.set(-1.8, ground(-1.8, -0.7) + 0.1, -0.7);
   world.add(tree);
   const bark = new Batch(tree);
   const branches: [Point3, Point3, number][] = [
@@ -108,8 +108,8 @@ export function createSakura(ctx: SceneContext) {
   blossoms.build();
   const fallen = new Batch();
   for (let i = 0; i < 220; i++) {
-    const x = range(-3.4, 0.8),
-      z = range(-1.8, 1.9);
+    const x = range(-4.2, 0.4),
+      z = range(-2.3, 2.0);
     if ((x / 3.9) ** 2 + (z / 2.9) ** 2 < 0.88)
       fallen.addSeasonal(
         x,

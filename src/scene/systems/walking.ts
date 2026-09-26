@@ -1,6 +1,7 @@
 import * as T from "three";
 import type { WalkView, WalkDirection } from "../types";
 import type { WorldObjects } from "../objects/createWorld";
+import { MAIN_ISLAND } from "../worldLayout";
 
 export interface WalkTile {
   x: number;
@@ -76,7 +77,8 @@ export class IslandWalker {
     for (const tile of tiles) this.tiles.set(this.key(tile.x, tile.z), tile);
   }
   private key(x: number, z: number) {
-    return `${Math.round((x + 4.1) / 0.29)},${Math.round((z + 3.04) / 0.29)}`;
+    const { gridOrigin, step } = MAIN_ISLAND;
+    return `${Math.round((x - gridOrigin[0]) / step)},${Math.round((z - gridOrigin[1]) / step)}`;
   }
   height(x: number, z: number): number | null {
     if (!Number.isFinite(x) || !Number.isFinite(z)) return null;

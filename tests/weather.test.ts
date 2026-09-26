@@ -14,6 +14,7 @@ function weather(kind: SceneEventKind) {
     whale: new T.Group(),
     whaleTail: new T.Group(),
     whaleSpout: new T.Group(),
+    whaleFins: [new T.Group(), new T.Group()],
     balloon: new T.Group(),
     shootingStar: new T.Group(),
     shootingStarMat: new T.MeshBasicMaterial(),

@@ -12,13 +12,15 @@ export function createFlowers(ctx: SceneContext) {
   // Flower borders and little tufts, all batched into a single mesh.
   const flowers = new Batch();
   for (let i = 0; i < 220; i++) {
-    const x = range(-3.6, 3.25),
-      z = range(-2.5, 2.5);
+    const x = range(-4.7, 4.6),
+      z = range(-3.3, 3.3);
     if (
-      (x / 3.7) ** 2 + (z / 2.6) ** 2 > 0.94 ||
+      (x / 4.9) ** 2 + (z / 3.5) ** 2 > 0.94 ||
       Math.abs(z - (0.85 + 0.31 * Math.sin(x * 1.15))) < 0.42 ||
-      (x > 0.15 && x < 2.25 && z > -0.75 && z < 1.08) ||
-      Math.hypot(x + 1.15, z + 0.48) < 0.54
+      (x > 0.7 && x < 2.9 && z > -0.75 && z < 1.08) ||
+      Math.hypot(x + 1.8, z + 0.7) < 0.54 ||
+      (x > -2.0 && x < -0.65 && z > 1.4 && z < 2.3) ||
+      (Math.abs(z - 1.45) < 0.3 && x < -0.75)
     )
       continue;
     const y = ground(x, z) + 0.11,

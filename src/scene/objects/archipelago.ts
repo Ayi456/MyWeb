@@ -100,9 +100,9 @@ export function createArchipelago(ctx: SceneContext) {
     );
   }
   for (let i = 0; i < 68; i++) {
-    const x = range(-1.5, 1.4),
-      z = range(-1.15, 1.15);
-    if ((x / 1.55) ** 2 + (z / 1.2) ** 2 > 1 || Math.abs(z - 0.3) < 0.27)
+    const x = range(-2.1, 2.1),
+      z = range(-1.65, 1.65);
+    if ((x / 2.2) ** 2 + (z / 1.75) ** 2 > 1 || Math.abs(z - 0.3) < 0.27)
       continue;
     if (x < -0.45 && z < -0.15) continue;
     const h = range(0.13, 0.28);
@@ -193,8 +193,12 @@ export function createArchipelago(ctx: SceneContext) {
   sails.build(false);
 
   const bridge = new Batch();
-  const start = new T.Vector3(-3.44, 1.12, -0.84);
-  const end = new T.Vector3(-5.53, 0.62, -1.06);
+  const start = new T.Vector3(-4.6, 1.12, -1.12);
+  const end = new T.Vector3(
+    GARDEN_ISLAND.center[0] + GARDEN_ISLAND.radius[0] * 0.9,
+    GARDEN_ISLAND.center[1] + 0.17,
+    GARDEN_ISLAND.center[2] + 0.24,
+  );
   const delta = end.clone().sub(start);
   const side = new T.Vector3(-delta.z, 0, delta.x)
     .normalize()
@@ -303,9 +307,9 @@ export function createArchipelago(ctx: SceneContext) {
   for (let i = 0; i < 19; i++) {
     const a = (i * TAU) / 19;
     tower.add(
-      Math.cos(a) * 1.35,
+      Math.cos(a) * LIGHTHOUSE_ISLAND.radius[0] * 0.77,
       0.22,
-      Math.sin(a) * 1.02,
+      Math.sin(a) * LIGHTHOUSE_ISLAND.radius[1] * 0.73,
       0.13,
       0.17,
       0.13,

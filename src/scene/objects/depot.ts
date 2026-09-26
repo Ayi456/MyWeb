@@ -12,9 +12,10 @@ export function createDepot(ctx: SceneContext) {
   ctx.world.add(depotIsland);
   const stone = new ctx.Batch(depotIsland, ctx.rockMat),
     grass = new ctx.Batch(depotIsland);
-  for (let x = -2.2; x <= 2.2; x += 0.28)
-    for (let z = -1.8; z <= 1.8; z += 0.28) {
-      const d = (x / 2.2) ** 2 + (z / 1.8) ** 2;
+  const [rx, rz] = DEPOT_ISLAND.radius;
+  for (let x = -rx; x <= rx; x += 0.28)
+    for (let z = -rz; z <= rz; z += 0.28) {
+      const d = (x / rx) ** 2 + (z / rz) ** 2;
       if (d > 1) continue;
       const h = 0.4 + 2.3 * (1 - d) ** 0.65;
       stone.add(x, -h / 2, z, 0.29, h, 0.29, d > 0.8 ? "#d0b9b0" : "#b6a4a9");
@@ -62,12 +63,14 @@ export function createDepot(ctx: SceneContext) {
   detail.add(1.1, 2.0, 0.65, 0.7, 0.12, 0.18, "#b2b8a4");
   detail.build(false);
   const infrastructure = new ctx.Batch();
+  const stationGround = ctx.ground(ROPEWAY.start[0], ROPEWAY.start[2]) + 0.09;
+  const supportTop = ROPEWAY.start[1] - 0.04;
   infrastructure.add(
     ROPEWAY.start[0],
-    2.28,
+    (stationGround + supportTop) / 2,
     ROPEWAY.start[2],
     0.1,
-    2.1,
+    supportTop - stationGround,
     0.1,
     "#8e9b94",
   );

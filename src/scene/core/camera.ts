@@ -562,7 +562,7 @@ export function createCamera<Id extends string>(
         if (arrival.t >= arrival.duration) arrival = null;
       }
       const dist =
-        distance * Math.max(1, 1.3 / camera.aspect) * (1 + away * 0.45);
+        distance * Math.max(1, 1.02 / camera.aspect) * (1 + away * 0.45);
       const elView = el + away * 0.14;
       // A more frontal portrait view keeps the remote beacon clear of the
       // right-hand controls without shrinking the main island further.

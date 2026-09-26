@@ -162,6 +162,7 @@ export function createEventDirector(
     | "whale"
     | "whaleTail"
     | "whaleSpout"
+    | "whaleFins"
     | "balloon"
     | "shootingStar"
     | "shootingStarMat"
@@ -257,18 +258,26 @@ export function createEventDirector(
         whaleCurve.getPoint(t, position);
         whaleCurve.getTangent(t, tangent);
         whale.position.copy(position);
-        whale.position.y += Math.sin(simTime * 0.7) * 0.4;
+        whale.position.y += Math.sin(simTime * 0.55) * 0.24;
         whale.rotation.set(
           0,
           Math.atan2(-tangent.z, tangent.x),
-          Math.sin(simTime * 0.5) * 0.05,
+          Math.atan2(tangent.y, Math.hypot(tangent.x, tangent.z)) +
+            Math.sin(simTime * 0.55) * 0.025,
         );
-        whale.scale.setScalar(2.1);
-        o.whaleTail.rotation.y = Math.sin(simTime * 1.4) * 0.35;
-        const spouting = (simTime * 0.13) % 1 < 0.18;
+        whale.scale.setScalar(1.85);
+        const beat = Math.sin(simTime * 1.05);
+        o.whaleTail.rotation.z = beat * 0.19;
+        o.whaleTail.rotation.x = 0.3 + Math.cos(simTime * 1.05) * 0.1;
+        o.whaleFins.forEach((fin, i) => {
+          const side = i === 0 ? -1 : 1;
+          fin.rotation.x = side * (0.5 + Math.sin(simTime * 0.7 - 0.5) * 0.12);
+          fin.rotation.z = beat * 0.035;
+        });
+        const puff = (simTime % 9) / 1.8;
+        const spouting = puff < 1;
         o.whaleSpout.visible = spouting;
-        if (spouting)
-          o.whaleSpout.scale.setScalar(0.6 + ((simTime * 0.13) % 1) * 3);
+        if (spouting) o.whaleSpout.scale.setScalar(0.45 + puff * 1.3);
       }
       const balloon = o.balloon;
       balloon.visible = active?.kind === "balloon";

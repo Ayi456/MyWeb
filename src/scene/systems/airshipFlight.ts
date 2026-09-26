@@ -3,35 +3,35 @@ import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
 import { FLIGHT_STOPS, LIGHTHOUSE_ISLAND } from "../worldLayout";
 
-export const dockPoint = new T.Vector3(5.65, 1.21, 0.17);
+export const dockPoint = new T.Vector3(6.75, 1.21, 0.17);
 export const lighthouseDockPoint = new T.Vector3(...LIGHTHOUSE_ISLAND.berth);
-const westPoint = new T.Vector3(-11.4, 3, -4.1);
-const southPoint = new T.Vector3(-1.2, 1.9, 7);
+const westPoint = new T.Vector3(-14, 3, -4.1);
+const southPoint = new T.Vector3(-1.2, 1.9, 8.8);
 // The outbound leg docks at the beacon. The return passes behind the islands,
 // around the garden and across the foreground, with clearance for the balloon.
 export const routes = [
   new T.CubicBezierCurve3(
     dockPoint,
     new T.Vector3(11.7, 2, 0.17),
-    new T.Vector3(13, 1.18, -10.1),
+    new T.Vector3(15, 1.18, -11.9),
     lighthouseDockPoint,
   ),
   new T.CubicBezierCurve3(
     lighthouseDockPoint,
-    new T.Vector3(9, 2.8, -18),
-    new T.Vector3(-9.2, 3.4, -15.2),
+    new T.Vector3(16, 2.8, -20),
+    new T.Vector3(-12, 3.4, -18),
     westPoint,
   ),
   new T.CubicBezierCurve3(
     westPoint,
-    new T.Vector3(-12.4, 3, 3.9),
-    new T.Vector3(-7, 2.1, 7.4),
+    new T.Vector3(-15, 3, 4.5),
+    new T.Vector3(-8, 2.1, 9.2),
     southPoint,
   ),
   new T.CubicBezierCurve3(
     southPoint,
-    new T.Vector3(5, 1.9, 7),
-    new T.Vector3(9.2, 1.21, 0.17),
+    new T.Vector3(6, 1.9, 8.8),
+    new T.Vector3(10.3, 1.21, 0.17),
     dockPoint,
   ),
 ];

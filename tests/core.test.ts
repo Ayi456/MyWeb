@@ -15,6 +15,7 @@ import {
   FLIGHT_STOPS,
   GARDEN_ISLAND,
   LIGHTHOUSE_ISLAND,
+  MAIN_ISLAND,
 } from "../src/scene/worldLayout";
 
 describe("the shared simulation clock", () => {
@@ -123,7 +124,10 @@ describe("airship route", () => {
   it("stays outside the island and tree during cruise", () => {
     for (let t = 11; t < 76; t += 0.05) {
       const p = sampleFlight(t).position;
-      expect((p.x / 4.5) ** 2 + (p.z / 3.5) ** 2).toBeGreaterThan(1);
+      expect(
+        (p.x / (MAIN_ISLAND.radius[0] + 0.55)) ** 2 +
+          (p.z / (MAIN_ISLAND.radius[1] + 0.6)) ** 2,
+      ).toBeGreaterThan(1);
     }
   });
   it("stops at the lighthouse landing before returning to the main dock", () => {
