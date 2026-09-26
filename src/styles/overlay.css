@@ -626,6 +626,84 @@ textarea {
     margin: 7px 0;
   }
 }
+.walk-controls {
+  position: fixed;
+  z-index: 15;
+  top: 42%;
+  left: 24px;
+  width: 170px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 250, 239, 0.94);
+  color: #705663;
+  box-shadow: 0 4px 24px #70566312;
+}
+.walk-controls p {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.walk-controls small {
+  font-size: 10px;
+  line-height: 1.6;
+  display: block;
+}
+.walk-controls [role="group"] {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+  margin: 10px 0;
+}
+.walk-controls button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d8b9c2;
+  border-radius: 12px;
+  color: inherit;
+  background: #fffaf1;
+  cursor: pointer;
+  touch-action: none;
+}
+.walk-controls button:active {
+  background: #f0dce3;
+}
+.walk-forward {
+  grid-column: 2;
+}
+.walk-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+.walk-back {
+  grid-column: 2;
+  grid-row: 2;
+}
+.walk-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+.walk-exit {
+  width: 100%;
+  font-size: 11px;
+}
+@media (max-width: 520px) {
+  .walk-controls {
+    top: auto;
+    bottom: 146px;
+    left: 12px;
+    width: 158px;
+    padding: 10px;
+  }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .walk-controls {
+    top: 90px;
+    width: 158px;
+    padding: 10px;
+  }
+  .walk-controls small {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

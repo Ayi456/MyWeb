@@ -22,6 +22,13 @@ export interface CameraView {
   distance: number;
   focus: [number, number, number];
 }
+export type WalkDirection = "forward" | "back" | "left" | "right";
+export interface WalkView {
+  x: number;
+  z: number;
+  yaw: number;
+  pitch: number;
+}
 export interface SceneSnapshot {
   ready: boolean;
   hour: number;
@@ -57,6 +64,7 @@ export interface SceneSnapshot {
   moonPhase: number;
   cameraPreset: CameraPreset | null;
   cameraView: CameraView;
+  walkView: WalkView | null;
 }
 export type SceneNotice =
   | { type: "tap"; id: HotspotId; text: string }
@@ -75,6 +83,8 @@ export interface SceneController {
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;
   setRadioPlaying(on: boolean): void;
+  setWalking(on: boolean): void;
+  walkInput(direction: WalkDirection, on: boolean): void;
   resetOrbitFlag(): void;
   /** Trigger a gentle hotspot reaction without a tap notice or stamp. */
   nudge(id: HotspotId, amount: number, pop?: boolean): void;
@@ -117,6 +127,7 @@ export interface SceneOptions {
     moonPhase?: number;
     cameraPreset?: CameraPreset;
     cameraView?: CameraView;
+    walkView?: WalkView;
     event?: SceneEventKind;
   };
 }

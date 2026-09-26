@@ -39,6 +39,7 @@ import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
 import { Foghorn, foghornWeather } from "./systems/foghorn";
 import { sampleRopeway } from "./systems/ropeway";
+import { IslandWalker, walkingObstacles } from "./systems/walking";
 import { updateFestival } from "./systems/festival";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
@@ -127,6 +128,10 @@ export function createScene(
     const objects = createWorld(ctx);
     objects.moonPhaseUniform.value = options.initial?.moonPhase ?? 0.5;
     const interactions = createInteractions(ctx, objects);
+    const walker = new IslandWalker(
+      objects.walkTiles,
+      walkingObstacles(objects),
+    );
     cleanups.push(() => interactions.dispose());
     const stamps = new StampBook(),
       ledger = new ReplyLedger(),
@@ -147,6 +152,7 @@ export function createScene(
         } else camera.preset(view);
         emit();
       },
+      walker,
     );
     cleanups.push(() => camera.dispose());
     if (options.initial?.cameraView)
@@ -156,6 +162,8 @@ export function createScene(
     else if (options.initial?.cameraPreset)
       camera.preset(options.initial.cameraPreset, true);
     else if (!options.skipArrival) camera.arrive();
+    if (options.initial?.walkView)
+      camera.setWalking(true, options.initial.walkView);
     const clock = new SimulationClock(),
       seasons = new SeasonClock(),
       windSystem = new WindSystem(),
@@ -237,6 +245,7 @@ export function createScene(
       moonPhase: objects.moonPhaseUniform.value,
       cameraPreset: camera.sharePreset,
       cameraView: camera.shareView,
+      walkView: camera.walkView,
     };
     stamps.onEarn((id) => {
       const stamp = STAMPS.find((s) => s.id === id)!;
@@ -315,6 +324,7 @@ export function createScene(
         moonPhase: objects.moonPhaseUniform.value,
         cameraPreset: camera.sharePreset,
         cameraView: camera.shareView,
+        walkView: camera.walkView,
       };
       listeners.forEach((listener) => listener(snapshot));
       // Non-sensitive diagnostics only. Never include letters or personal text here.
@@ -660,6 +670,13 @@ export function createScene(
           rodeStamp = false;
         } else camera.preset(preset);
         emit();
+      },
+      setWalking(on) {
+        camera.setWalking(on);
+        emit();
+      },
+      walkInput(direction, on) {
+        camera.walkInput(direction, on);
       },
       setInteractionBlocked(blocked) {
         camera.setBlocked(blocked);

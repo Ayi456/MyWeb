@@ -7,6 +7,7 @@ import { ActionControls } from "./components/ActionControls";
 import { LetterDialog } from "./components/LetterDialog";
 import { HelpPanel } from "./components/HelpPanel";
 import { TreasureHunt } from "./components/TreasureHunt";
+import { WalkControls } from "./components/WalkControls";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio, type RadioControl } from "./components/CloudRadio";
@@ -140,6 +141,7 @@ export default function App() {
       SCENE_LINK.year !== null ||
       SCENE_LINK.cameraPreset !== null ||
       SCENE_LINK.cameraView !== null ||
+      SCENE_LINK.walkView !== null ||
       SCENE_LINK.event !== null;
     return {
       stamps: collectionRef.current.stamps,
@@ -155,6 +157,7 @@ export default function App() {
       year: SCENE_LINK.year ?? undefined,
       cameraPreset: SCENE_LINK.cameraPreset ?? undefined,
       cameraView: SCENE_LINK.cameraView ?? undefined,
+      walkView: SCENE_LINK.walkView ?? undefined,
       event: SCENE_LINK.event ?? undefined,
     };
   }, []);
@@ -476,6 +479,10 @@ export default function App() {
   }, [attempt, ready, guideStep, notify]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.code === "Escape" && !mailOpen && !postcardsOpen) {
+        setHelpOpen(false);
+        return;
+      }
       if (
         mailOpen ||
         postcardsOpen ||
@@ -544,6 +551,14 @@ export default function App() {
   return (
     <>
       <SceneCanvas key={attempt} canvasRef={canvas} />
+      {snapshot?.walkView && !blocked && !error && (
+        <WalkControls
+          onInput={(direction, on) =>
+            controller.current?.walkInput(direction, on)
+          }
+          onExit={() => controller.current?.setWalking(false)}
+        />
+      )}
       <SceneOverlay
         snapshot={snapshot}
         hidden={hidden}
@@ -583,6 +598,11 @@ export default function App() {
             onPoke={(id) => controller.current?.poke(id)}
             onVisit={(preset) => {
               controller.current?.setCameraPreset(preset);
+              setHelpOpen(false);
+            }}
+            walking={!!snapshot?.walkView}
+            onWalking={() => {
+              controller.current?.setWalking(!snapshot?.walkView);
               setHelpOpen(false);
             }}
             treasure={

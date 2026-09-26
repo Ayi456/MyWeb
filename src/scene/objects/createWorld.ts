@@ -25,7 +25,7 @@ import { createDepot } from "./depot";
 
 export function createWorld(ctx: SceneContext) {
   const sky = createSky(ctx);
-  createIsland(ctx);
+  const island = createIsland(ctx);
   const sakura = createSakura(ctx);
   const office = createPostOffice(ctx);
   const dock = createDock(ctx);
@@ -48,6 +48,7 @@ export function createWorld(ctx: SceneContext) {
   const gramophone = createGramophone(ctx, archipelago.gardenIsland);
   const depot = createDepot(ctx);
   return {
+    ...island,
     ...sky,
     ...sakura,
     ...office,

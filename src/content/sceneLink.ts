@@ -1,6 +1,11 @@
 import { EVENT_KINDS, type SceneEventKind } from "../scene/systems/events";
 import { SEASONS } from "../scene/systems/season";
-import type { CameraPreset, CameraView, SceneSnapshot } from "../scene/types";
+import type {
+  CameraPreset,
+  CameraView,
+  SceneSnapshot,
+  WalkView,
+} from "../scene/types";
 import { sceneFromSearch } from "./realTime";
 import { CAMERA_PRESETS } from "../scene/core/cameraViews";
 
@@ -51,6 +56,7 @@ export function parseSceneLink(search: string) {
         ? (presetText as CameraPreset)
         : null,
     cameraView: base.classic ? null : cameraFromText(params.get("cam")),
+    walkView: base.classic ? null : walkFromText(params.get("walk")),
     event:
       !base.classic && EVENT_KINDS.includes(eventText as SceneEventKind)
         ? (eventText as SceneEventKind)
@@ -67,7 +73,13 @@ export function buildSceneLink(currentUrl: string, snapshot: SceneSnapshot) {
     Number(value.toFixed(places)).toString();
   url.searchParams.set("hour", numeric(snapshot.hour, 2));
   url.searchParams.set("season", String(SEASONS.indexOf(snapshot.season)));
-  if (snapshot.cameraPreset)
+  if (snapshot.walkView) {
+    const { x, z, yaw, pitch } = snapshot.walkView;
+    url.searchParams.set(
+      "walk",
+      [x, z, yaw, pitch].map((value) => numeric(value, 3)).join(","),
+    );
+  } else if (snapshot.cameraPreset)
     url.searchParams.set("preset", snapshot.cameraPreset);
   else {
     const view = snapshot.cameraView;
@@ -80,4 +92,25 @@ export function buildSceneLink(currentUrl: string, snapshot: SceneSnapshot) {
   }
   if (snapshot.event) url.searchParams.set("event", snapshot.event);
   return url.toString();
+}
+
+function walkFromText(text: string | null): WalkView | null {
+  if (!text) return null;
+  const parts = text.split(",");
+  if (parts.length !== 4 || parts.some((p) => !/^-?\d+(?:\.\d+)?$/.test(p)))
+    return null;
+  const bounds = [
+    [-4.1, 4.1],
+    [-3.04, 3.04],
+    [-Math.PI, Math.PI],
+    [-0.8, 0.8],
+  ];
+  const values = parts.map(Number);
+  if (
+    values.some(
+      (v, i) => !Number.isFinite(v) || v < bounds[i][0] || v > bounds[i][1],
+    )
+  )
+    return null;
+  return { x: values[0], z: values[1], yaw: values[2], pitch: values[3] };
 }

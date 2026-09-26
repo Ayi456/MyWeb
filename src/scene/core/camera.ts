@@ -1,6 +1,12 @@
 import * as T from "three";
 import { CONFIG } from "../config";
-import type { CameraPreset, CameraView } from "../types";
+import type {
+  CameraPreset,
+  CameraView,
+  WalkView,
+  WalkDirection,
+} from "../types";
+import type { IslandWalker } from "../systems/walking";
 import { HIT_LAYER } from "../systems/interactions";
 import { CAMERA_VIEWS, sampleTour, nearestTourTime } from "./cameraViews";
 
@@ -14,6 +20,7 @@ export function createCamera<Id extends string>(
   onTap: (id: Id) => void,
   onHover: (id: Id) => void = () => {},
   onVisit: (id: Id) => void = () => {},
+  walker?: IslandWalker,
 ) {
   const camera = new T.PerspectiveCamera(37, 1, 0.1, 150);
   const abort = new AbortController();
@@ -35,6 +42,26 @@ export function createCamera<Id extends string>(
     followOffset = 0.55,
     followTime = 0;
   let presetName: CameraPreset | null = "reset";
+  let walking = false;
+  let beforeWalk: CameraView | null = null;
+  const directions: Record<string, WalkDirection> = {
+    KeyW: "forward",
+    ArrowUp: "forward",
+    KeyS: "back",
+    ArrowDown: "back",
+    KeyA: "left",
+    ArrowLeft: "left",
+    KeyD: "right",
+    ArrowRight: "right",
+  };
+  const forward = new T.Vector3();
+  function leaveWalking() {
+    walking = false;
+    walker?.clear();
+    camera.fov = 37;
+    camera.near = 0.1;
+    camera.updateProjectionMatrix();
+  }
   let tourTime = 0;
   let tourEntry: { from: CameraView; age: number } | null = null;
   let flight: { from: CameraView; to: CameraView; age: number } | null = null;
@@ -88,6 +115,7 @@ export function createCamera<Id extends string>(
     interact();
   };
   function resetInput() {
+    walker?.clear();
     pointers.clear();
     pointerStart = null;
     pointerActive = false;
@@ -95,6 +123,7 @@ export function createCamera<Id extends string>(
   }
   function preset(value: CameraPreset, instant = false) {
     if (value === "ride") return;
+    leaveWalking();
     const view = CAMERA_VIEWS[value];
     if (!view) return;
     const from: CameraView = {
@@ -118,6 +147,7 @@ export function createCamera<Id extends string>(
     } else flight = { from, to: { ...view, azimuth: targetAz }, age: 0 };
   }
   function setShareView(value: CameraView) {
+    leaveWalking();
     followTarget = null;
     presetName = null;
     az = targetAz = value.azimuth;
@@ -183,7 +213,10 @@ export function createCamera<Id extends string>(
         Math.hypot(e.clientX - pointerStart.x, e.clientY - pointerStart.y) > 5
       )
         pointerStart.moved = true;
-      if (pointers.size === 2) {
+      if (walking) {
+        if (pointers.size === 1)
+          walker?.look(e.clientX - previous.x, e.clientY - previous.y);
+      } else if (pointers.size === 2) {
         const p = [...pointers.values()],
           d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
         targetDistance = T.MathUtils.clamp(
@@ -241,6 +274,7 @@ export function createCamera<Id extends string>(
     (e) => {
       if (blocked) return;
       e.preventDefault();
+      if (walking) return;
       if (!followTarget) presetName = null;
       targetDistance = T.MathUtils.clamp(
         targetDistance * Math.exp(e.deltaY * 0.001),
@@ -256,6 +290,15 @@ export function createCamera<Id extends string>(
     "keydown",
     (e) => {
       if (blocked) return;
+      if (walking) {
+        const direction = directions[e.code];
+        if (direction && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          walker?.input(direction, true);
+          takeOver();
+        }
+        return;
+      }
       if (
         ![
           "ArrowLeft",
@@ -296,6 +339,21 @@ export function createCamera<Id extends string>(
     opts,
   );
   window.addEventListener("blur", resetInput, opts);
+  window.addEventListener(
+    "keyup",
+    (e) => {
+      const direction = directions[e.code];
+      if (direction) walker?.input(direction, false);
+    },
+    opts,
+  );
+  window.addEventListener(
+    "focusin",
+    (e) => {
+      if (e.target !== canvas) walker?.clear();
+    },
+    opts,
+  );
   // UI gestures also stop the tour, including sound and copy-link buttons.
   window.addEventListener("pointerdown", interact, opts);
   window.addEventListener("keydown", interact, opts);
@@ -305,6 +363,38 @@ export function createCamera<Id extends string>(
     camera,
     preset,
     setShareView,
+    get walkView(): WalkView | null {
+      return walking && walker ? { ...walker.view } : null;
+    },
+    walkInput(direction: WalkDirection, on: boolean) {
+      if (walking && !blocked) walker?.input(direction, on);
+    },
+    setWalking(on: boolean, view?: WalkView) {
+      if (!walker || on === walking) return;
+      if (on) {
+        beforeWalk = {
+          azimuth: targetAz,
+          elevation: targetEl,
+          distance: targetDistance,
+          focus: [targetFocus.x, targetFocus.y, targetFocus.z],
+        };
+        followTarget = null;
+        presetName = null;
+        walker.reset(view);
+        walking = true;
+        camera.fov = 60;
+        camera.near = 0.035;
+        camera.updateProjectionMatrix();
+        takeOver();
+        resetInput();
+        canvas.focus({ preventScroll: true });
+      } else {
+        leaveWalking();
+        if (beforeWalk) setShareView(beforeWalk);
+        else preset("reset", true);
+        canvas.focus({ preventScroll: true });
+      }
+    },
     get sharePreset() {
       return followTarget ? "ride" : presetName;
     },
@@ -345,6 +435,7 @@ export function createCamera<Id extends string>(
     },
     /** Ride behind the airship. Reset or the tree preset leaves the ride. */
     follow(target: T.Object3D | null) {
+      leaveWalking();
       if (target === followTarget) return;
       followTarget = target;
       followTime = 0;
@@ -366,6 +457,19 @@ export function createCamera<Id extends string>(
       resetInput();
     },
     update(dt: number, now: number, playing: boolean, reducedMotion: boolean) {
+      if (walking && walker) {
+        autoOrbit = false;
+        if (!blocked) walker.update(dt);
+        camera.position.set(...walker.eye);
+        const { yaw, pitch } = walker.view;
+        forward.set(
+          Math.sin(yaw) * Math.cos(pitch),
+          Math.sin(pitch),
+          -Math.cos(yaw) * Math.cos(pitch),
+        );
+        camera.lookAt(forward.add(camera.position));
+        return;
+      }
       if (followTarget) {
         followTime += dt;
         targetFocus.copy(followTarget.position).add(new T.Vector3(0, 0.9, 0));

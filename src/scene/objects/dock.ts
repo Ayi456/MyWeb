@@ -39,7 +39,7 @@ export function createDock(ctx: SceneContext) {
       fence.add(x + 0.18, y + 0.18, z, 0.38, 0.04, 0.04, "#ddc9ab");
     }
   }
-  fence.build();
+  const fenceMesh = fence.build();
   const mailbox = new T.Group();
   mailbox.position.set(2.35, ground(2.35, 1.03) + 0.07, 1.03);
   world.add(mailbox);
@@ -66,5 +66,5 @@ export function createDock(ctx: SceneContext) {
     0,
   );
   mailHit.castShadow = false;
-  return { mailHit, mailbox };
+  return { mailHit, mailbox, fenceMesh };
 }

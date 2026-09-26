@@ -16,6 +16,8 @@ export function HelpPanel({
   onRestartGuide,
   onPoke,
   onVisit,
+  walking,
+  onWalking,
   treasure,
   onClose,
 }: {
@@ -31,6 +33,8 @@ export function HelpPanel({
   onRestartGuide: () => void;
   onPoke: (id: HotspotId) => void;
   onVisit: (preset: CameraPreset) => void;
+  walking: boolean;
+  onWalking: () => void;
   treasure: ReactNode;
   onClose: () => void;
 }) {
@@ -82,6 +86,18 @@ export function HelpPanel({
         ))}
       </div>
       {treasure}
+      <p>
+        想从小兔的高度看看春天？开始散步后，用
+        WASD、方向键或屏幕方向按钮移动，拖动画面看四周。岛边、建筑和水池会挡住脚步。
+      </p>
+      <button
+        type="button"
+        className="guide-restart"
+        onClick={onWalking}
+        aria-pressed={walking}
+      >
+        {walking ? "结束散步" : "开始岛上散步"}
+      </button>
       <button type="button" className="guide-restart" onClick={onRestartGuide}>
         重看三步引导
       </button>

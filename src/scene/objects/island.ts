@@ -8,6 +8,7 @@ export function createIsland(ctx: SceneContext) {
   const terrain = new Batch(world, rockMat),
     grass = new Batch();
   const step = 0.29;
+  const walkTiles: { x: number; z: number; y: number }[] = [];
   for (let x = -4.1; x <= 4.1; x += step)
     for (let z = -3.04; z <= 3.04; z += step) {
       const d = (x / 3.95) ** 2 + (z / 2.9) ** 2,
@@ -17,6 +18,7 @@ export function createIsland(ctx: SceneContext) {
         depth =
           0.42 + 3.47 * Math.pow(Math.max(0, 1 - d), 0.63) + hash(x, z) * 0.31;
       const lower = y - depth;
+      walkTiles.push({ x, z, y: y + 0.09 });
       const layers = 4;
       for (let k = 0; k < layers; k++) {
         const h = depth / layers;
@@ -113,5 +115,5 @@ export function createIsland(ctx: SceneContext) {
     }
   }
   vines.build();
-  return { terrainCount: terrain.cells.length };
+  return { terrainCount: terrain.cells.length, walkTiles };
 }
