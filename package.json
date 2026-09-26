@@ -13,9 +13,10 @@
     "test": "vitest run",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "format": "prettier --write src server api tests *.json *.ts *.js index.html README.md",
-    "format:check": "prettier --check src server api tests *.json *.ts *.js index.html README.md",
-    "test:visual": "playwright test"
+    "format": "prettier --write src server api tests scripts *.json *.ts *.js index.html README.md",
+    "format:check": "prettier --check src server api tests scripts *.json *.ts *.js index.html README.md",
+    "test:visual": "playwright test",
+    "music:probe": "node scripts/probe-music-cors.mjs"
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "4.40.1",

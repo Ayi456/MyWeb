@@ -83,6 +83,7 @@ export interface SceneController {
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;
   setRadioPlaying(on: boolean): void;
+  setMusicEnergy(energy: number): void;
   setWalking(on: boolean): void;
   walkInput(direction: WalkDirection, on: boolean): void;
   resetOrbitFlag(): void;

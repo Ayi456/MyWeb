@@ -4,6 +4,7 @@ import { type SceneContext, type Point3, PI, lerp } from "../core/context";
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createLanterns(ctx: SceneContext) {
   const { world, lampMat, Batch, line } = ctx;
+  const lanternMat = lampMat.clone();
   // Lantern strands follow shallow catenaries, with warm glowing paper cubes at night.
   const lanterns: T.Group[] = [],
     glows: T.Sprite[] = [];
@@ -30,7 +31,7 @@ export function createLanterns(ctx: SceneContext) {
     g.position.set(x, y, z);
     g.scale.setScalar(scale);
     parent.add(g);
-    const l = new Batch(g, lampMat);
+    const l = new Batch(g, lanternMat);
     l.add(0, 0, 0, 0.18, 0.22, 0.18, "#ffdbb7");
     l.add(0, 0.13, 0, 0.12, 0.07, 0.12, "#ffe6c6");
     l.add(0, -0.13, 0, 0.12, 0.05, 0.12, "#efc290");
@@ -79,5 +80,5 @@ export function createLanterns(ctx: SceneContext) {
       );
     }
   }
-  return { lanterns, glows };
+  return { lanterns, glows, lanternMat };
 }

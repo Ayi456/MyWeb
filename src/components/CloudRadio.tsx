@@ -8,6 +8,8 @@ import {
 } from "react";
 import type { RadioPlayback, RadioPlaylist } from "../music/types";
 import { nextPlayable, skipDelay } from "../music/skipPolicy";
+import { MusicMeter, canAnalyse } from "../music/meter";
+import { readPreference, writePreference } from "../persist/storage";
 import "../styles/radio.css";
 
 class RadioError extends Error {
@@ -59,21 +61,52 @@ export function CloudRadio({
   onCaption,
   controlRef,
   onPlaybackChange,
+  onEnergy,
 }: {
   hidden: boolean;
   night: boolean;
   onCaption?: (text: string) => void;
   controlRef?: Ref<RadioControl>;
   onPlaybackChange?: (playing: boolean) => void;
+  onEnergy?: (energy: number) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const meterRef = useRef<MusicMeter | null>(null);
+  const [audioKey, setAudioKey] = useState(0);
+  const replacement = useRef<{
+    old: HTMLAudioElement;
+    resolve: (audio: HTMLAudioElement | null) => void;
+  } | null>(null);
+  const [pulse, setPulse] = useState(() => readPreference("music-pulse"));
+  const [pulseStatus, setPulseStatus] =
+    useState("播放后，灯笼会跟着旋律轻轻呼吸。");
+  const loadedPulse = useRef(false);
+  const loadedCors = useRef(false);
+  const nativeFallback = useRef(new Set<string>());
+  const reportEnergy = useEffectEvent((value: number) => onEnergy?.(value));
+  useEffect(() => {
+    if (!pulse || !playing) {
+      reportEnergy(0);
+      return;
+    }
+    let frame = 0;
+    const tick = () => {
+      reportEnergy(document.hidden ? 0 : (meterRef.current?.read() ?? 0));
+      frame = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => {
+      cancelAnimationFrame(frame);
+      reportEnergy(0);
+    };
+  }, [pulse, playing]);
   const [open, setOpen] = useState(false);
   const [playlist, setPlaylist] = useState<RadioPlaylist | null>(null);
   const [playlistError, setPlaylistError] = useState("");
   const [retry, setRetry] = useState(0);
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
-  const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [trial, setTrial] = useState(false);
@@ -157,6 +190,16 @@ export function CloudRadio({
       audio?.pause();
       audio?.removeAttribute("src");
       audio?.load();
+      const currentAudio = audioRef.current;
+      if (currentAudio !== audio) {
+        currentAudio?.pause();
+        currentAudio?.removeAttribute("src");
+        currentAudio?.load();
+      }
+      meterRef.current?.dispose();
+      meterRef.current = null;
+      replacement.current?.resolve(null);
+      replacement.current = null;
     };
   }, []);
 
@@ -201,12 +244,34 @@ export function CloudRadio({
 
   function userAction() {
     failures.current = 0;
+    if (pulse) primeMeter();
   }
 
-  async function play(nextIndex: number, autoplay = true) {
-    const audio = audioRef.current;
+  function primeMeter() {
+    meterRef.current ??= new MusicMeter();
+    return meterRef.current.prime();
+  }
+  function replaceAudio(old: HTMLAudioElement) {
+    old.pause();
+    old.removeAttribute("src");
+    old.load();
+    meterRef.current?.detach();
+    return new Promise<HTMLAudioElement | null>((resolve) => {
+      replacement.current = { old, resolve };
+      setAudioKey((key) => key + 1);
+    });
+  }
+
+  async function play(
+    nextIndex: number,
+    autoplay = true,
+    analyse = pulse,
+    resumeAt = 0,
+  ) {
+    let audio = audioRef.current;
     const nextTrack = playlist?.tracks[nextIndex];
     if (!audio || !nextTrack) return;
+    const meterReady = analyse && primeMeter();
     cancel();
     const version = generation.current;
     const controller = new AbortController();
@@ -218,12 +283,18 @@ export function CloudRadio({
       if (version !== generation.current) return;
       cancel();
       loaded.current = "";
-      audio.removeAttribute("src");
-      audio.load();
+      audio?.removeAttribute("src");
+      audio?.load();
       setMessage("这首歌连接超时了，可以重试或换一首。");
     }, 20_000);
     try {
-      if (loaded.current !== nextTrack.id || audio.error) {
+      if (
+        loaded.current !== nextTrack.id ||
+        audio.error ||
+        (analyse &&
+          !loadedPulse.current &&
+          !nativeFallback.current.has(nextTrack.id))
+      ) {
         audio.removeAttribute("src");
         audio.load();
         const result = await readRadio<RadioPlayback>(
@@ -231,13 +302,45 @@ export function CloudRadio({
           controller.signal,
         );
         if (generation.current !== version) return;
+        const eligible =
+          meterReady &&
+          !nativeFallback.current.has(nextTrack.id) &&
+          (await canAnalyse(result.url, controller.signal));
+        if (generation.current !== version) return;
+        if (!eligible && meterRef.current?.hasSource(audio)) {
+          audio = await replaceAudio(audio);
+          if (!audio || generation.current !== version) return;
+        }
+        if (eligible) audio.crossOrigin = "anonymous";
+        else audio.removeAttribute("crossorigin");
         audio.src = result.url;
+        loadedCors.current = !!eligible;
+        loadedPulse.current = !!eligible && !!meterRef.current?.attach(audio);
+        if (analyse)
+          setPulseStatus(
+            loadedPulse.current
+              ? "灯笼与螺旋桨正在倾听这首歌。"
+              : "本曲暂不支持律动，音乐照常播放。",
+          );
         loaded.current = nextTrack.id;
         setTrial(result.trial);
       }
       await audio.play();
+      if (resumeAt > 0 && generation.current === version)
+        audio.currentTime = resumeAt;
     } catch (error) {
       if (generation.current !== version) return;
+      if (
+        loadedCors.current &&
+        !nativeFallback.current.has(nextTrack.id) &&
+        !(error instanceof DOMException && error.name === "NotAllowedError")
+      ) {
+        nativeFallback.current.add(nextTrack.id);
+        loaded.current = "";
+        setPulseStatus("本曲暂不支持律动，音乐照常播放。");
+        void play(nextIndex, autoplay, false, audio?.currentTime ?? 0);
+        return;
+      }
       intent.current = false;
       if (error instanceof DOMException && error.name === "NotAllowedError") {
         setMessage("歌曲已准备好，再点一次播放吧。");
@@ -333,7 +436,17 @@ export function CloudRadio({
   return (
     <>
       <audio
-        ref={audioRef}
+        key={audioKey}
+        ref={(node) => {
+          audioRef.current = node;
+          if (node) {
+            node.volume = volume;
+            if (replacement.current && node !== replacement.current.old) {
+              replacement.current.resolve(node);
+              replacement.current = null;
+            }
+          }
+        }}
         preload="none"
         aria-label="云上电台音频"
         onPlaying={() => {
@@ -368,8 +481,21 @@ export function CloudRadio({
             move(1, true);
           }
         }}
-        onError={() => {
+        onError={(e) => {
+          if (e.currentTarget !== audioRef.current) return;
           if (!audioRef.current?.getAttribute("src") || !track) return;
+          if (loadedCors.current && !nativeFallback.current.has(track.id)) {
+            nativeFallback.current.add(track.id);
+            loaded.current = "";
+            setPulseStatus("本曲暂不支持律动，音乐照常播放。");
+            void play(
+              indexRef.current,
+              intent.current,
+              false,
+              audioRef.current.currentTime,
+            );
+            return;
+          }
           const autoplay = intent.current;
           cancel();
           fail(track.id, "这首歌暂时无法播放，换一首听听吧。", autoplay);
@@ -562,6 +688,27 @@ export function CloudRadio({
                     {index + 1} / {playlist.tracks.length}
                   </span>
                 </div>
+                <label className="radio-pulse">
+                  <input
+                    type="checkbox"
+                    checked={pulse}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      if (on) primeMeter();
+                      setPulse(on);
+                      writePreference("music-pulse", on);
+                      if (on && playing && !loadedPulse.current)
+                        void play(
+                          indexRef.current,
+                          true,
+                          true,
+                          audioRef.current?.currentTime ?? 0,
+                        );
+                    }}
+                  />
+                  音乐律动
+                </label>
+                {pulse && <p className="radio-pulse-status">{pulseStatus}</p>}
               </>
             )}
           </section>

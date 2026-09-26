@@ -40,6 +40,7 @@ import { soundCues, type SoundState } from "./systems/soundCues";
 import { Foghorn, foghornWeather } from "./systems/foghorn";
 import { sampleRopeway } from "./systems/ropeway";
 import { IslandWalker, walkingObstacles } from "./systems/walking";
+import { MusicPulse } from "./systems/musicPulse";
 import { updateFestival } from "./systems/festival";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
@@ -77,6 +78,8 @@ export function createScene(
   const foghorn = new Foghorn();
   let radioPlaying = false;
   let ropewayTime = 0;
+  let musicEnergy = 0;
+  const musicPulse = new MusicPulse();
   let captions = false;
   const lastCue = new Map<string, number>();
   const soundLabels: Record<SoundName, string> = {
@@ -353,6 +356,9 @@ export function createScene(
           cablecar: objects.cablecar.position.toArray(),
           ropewayStopped: sampleRopeway(ropewayTime).stopped,
           ropewayTime,
+          musicPulse: musicPulse.level,
+          musicPropeller: musicPulse.angle,
+          lanternBrightness: objects.lanternMat.emissiveIntensity,
         });
     }
     function resize() {
@@ -500,6 +506,16 @@ export function createScene(
         ctx.U.uShip.value.copy(objects.airship.position);
         updateAmbient(objects, clock.time, motionWind, route.phase, windSystem);
         interactions.update(dt, clock.time);
+        musicPulse.update(
+          realDt,
+          musicEnergy,
+          radioPlaying,
+          dt === 0,
+          reducedMotion,
+        );
+        objects.lanternMat.emissiveIntensity =
+          ctx.lampMat.emissiveIntensity * (1 + musicPulse.level * 0.22);
+        objects.propeller.rotation.x += musicPulse.angle;
         delivery.update(dt, objects.airship);
         // Replies ride back with the ship and land when it moors at home.
         const moored = route.phase < CONFIG.dockDuration;
@@ -702,6 +718,11 @@ export function createScene(
       },
       setRadioPlaying(on) {
         radioPlaying = on;
+      },
+      setMusicEnergy(energy) {
+        musicEnergy = Number.isFinite(energy)
+          ? Math.max(0, Math.min(1, energy))
+          : 0;
       },
       setCaptions(on) {
         captions = on;

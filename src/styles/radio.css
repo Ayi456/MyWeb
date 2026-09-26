@@ -249,6 +249,24 @@
   font-size: 9px;
   line-height: 1.6;
 }
+.radio-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 11px;
+  color: inherit;
+}
+.radio-pulse input {
+  accent-color: #b87f91;
+}
+.radio-pulse-status {
+  font-size: 10px;
+  line-height: 1.6;
+  color: inherit;
+  opacity: 0.75;
+  margin: 0 0 8px;
+}
 .radio-source a {
   color: inherit;
   text-decoration: none;

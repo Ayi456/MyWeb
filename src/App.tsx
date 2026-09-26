@@ -693,6 +693,7 @@ export default function App() {
       <CloudRadio
         controlRef={radioControl}
         onPlaybackChange={setRadioPlaying}
+        onEnergy={(energy) => controller.current?.setMusicEnergy(energy)}
         hidden={hidden || !snapshot?.ready || !!error || blocked}
         night={(snapshot?.night ?? 0) > 0.63}
         onCaption={
