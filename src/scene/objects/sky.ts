@@ -12,8 +12,10 @@ export function createSky(ctx: SceneContext) {
     new T.SphereGeometry(95, 24, 16),
     new T.ShaderMaterial({
       uniforms: skyUniforms,
+      // Keep the sky camera-centred at every world position and pin it to the
+      // far plane, so orbiting distant islands cannot clip holes in the dome.
       vertexShader:
-        "varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+        "varying vec3 vP;void main(){vP=position;vec4 p=projectionMatrix*vec4(mat3(modelViewMatrix)*position,1.);gl_Position=p.xyww;}",
       fragmentShader:
         "uniform vec3 top;uniform vec3 bottom;varying vec3 vP;void main(){float h=smoothstep(-.25,.65,normalize(vP).y);vec3 c=mix(bottom,top,h);gl_FragColor=vec4(c,1.);}",
       side: T.BackSide,
@@ -23,6 +25,7 @@ export function createSky(ctx: SceneContext) {
     scene,
   );
   sky.castShadow = false;
+  sky.frustumCulled = false;
   sky.renderOrder = -50;
   const hemi = new T.HemisphereLight("#e9f4f0", "#c99a99", 2.4);
   scene.add(hemi);
