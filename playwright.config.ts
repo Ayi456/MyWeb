@@ -13,6 +13,7 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixelRatio: 0.01, threshold: 0.15 },
   },
   use: {
+    baseURL: "http://127.0.0.1:5175",
     viewport: { width: 1280, height: 720 },
     deviceScaleFactor: 1,
     launchOptions: {
@@ -21,9 +22,10 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "npm run dev",
-      url: "http://127.0.0.1:5173/tests/browser.html",
-      reuseExistingServer: true,
+      command: "npm run dev -- --port 5175 --force",
+      env: { SCENE_TEST_SERVER: "1" },
+      url: "http://127.0.0.1:5175/tests/browser.html",
+      reuseExistingServer: false,
       timeout: 60_000,
     },
     {

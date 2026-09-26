@@ -9,7 +9,7 @@ test("reality follow is optional, persisted, paused and exits on manual season",
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1");
+  await page.goto("/?debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   const diagnostic = () =>
     page
@@ -35,7 +35,7 @@ test("reality follow is optional, persisted, paused and exits on manual season",
       localStorage.getItem("spring-post-office:v1:real-time"),
     ),
   ).toBe("false");
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=6.5&season=2");
+  await page.goto("/?debug=1&hour=6.5&season=2");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect.poll(async () => (await diagnostic()).season).toBe("autumn");
   await expect

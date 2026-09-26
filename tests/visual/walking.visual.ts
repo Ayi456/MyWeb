@@ -16,7 +16,7 @@ test("rabbit walk moves, collides, shares, stops on panel/blur and returns to or
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("http://127.0.0.1:5173/?hour=12&debug=1");
+  await page.goto("/?hour=12&debug=1");
   await expect.poll(async () => (await data(page)).ready).toBe(true);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.getByRole("button", { name: "操作指南", exact: true }).click();
@@ -81,7 +81,7 @@ test("touch direction buttons cancel cleanly and invalid solid-ground coordinate
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:5173/?walk=1.2,0.15,0,0&hour=12&debug=1");
+  await page.goto("/?walk=1.2,0.15,0,0&hour=12&debug=1");
   await expect.poll(async () => (await data(page)).walkView?.z).toBe(1.65);
   const button = page.getByRole("button", { name: "向左走", exact: true });
   expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);

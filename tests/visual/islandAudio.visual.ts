@@ -61,7 +61,7 @@ test("a real garden click controls the radio, keyboard resumes and the record fo
           : playlist,
     });
   });
-  await page.goto("http://127.0.0.1:5173/?preset=garden&hour=12&debug=1");
+  await page.goto("/?preset=garden&hour=12&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.waitForTimeout(2200);
   expect(requests).toBe(0);
@@ -151,7 +151,7 @@ test("a second gramophone tap cancels pending autoplay while its playlist loads"
     await new Promise((resolve) => setTimeout(resolve, 1800));
     return route.fulfill({ json: playlist });
   });
-  await page.goto("http://127.0.0.1:5173/?hour=12&debug=1");
+  await page.goto("/?hour=12&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await pokeGramophone(page);
   await expect(page.locator(".radio-status")).toContainText("正在接收公开歌单");
@@ -178,7 +178,7 @@ test("failed and offline gramophone requests stay retryable on a narrow viewport
       : route.fulfill({ json: playlist });
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:5173/?hour=12&debug=1");
+  await page.goto("/?hour=12&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await pokeGramophone(page);
   await expect(page.locator(".radio-status")).toContainText("暂时连接不上");
@@ -223,7 +223,7 @@ test("autoplay denial leaves a loaded song ready for another explicit gramophone
     if (isPlayback) playbackRequests++;
     return route.fulfill({ json: isPlayback ? playback : playlist });
   });
-  await page.goto("http://127.0.0.1:5173/?hour=12&debug=1");
+  await page.goto("/?hour=12&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await pokeGramophone(page);
   await expect(page.locator(".radio-status")).toContainText("再点一次播放");
@@ -257,7 +257,7 @@ test("night foghorn schedules WebAudio notes, captions while muted and freezes o
       return osc;
     };
   });
-  await page.goto("http://127.0.0.1:5173/?hour=23&season=3&debug=1");
+  await page.goto("/?hour=23&season=3&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.getByRole("button", { name: "操作指南", exact: true }).click();

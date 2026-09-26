@@ -1,6 +1,6 @@
 # 云上的春日邮局
 
-**Postcards from the Sky** — 一张可以走进去的春日明信片。React 负责界面，TypeScript + Three.js r160 负责真正的体素微缩世界，Vite 构建前端，Vercel Function 为「云上电台」提供公开歌单和播放地址。
+**Postcards from the Sky** — 一张可以走进去的春日明信片。React 负责界面，TypeScript + Three.js r186 负责真正的体素微缩世界，Vite 构建前端，Vercel Function 为「云上电台」提供公开歌单和播放地址。
 
 本项目从根目录的 `spring-post-office.html` 迁移，主岛保留原有模型生成算法、随机调用顺序、固定种子 **314159**、布局、体素尺寸、配色和自定义 Shader。在此基础上扩展了花园副岛、灯塔小站、群岛邮路、彩虹和云上电台，并加入邮局历书、本机邮戳收藏、明信片导出与场景分享链接。原 HTML 原样保留，不参与生产构建。前端代码和字体不依赖外部 CDN；音乐由网易云音频 CDN 提供。
 
@@ -15,6 +15,8 @@ npm run dev
 ```
 
 没有 nvm 时，直接安装 Node.js 24.x 后运行后两行。开发地址以终端输出为准，默认端口 5173。默认配置无需环境变量。依赖锁文件由真实 npm 安装生成，请提交 `package-lock.json`，团队安装和 CI 使用 `npm ci`。
+
+更新 Three.js 依赖后，请重启开发服务并运行 `npm run dev -- --force`，避免已有进程继续提供旧版预构建模块。Playwright 使用独立的 5175 端口和依赖缓存，另在 4174 端口构建并检查生产页面；开发、生产运行版本都会断言为 r186。
 
 | 命令                  | 用途                                                                                       |
 | --------------------- | ------------------------------------------------------------------------------------------ |
@@ -128,7 +130,7 @@ Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。构�
 | `tests/browser.html`            | 开发环境中的真实 WebGL 生命周期验证页            |
 | `docs/VALIDATION.md`            | 实际验证结果与明确的未验证项                     |
 
-场景公开 `setSpeed`、`setTimeOfDay`、`setWind`、`setCameraPreset`、`setQuality`、`setInteractionBlocked`、`sendLetter`、`subscribe`、`dispose`。React 不保存 Three 对象，也不逐帧 setState；每 300 ms 或用户操作时同步轻量快照，统计每秒更新。
+场景公开 `setSpeed`、`setTimeOfDay`、`setWind`、`setCameraPreset`、`setQuality`、`setInteractionBlocked`、`setWalking`、`walkInput`、`setRadioPlaying`、`setMusicEnergy`、`sendLetter`、`subscribe`、`dispose`。React 不保存 Three 对象，也不逐帧 setState；每 300 ms 或用户操作时同步轻量快照，统计每秒更新。
 
 资源归场景所有，模型工厂共享 cube / material；信封只释放它自己的线条和实例缓冲。销毁时取消 RAF、订阅、事件和 ResizeObserver，释放几何体、材质、纹理、阴影与 HDR render target，最后释放 renderer。React StrictMode 的取消初始化分支和重复清理均已处理。后台停止 RAF，恢复前台重置时间基准；WebGL 不可用、Shader 错误或 context lost 进入可重试错误界面。
 
@@ -138,9 +140,9 @@ Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。构�
 - 自动模式从桌面高档、粗指针设备中档开始。先观察 8 秒，在低于 43 FPS 累积约 5 秒后降一级，再冷却 10 秒。不会自动升档来回抖动；可手动选档重置。
 - 花瓣、云团、溪水、瀑布和萤火虫使用 GPU 动画。位移对象有明确剔除策略；主体和花朵采用 InstancedMesh，共享几何体/材质。
 - 竖屏采用相机随动天空与雾密度补偿，修复原型在拉远时的天空裁切和过度雾化；默认角度稍向正面调整，避免灯塔被右侧按钮遮住。桌面相机保持不变。
-- 保留 r160 sRGB 输出、ACES、0.95 exposure、原雾参数及 HDR 微弱 Bloom / 暗角。灯光色改为连续插值；离港/靠港速度增加缓动、螺旋桨累积角度避免切换时跳动。
+- r186 保留 sRGB 输出、ACES、0.95 exposure、原雾参数及 HDR 微弱 Bloom / 暗角，阴影使用当前 PCF 实现。四张原有主岛基线在原容差内通过，阴影与着色的轻微变化已核对，截图和差异见 [验证记录](docs/VALIDATION.md)。灯光色改为连续插值；离港/靠港速度增加缓动、螺旋桨累积角度避免切换时跳动。
 - 系统减少动态效果会关闭自动环视和 UI 动画，减弱风的摇摆响应；可进一步用暂停冻结整个世界。仍保留缓慢环境动画。
-- 目标是常见桌面 GPU 在 1080p 附近流畅运行，不保证所有设备 60 FPS。WebGL / 硬件加速为必要条件。真实移动 GPU、Safari、中文输入法候选词和长时间运行仍需在目标设备确认，不能用桌面视口模拟代替真机验证。
+- 目标是常见桌面 GPU 在 1080p 附近流畅运行，不保证所有设备 60 FPS。WebGL 2 / 硬件加速为必要条件，不支持时显示可重试的明确说明。真实移动 GPU、Safari、中文输入法候选词和长时间运行仍需在目标设备确认，不能用桌面视口模拟代替真机验证。
 
 浏览器验证页使用 `npm run dev` 后打开 `/tests/browser.html?debug=1`，会在真实 WebGL 上检查暂停、寄信、资源回落、三次创建/销毁、不可用和 context loss 恢复，并输出实际 FPS。该页只作为测试源码存在，**不会进入生产 dist**。测试时保持该标签页处于选中状态，切到后台会按设计暂停模拟。
 

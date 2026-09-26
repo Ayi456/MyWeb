@@ -9,11 +9,10 @@ const SHOTS = [
 
 for (const { name, query } of SHOTS) {
   test(`main island · ${name}`, async ({ page }) => {
-    await page.goto(
-      `http://127.0.0.1:5173/tests/browser.html?mode=visual&${query}`,
-    );
+    await page.goto(`/tests/browser.html?mode=visual&${query}`);
     // The harness pauses the clock; give the camera damping time to settle.
     await page.waitForTimeout(2500);
+    await page.screenshot({ path: `docs/screenshots/three-r186-${name}.png` });
     await expect(page).toHaveScreenshot(`${name}.png`);
   });
 }

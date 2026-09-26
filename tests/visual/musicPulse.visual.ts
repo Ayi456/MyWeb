@@ -103,7 +103,7 @@ async function setup(
       body,
     });
   });
-  await page.goto("http://127.0.0.1:5173/?preset=tree&hour=23&debug=1");
+  await page.goto("/?preset=tree&hour=23&debug=1");
   await expect.poll(async () => (await data(page)).ready).toBe(true);
   await page.getByRole("button", { name: "云上电台", exact: false }).click();
   await expect(

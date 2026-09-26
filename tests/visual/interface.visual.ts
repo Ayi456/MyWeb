@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("opening, sound invitation and captions", async ({ page }) => {
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect(page.locator(".overlay")).not.toHaveClass(/arriving/);
 

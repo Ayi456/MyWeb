@@ -5,6 +5,10 @@ import { siteMeta } from "./server/vite-meta.ts";
 import { offlineShell } from "./server/vite-pwa.ts";
 
 export default defineConfig(({ mode }) => ({
+  cacheDir:
+    process.env.SCENE_TEST_SERVER === "1"
+      ? "node_modules/.vite-scene-tests"
+      : "node_modules/.vite",
   plugins: [
     react(),
     musicApi(loadEnv(mode, process.cwd(), "MUSIC_").MUSIC_PLAYLIST_ID),

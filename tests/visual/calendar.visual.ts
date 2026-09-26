@@ -9,7 +9,7 @@ test("solar term and return visit appear on desktop and mobile", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect(page.locator(".almanac-line")).toContainText("秋分");
   await page.reload();

@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 test("weekly hunt follows ordered clues, resumes, rewards and clears", async ({
   page,
 }) => {
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "操作指南", exact: true }).click();
   const hunt = page.getByRole("region", { name: "本周群岛寻宝" });
@@ -78,7 +78,7 @@ test("new local week resets clues while retaining the stamp on a narrow viewport
     }
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "操作指南", exact: true }).click();
   await expect(
@@ -120,7 +120,7 @@ test("a hunt can finish when local storage is unavailable", async ({
       throw new Error("blocked");
     };
   });
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "操作指南", exact: true }).click();
   const hunt = page.getByRole("region", { name: "本周群岛寻宝" });

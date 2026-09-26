@@ -9,7 +9,7 @@ test("mid-autumn decorations and limited stamp persist, while classic disables c
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1");
+  await page.goto("/?debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect
     .poll(async () =>
@@ -34,7 +34,7 @@ test("mid-autumn decorations and limited stamp persist, while classic disables c
   await expect(
     page.getByRole("list", { name: "限时邮戳" }).locator(".stamp-slot.earned"),
   ).toContainText("望月邮戳");
-  await page.goto("http://127.0.0.1:5173/?classic=1&debug=1");
+  await page.goto("/?classic=1&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect
     .poll(async () =>

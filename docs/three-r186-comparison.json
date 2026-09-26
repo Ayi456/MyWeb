@@ -1,0 +1,26 @@
+[
+  {
+    "scene": "dusk",
+    "width": 1280,
+    "height": 720,
+    "rgb_mean_absolute_difference": 0.8849
+  },
+  {
+    "scene": "day-tree",
+    "width": 1280,
+    "height": 720,
+    "rgb_mean_absolute_difference": 1.3837
+  },
+  {
+    "scene": "night",
+    "width": 1280,
+    "height": 720,
+    "rgb_mean_absolute_difference": 1.566
+  },
+  {
+    "scene": "winter",
+    "width": 1280,
+    "height": 720,
+    "rgb_mean_absolute_difference": 0.923
+  }
+]

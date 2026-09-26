@@ -8,9 +8,7 @@ test("copy link reproduces season, hour, preset and active event", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto(
-    "http://127.0.0.1:5173/?debug=1&hour=23&season=3&preset=tree&event=whale",
-  );
+  await page.goto("/?debug=1&hour=23&season=3&preset=tree&event=whale");
   await expect(page.locator(".loader")).toHaveCount(0);
   const diagnostics = () =>
     page
@@ -41,7 +39,7 @@ test("custom orbit survives a copied link without leaking a letter", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1");
+  await page.goto("/?debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "寄一封春天" }).click();
   await page

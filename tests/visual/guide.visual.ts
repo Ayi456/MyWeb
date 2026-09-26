@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("first-visit guide advances through a real orbit and a sent letter", async ({
   page,
 }) => {
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   const guide = page.locator(".guide");
   await expect(guide).toContainText("点一点樱花树", { timeout: 12_000 });
   await page.keyboard.press("1");

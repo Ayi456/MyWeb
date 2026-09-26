@@ -11,21 +11,23 @@ export function createRenderer(canvas: HTMLCanvasElement) {
       powerPreference: "high-performance",
     });
   } catch {
-    throw new Error("此浏览器无法创建 WebGL 场景，请检查硬件加速后重试。");
+    throw new Error(
+      "此浏览器无法创建 WebGL 2 场景，请更新浏览器或检查硬件加速后重试。",
+    );
   }
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.toneMapping = T.ACESFilmicToneMapping;
   renderer.toneMappingExposure = CONFIG.exposure;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  renderer.shadowMap.type = T.PCFShadowMap;
   let shaderError = false;
   renderer.debug.onShaderError = () => {
     shaderError = true;
   };
   const rt = new T.WebGLRenderTarget(1, 1, {
-    type: renderer.capabilities.isWebGL2 ? T.HalfFloatType : T.UnsignedByteType,
+    type: T.HalfFloatType,
   });
-  rt.samples = renderer.capabilities.isWebGL2 ? 2 : 0;
+  rt.samples = 2;
   const postScene = new T.Scene(),
     postCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const postU = {

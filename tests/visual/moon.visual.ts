@@ -9,7 +9,7 @@ test("moon shader tracks the date and festival forces full moon", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=23");
+  await page.goto("/?debug=1&hour=23");
   await expect(page.locator(".loader")).toHaveCount(0);
   const phase = () =>
     page
@@ -22,7 +22,7 @@ test("moon shader tracks the date and festival forces full moon", async ({
   await page.reload();
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect.poll(phase).toBe(0.5);
-  await page.goto("http://127.0.0.1:5173/?classic=1&debug=1&hour=23");
+  await page.goto("/?classic=1&debug=1&hour=23");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect.poll(phase).toBe(0.5);
 });

@@ -8,7 +8,7 @@ test("island views are keyboard reachable and their copied links replay", async 
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=12");
+  await page.goto("/?debug=1&hour=12");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   const diagnostics = () =>
@@ -56,9 +56,7 @@ test("island views are keyboard reachable and their copied links replay", async 
 test("double clicking a hotspot glides towards its landmark", async ({
   page,
 }) => {
-  await page.goto(
-    "http://127.0.0.1:5173/tests/browser.html?mode=visual&hour=12",
-  );
+  await page.goto("/tests/browser.html?mode=visual&hour=12");
   const diagnostics = () =>
     page
       .locator("canvas")
@@ -87,7 +85,7 @@ test("idle touring stops for pause, panels and reduced motion", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=12");
+  await page.goto("/?debug=1&hour=12");
   await expect(page.locator(".loader")).toHaveCount(0);
   const diagnostics = () =>
     page

@@ -4,7 +4,7 @@ test("hotspots react to night, winter and a sent letter", async ({ page }) => {
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=23");
+  await page.goto("/?debug=1&hour=23");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.locator("#world").focus();
@@ -36,9 +36,7 @@ test("a reply remembers the cloud whale and persists as a fixed line", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto(
-    "http://127.0.0.1:5173/?debug=1&hour=12&season=2&event=whale",
-  );
+  await page.goto("/?debug=1&hour=12&season=2&event=whale");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "时间倍率 12", exact: true }).click();
   await page.getByRole("button", { name: "寄一封春天" }).click();
@@ -68,7 +66,7 @@ test("season changes create a particle burst that freezes on pause", async ({
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=12");
+  await page.goto("/?debug=1&hour=12");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.getByRole("button", { name: "切换到秋天" }).click();

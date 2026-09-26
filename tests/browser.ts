@@ -1,5 +1,7 @@
 /** Browser-only integration harness; Vite does not include it in dist. */
 import { createScene } from "../src/scene/createScene";
+import { REVISION } from "three";
+export * as THREE from "three";
 import { EVENT_KINDS, type SceneEventKind } from "../src/scene/systems/events";
 import { CAMERA_PRESETS } from "../src/scene/core/cameraViews";
 import type { CameraPreset } from "../src/scene/types";
@@ -84,6 +86,7 @@ if (params.get("mode") === "visual") {
     tick();
   }
 } else {
+  log(`Three.js revision: ${REVISION}`);
   const originalRAF = window.requestAnimationFrame.bind(window),
     originalCancel = window.cancelAnimationFrame.bind(window);
   const pending = new Set<number>();
@@ -184,6 +187,10 @@ if (params.get("mode") === "visual") {
         };
         for (let i = 0; i < 12; i++)
           controller!.sendLetter("Resource lifetime test");
+        assert(
+          snapshot!.lettersInFlight === 12,
+          "all 12 resource-test letters are accepted",
+        );
         controller!.setSpeed(12);
         await until(() => snapshot!.lettersInFlight === 0);
         await delay(1300);

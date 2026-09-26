@@ -1,6 +1,24 @@
 # 验证记录
 
-**当前代码基线**：见 `git log`，2026-09-25 起每项提交都附带本文件对应条目。最近一次检查通过 TypeScript、ESLint、Prettier、生产构建、Vitest **138 / 138**、完整 Playwright 首轮 **42 / 43**，补齐受控 WAV 响应的字节范围后，四项音乐回归 **4 / 4** 通过。四张主岛视觉基线通过。下面保留各阶段实际结果，早期数量与性能数字只代表对应日期。实施状态见 [路线图第 7 节](ROADMAP.md#7-实施进度)。
+**当前代码基线**：见 `git log`，2026-09-25 起每项提交都附带本文件对应条目。最近一次检查通过 TypeScript、ESLint、Prettier、生产构建、Vitest **138 / 138**、真实 r186 上的完整 Playwright **45 / 45**；补充截图、统一测试模块及加强信件数量断言后，相关回归 **7 / 7** 再次通过。四张原有主岛视觉基线在未修改的容差内通过，未重生成基线。下面保留各阶段实际结果，早期数量与性能数字只代表对应日期。实施状态见 [路线图第 7 节](ROADMAP.md#7-实施进度)。
+
+## Three.js r186 升级与渲染回归（2026-09-26）
+
+- 真实 npm 安装并锁定 `three` 和 `@types/three` 为 **0.186.0**。按 [官方迁移指南](https://github.com/mrdoob/three.js/wiki/Migration-Guide) 处理 WebGL 2 要求；依据 [r186 阴影实现](https://github.com/mrdoob/three.js/blob/r186/src/renderers/webgl/WebGLShadowMap.js) 将已移除的 PCFSoft 用法更新为 PCF，避免兼容回退警告。删除已废弃的 WebGL 2 capability 判断，HDR 半浮点目标保留 2 次采样，仍只在最终通道执行一次 ACES/sRGB，曝光 0.95。主岛模型、随机序列、布局、体素配色与根目录原 HTML 未改，原 HTML SHA-256 与下方历史记录一致。
+- 升级时发现已有开发进程仍提供优化缓存中的 r160；因此浏览器测试改用独立 **5175** 端口、独立 Vite 缓存并强制重新预构建，不复用日常开发服务。新增开发和新构建生产页面的运行版本断言，均实际读到 **186**；生产测试使用 4174 端口。手动开发需重启并运行 `npm run dev -- --force`。天空测试复用验证页的 Three 模块，避免重复实例警告。
+- [真实 WebGL 原始结果](browser-r186-results.txt)：三次创建/销毁、单一 RAF、重复 dispose、暂停、寄信和送达均通过；明确确认 12 封资源测试信全部被接受，再核对送达后 GPU 几何体与纹理回到基线。WebGL 2 不可用时明确报错且不尝试 WebGL 1；context loss 停止循环并提示，重新创建后恢复渲染。完整 45 项回归覆盖散步与触屏取消、驿站缆车、真实音频解码/CORS 回退、PWA 离线与原有交互；相关 7 项再次通过，未观察到非故障注入的未处理异常或 Shader 错误。
+- GTX 1650 / ANGLE D3D11 / HeadlessChrome 153，1280×720：最新生命周期记录首帧 **1595 / 191 / 161 ms**（模块加载后开始计时，不含下载，首次受编译与并行测试影响）；十次稳态采样均 **60 FPS**，260 draw calls、15581 instances、26 geometries / 8 textures。这组桌面读数不能代替手机性能或长时间内存验证。Three 分包从 r160 的 491.28 kB / gzip 123.75 kB 增至 r186 的 558.11 kB / gzip 139.16 kB；gzip 增加 15.41 kB，构建仍提示分包超过 500 kB，未提高阈值掩盖提示。
+
+黄昏、正午近景、星夜和冬季均逐张检查。旧基线 PNG 保持原样，原 `maxDiffPixelRatio: 0.01` / `threshold: 0.15` 均通过，未宣称逐像素相同。下表全帧 RGB 平均绝对差（0–255）来自 [差异记录](three-r186-comparison.json)；旧 r160 基线早于本轮驿站等内容，指标包含新增场景与阴影/着色变化，不能当作纯渲染器差异。
+
+| 场景 | 原 r160 基线 | 当前 r186 | RGB 平均绝对差 |
+| --- | --- | --- | --- |
+| 黄昏 | [原图](screenshots/three-r160-dusk.png) | [升级后](screenshots/three-r186-dusk.png) | 0.8849 |
+| 正午樱花树近景 | [原图](screenshots/three-r160-day-tree.png) | [升级后](screenshots/three-r186-day-tree.png) | 1.3837 |
+| 星夜 | [原图](screenshots/three-r160-night.png) | [升级后](screenshots/three-r186-night.png) | 1.5660 |
+| 冬季 | [原图](screenshots/three-r160-winter.png) | [升级后](screenshots/three-r186-winter.png) | 0.9230 |
+
+Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的是代码、文档、桌面回归及 GitHub 提交。
 
 ## 音乐律动与安全播放回退（2026-09-26）
 

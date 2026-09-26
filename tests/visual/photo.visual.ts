@@ -27,7 +27,7 @@ test("exports a real PNG and includes letter text only on this export's checked 
       return create.call(URL, object);
     };
   });
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "寄一封春天" }).click();
   await page
@@ -108,7 +108,7 @@ test("camera and guide remain clickable beside controls on desktop and phones", 
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/");
+  await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
   for (const viewport of [
     { width: 1280, height: 720 },

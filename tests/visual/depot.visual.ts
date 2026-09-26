@@ -12,7 +12,7 @@ test("depot is keyboard reachable and shareable; cablecar freezes for pause and 
     localStorage.setItem("spring-post-office:guide-done", "true");
     localStorage.setItem("spring-post-office:sound-asked", "true");
   });
-  await page.goto("http://127.0.0.1:5173/?preset=depot&hour=12&debug=1");
+  await page.goto("/?preset=depot&hour=12&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect.poll(async () => (await data(page)).cameraPreset).toBe("depot");
   await page.getByRole("button", { name: "操作指南", exact: true }).click();

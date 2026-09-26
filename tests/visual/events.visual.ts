@@ -6,9 +6,7 @@ const diagnostics = (page: Page) =>
     .evaluate((el) => JSON.parse(el.dataset.diagnostics ?? "{}"));
 
 async function settle(page: Page, query: string, simTime: number) {
-  await page.goto(
-    `http://127.0.0.1:5173/tests/browser.html?mode=visual&${query}&settle=${simTime}`,
-  );
+  await page.goto(`/tests/browser.html?mode=visual&${query}&settle=${simTime}`);
   await expect
     .poll(async () => (await diagnostics(page)).simTime ?? 0)
     .toBeGreaterThanOrEqual(simTime);
@@ -45,7 +43,7 @@ test("a shared link replays one of the new events", async ({ page }) => {
   await page.addInitScript(() =>
     localStorage.setItem("spring-post-office:guide-done", "true"),
   );
-  await page.goto("http://127.0.0.1:5173/?debug=1&hour=6&event=seaMist");
+  await page.goto("/?debug=1&hour=6&event=seaMist");
   await expect(page.locator(".loader")).toHaveCount(0);
   await expect
     .poll(async () => (await diagnostics(page)).event)

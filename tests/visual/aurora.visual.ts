@@ -7,7 +7,7 @@ test("winter aurora renders, freezes on pause and stills with reduced motion", a
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(
-    "http://127.0.0.1:5173/tests/browser.html?mode=visual&hour=23&season=3&event=aurora&settle=20",
+    "/tests/browser.html?mode=visual&hour=23&season=3&event=aurora&settle=20",
   );
   const diagnostics = () =>
     page

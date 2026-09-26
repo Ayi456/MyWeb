@@ -356,6 +356,7 @@ export function createScene(
           cablecar: objects.cablecar.position.toArray(),
           ropewayStopped: sampleRopeway(ropewayTime).stopped,
           ropewayTime,
+          threeRevision: T.REVISION,
           musicPulse: musicPulse.level,
           musicPropeller: musicPulse.angle,
           lanternBrightness: objects.lanternMat.emissiveIntensity,

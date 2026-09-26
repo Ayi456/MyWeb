@@ -3,12 +3,10 @@ import { expect, test } from "@playwright/test";
 test("sky covers distant reverse views and portrait zoom without black holes", async ({
   page,
 }) => {
-  await page.goto(
-    "http://127.0.0.1:5173/tests/browser.html?mode=visual&hour=19.5",
-  );
+  await page.goto("/tests/browser.html?mode=visual&hour=19.5");
   const coverage = await page.evaluate(async () => {
     // @ts-expect-error Vite resolves the browser-only module imports.
-    const T = await import("/node_modules/three/build/three.module.js");
+    const { THREE: T } = await import("/tests/browser.ts");
     // @ts-expect-error Vite resolves the browser-only module imports.
     const { createContext } = await import("/src/scene/core/context.ts");
     // @ts-expect-error Vite resolves the browser-only module imports.
