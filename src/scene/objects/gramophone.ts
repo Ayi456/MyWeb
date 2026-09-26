@@ -7,7 +7,7 @@ export function createGramophone(ctx: SceneContext, garden: T.Group) {
   gramophone.name = "garden-gramophone";
   gramophone.position.set(0.88, 0.12, 0.55);
   garden.add(gramophone);
-  const body = new ctx.Batch(gramophone);
+  const body = new ctx.SoftBatch(gramophone);
   for (const x of [-0.2, 0.2])
     for (const z of [-0.17, 0.17])
       body.add(x, 0.17, z, 0.065, 0.34, 0.065, "#a38772");
@@ -18,39 +18,51 @@ export function createGramophone(ctx: SceneContext, garden: T.Group) {
   body.add(0.37, 0.41, 0, 0.035, 0.1, 0.035, "#bc9b69");
   ctx.rod(body, [0.17, 0.55, -0.1], [0.04, 0.61, 0.03], 0.025, "#a58e68");
   ctx.rod(body, [-0.17, 0.5, -0.14], [-0.22, 0.78, -0.14], 0.055, "#bca06d");
-  // A stepped hollow brass horn opening towards the visitor.
-  for (let ring = 0; ring < 5; ring++) {
-    const half = 0.07 + ring * 0.043;
-    const y = 0.79 + ring * 0.035,
-      z = -0.14 + ring * 0.08;
-    const color = ring === 4 ? "#ecd6a0" : "#c9a66c";
-    body.add(-0.22 - half, y, z, 0.04, half * 2, 0.075, color);
-    body.add(-0.22 + half, y, z, 0.04, half * 2, 0.075, color);
-    body.add(-0.22, y + half, z, half * 2, 0.04, 0.075, color);
-    body.add(-0.22, y - half, z, half * 2, 0.04, 0.075, color);
-  }
-  body.add(-0.22, 0.79, -0.19, 0.12, 0.12, 0.025, "#806d52");
+  const brass = new T.MeshStandardMaterial({
+    color: "#d4b57d",
+    roughness: 0.75,
+    side: T.DoubleSide,
+  });
+  const horn = new T.Mesh(
+    new T.LatheGeometry(
+      [
+        new T.Vector2(0.04, 0),
+        new T.Vector2(0.055, 0.055),
+        new T.Vector2(0.09, 0.13),
+        new T.Vector2(0.15, 0.23),
+        new T.Vector2(0.24, 0.32),
+        new T.Vector2(0.26, 0.34),
+      ],
+      24,
+    ),
+    brass,
+  );
+  horn.position.set(-0.22, 0.76, -0.14);
+  horn.rotation.x = Math.PI / 3;
+  gramophone.add(horn);
   body.build(false);
   const gramophoneRecord = new T.Group();
   gramophoneRecord.name = "gramophone-record";
   gramophoneRecord.position.set(0, 0.56, 0.04);
   gramophone.add(gramophoneRecord);
-  const disc = new ctx.Batch(gramophoneRecord);
-  for (let x = -3; x <= 3; x++)
-    for (let z = -3; z <= 3; z++) {
-      if (x * x + z * z > 10) continue;
-      disc.add(
-        x * 0.045,
-        0,
-        z * 0.045,
-        0.048,
-        0.025,
-        0.048,
-        Math.abs(x) + Math.abs(z) <= 1 ? "#d7b09a" : "#51494b",
-      );
-    }
-  disc.add(0.07, 0.018, 0, 0.035, 0.012, 0.025, "#f0dec2");
-  disc.build(false);
+  const record = ctx.mesh(
+    new T.CylinderGeometry(0.158, 0.158, 0.025, 32),
+    new T.MeshStandardMaterial({ color: "#51494b", roughness: 0.8 }),
+    gramophoneRecord,
+  );
+  record.castShadow = false;
+  const label = ctx.mesh(
+    new T.CylinderGeometry(0.055, 0.055, 0.008, 24),
+    new T.MeshStandardMaterial({ color: "#d7b09a", roughness: 0.9 }),
+    gramophoneRecord,
+    0,
+    0.018,
+    0,
+  );
+  label.castShadow = false;
+  const marker = new ctx.SoftBatch(gramophoneRecord);
+  marker.add(0.07, 0.018, 0, 0.035, 0.012, 0.025, "#f0dec2");
+  marker.build(false);
   return { gramophone, gramophoneRecord };
 }
 

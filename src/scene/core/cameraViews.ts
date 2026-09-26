@@ -42,10 +42,10 @@ export const CAMERA_VIEWS: Record<Exclude<CameraPreset, "ride">, CameraView> = {
     focus: [LIGHTHOUSE_ISLAND.center[0], 2.6, LIGHTHOUSE_ISLAND.center[2]],
   },
   teahouse: {
-    azimuth: 0.42,
-    elevation: 0.34,
-    distance: 20,
-    focus: [TEA_ISLAND.center[0], 0.3, TEA_ISLAND.center[2] - 1.4],
+    azimuth: -0.55,
+    elevation: 0.48,
+    distance: 18,
+    focus: [TEA_ISLAND.center[0], -0.45, TEA_ISLAND.center[2] - 0.45],
   },
   village: {
     azimuth: 0.3,

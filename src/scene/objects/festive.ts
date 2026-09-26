@@ -4,7 +4,7 @@ import { VILLAGE_ISLAND } from "../worldLayout";
 
 /** Seasonal decorations are built once, then shown only on their festival. */
 export function createFestive(ctx: SceneContext) {
-  const { world, scene, Batch, U } = ctx;
+  const { world, scene, SoftBatch: Batch, U } = ctx;
 
   const festivalLanterns = new T.Group();
   festivalLanterns.name = "mid-autumn-sky-lanterns";

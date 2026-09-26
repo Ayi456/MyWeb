@@ -63,6 +63,8 @@ export function createScene(
   const ctx = createContext(),
     tracker = new ResourceTracker();
   tracker.trackGeometry(ctx.cube);
+  tracker.trackGeometry(ctx.softCube);
+  tracker.trackGeometry(ctx.puff);
   const cleanups: (() => void)[] = [];
   let disposed = false,
     failed = false,

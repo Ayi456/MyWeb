@@ -3,11 +3,11 @@ import { type SceneContext, TAU } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createClouds(ctx: SceneContext) {
-  const { scene, U, rand, range, Batch, rod } = ctx;
+  const { scene, U, rand, range, PuffBatch: Batch, rod } = ctx;
   // Sea of clouds. One instanced draw call, gently drifting with depth-faded color.
   const cloudMat = new T.MeshStandardMaterial({
     roughness: 1,
-    flatShading: true,
+    flatShading: false,
   });
   cloudMat.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.uTime;
@@ -39,18 +39,18 @@ export function createClouds(ctx: SceneContext) {
     ]);
   }
   for (const [x, y, z, s] of cloudCenters) {
-    for (let j = 0; j < 13; j++) {
-      const dx = range(-s, s),
-        dz = range(-s * 0.6, s * 0.6),
-        dy = 0.6 * (1 - Math.abs(dx) / s);
+    for (let j = 0; j < 7; j++) {
+      const t = j / 6,
+        dx = (t - 0.5) * s * 1.8;
+      const size = s * (0.62 + Math.sin(t * Math.PI) * 0.34);
       cloudBatch.add(
         x + dx,
-        y + dy + range(-0.2, 0.2),
-        z + dz,
-        range(0.8, 1.7),
-        range(0.45, 0.9),
-        range(0.8, 1.7),
-        j % 4 ? "#fff2e7" : "#e2d4df",
+        y + Math.sin(t * Math.PI) * 0.35,
+        z + Math.sin(j * 2.3) * s * 0.13,
+        size * 1.65,
+        size * 0.85,
+        size * 1.1,
+        j % 3 ? "#fff4ea" : "#efe4ed",
       );
     }
   }

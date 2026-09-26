@@ -1,16 +1,18 @@
 import * as T from "three";
 import { type SceneContext, type Point3, TAU, PI } from "../core/context";
+import { createClayRoof } from "./clayRoof";
+import { createSoftTerrain } from "./softTerrain";
 import { seededRandom } from "../utils/seededRandom";
 import { TEA_ISLAND, VILLAGE_ISLAND } from "../worldLayout";
-import { ISLET_GRASS, TEA, maple } from "./seasonalColors";
+import { TEA, maple } from "./seasonalColors";
 
 /**
- * Two large background islands. They use a coarser voxel step than the main
- * island so their instance counts stay modest, and their decorative batches
+ * Two sculpted background islands. Their terrain uses continuous surfaces,
+ * and their decorative batches
  * are grouped under `detail` so low quality can hide them.
  */
 export function createFarIslands(ctx: SceneContext) {
-  const { world, Batch, rockMat, lampMat, rod, line } = ctx;
+  const { world, SoftBatch: Batch, lampMat, rod, line } = ctx;
   const random = seededRandom(161803);
   const range = (a: number, b: number) => a + (b - a) * random();
   const detail: T.Object3D[] = [];
@@ -21,38 +23,8 @@ export function createFarIslands(ctx: SceneContext) {
     depth: number,
     height: (x: number, z: number, d: number) => number,
   ) {
-    const stone = new Batch(group, rockMat),
-      grass = new Batch(group);
-    const step = 0.33;
-    for (let x = -radius[0]; x <= radius[0]; x += step)
-      for (let z = -radius[1]; z <= radius[1]; z += step) {
-        const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2;
-        if (d > 0.96 + Math.sin(x * 5 + z * 3) * 0.06) continue;
-        const top = height(x, z, d);
-        const under = 0.4 + depth * Math.pow(1 - Math.min(d, 1), 0.6);
-        for (let layer = 0; layer < 3; layer++)
-          stone.add(
-            x,
-            top - under + ((layer + 0.5) * under) / 3,
-            z,
-            step + 0.01,
-            under / 3 + 0.014,
-            step + 0.01,
-            ["#968a9e", "#b3a1a4", "#c9b5a9"][layer],
-          );
-        grass.addSeasonal(
-          x,
-          top + 0.07,
-          z,
-          step + 0.01,
-          0.16,
-          step + 0.01,
-          ISLET_GRASS[Math.floor(random() * 3)],
-        );
-      }
-    stone.build(false);
-    grass.build(false);
-    const roots = new Batch(group);
+    createSoftTerrain(ctx, group, radius, depth, height);
+    const roots = new ctx.PuffBatch(group);
     for (let i = 0; i < 16; i++) {
       const a = (i * TAU) / 16,
         x = Math.cos(a) * radius[0] * 0.84,
@@ -75,40 +47,32 @@ export function createFarIslands(ctx: SceneContext) {
     g.position.set(x, y, z);
     g.scale.setScalar(s);
     parent.add(g);
-    const bark = new Batch(g);
+    const bark = new ctx.PuffBatch(g);
     rod(bark, [0, 0, 0], [0.05, 0.95, 0.03], 0.16, "#8d6b5d");
     rod(bark, [0.05, 0.8, 0.03], [-0.35, 1.35, 0.1], 0.09, "#8d6b5d");
     rod(bark, [0.05, 0.8, 0.03], [0.4, 1.4, -0.2], 0.09, "#8d6b5d");
     bark.build(false);
-    const crown = new Batch(g);
+    const crown = new ctx.PuffBatch(g);
     const lobes = [
       [0, 1.55, 0, 0.75, 0.55, 0.7],
       [-0.4, 1.35, 0.15, 0.5, 0.4, 0.45],
       [0.45, 1.4, -0.2, 0.5, 0.42, 0.45],
     ];
-    const stepSize = 0.2;
-    for (let cx = -1.1; cx <= 1.1; cx += stepSize)
-      for (let cy = 0.85; cy <= 2.3; cy += stepSize)
-        for (let cz = -0.9; cz <= 0.9; cz += stepSize) {
-          const inside = lobes.some(
-            (p) =>
-              ((cx - p[0]) / p[3]) ** 2 +
-                ((cy - p[1]) / p[4]) ** 2 +
-                ((cz - p[2]) / p[5]) ** 2 <
-              1,
-          );
-          if (!inside) continue;
-          const size = stepSize * range(0.9, 1.15);
-          crown.addSeasonal(
-            cx,
-            cy,
-            cz,
-            size,
-            size * 0.85,
-            size,
-            maple(Math.floor(random() * 3)),
-          );
-        }
+    lobes.forEach(([cx, cy, cz, rx, ry, rz], i) => {
+      crown.addSeasonal(cx, cy, cz, rx * 2, ry * 2, rz * 2, maple(i));
+      for (let j = 0; j < 5; j++) {
+        const a = (j * TAU) / 5;
+        crown.addSeasonal(
+          cx + Math.cos(a) * rx * 0.55,
+          cy + ry * 0.2,
+          cz + Math.sin(a) * rz * 0.55,
+          rx * 1.2,
+          ry * 1.25,
+          rz * 1.2,
+          maple((i + j) % 3),
+        );
+      }
+    });
     crown.build(false);
     return g;
   }
@@ -126,7 +90,7 @@ export function createFarIslands(ctx: SceneContext) {
   const teaDetail = new T.Group();
   tea.add(teaDetail);
   detail.push(teaDetail);
-  const rows = new Batch(teaDetail);
+  const rows = new ctx.PuffBatch(teaDetail);
   for (let z = 2.4; z >= -2.6; z -= 0.45) {
     for (let x = -3.9; x <= 3.9; x += 0.3) {
       const d =
@@ -182,16 +146,17 @@ export function createFarIslands(ctx: SceneContext) {
     for (const dz of [-0.52, 0.52])
       pavilion.add(0.2 + dx, py + 0.62, pz + dz, 0.09, 1.1, 0.09, "#b3585c");
   pavilion.add(0.2, py + 1.2, pz, 1.85, 0.1, 1.65, "#c76b74");
-  for (let k = 0; k < 4; k++)
-    pavilion.add(
-      0.2,
-      py + 1.3 + k * 0.13,
-      pz,
-      1.7 - k * 0.42,
-      0.14,
-      1.5 - k * 0.37,
-      k % 2 ? "#d98a8f" : "#c76b74",
-    );
+  const pavilionRoof = ctx.mesh(
+    new T.ConeGeometry(1.25, 0.58, 4),
+    new T.MeshStandardMaterial({ color: "#c76b74", roughness: 0.9 }),
+    teaDetail,
+    0.2,
+    py + 1.53,
+    pz,
+  );
+  pavilionRoof.rotation.y = Math.PI / 4;
+  pavilionRoof.scale.z = 0.88;
+  pavilionRoof.castShadow = false;
   pavilion.add(0.2, py + 1.9, pz, 0.12, 0.25, 0.12, "#e3bd76");
   pavilion.add(0.2, py + 0.32, pz + 0.2, 0.7, 0.07, 0.3, "#d8c1a1");
   pavilion.add(0.2, py + 0.2, pz + 0.2, 0.08, 0.2, 0.08, "#a48b73");
@@ -249,16 +214,7 @@ export function createFarIslands(ctx: SceneContext) {
     const b = new Batch(g);
     b.add(0, 0.45, 0, 1.3, 0.9, 1.0, wall);
     b.add(0, 0.03, 0, 1.45, 0.12, 1.15, "#d6c19d");
-    for (let k = 0; k < 5; k++)
-      b.add(
-        0,
-        0.92 + k * 0.11,
-        0,
-        1.45 - k * 0.3,
-        0.12,
-        1.15,
-        k === 4 ? "#e5aaa5" : roof,
-      );
+    createClayRoof(ctx, g, [0, 0.9, 0], 1.5, 1.2, 0.53, roof, wall);
     b.add(0.4, 0.95, -0.25, 0.18, 0.5, 0.18, "#b78d87");
     b.add(-0.25, 0.4, 0.51, 0.34, 0.6, 0.04, "#8a6a5e");
     b.build(false);
@@ -285,25 +241,20 @@ export function createFarIslands(ctx: SceneContext) {
     transparent: true,
     opacity: 0.9,
   });
-  const pool = new Batch(villageDetail, springMat);
   const poolCenter: Point3 = [0.9, 0.16, 1.3];
-  for (let x = -1.1; x <= 1.1; x += 0.22)
-    for (let z = -0.8; z <= 0.8; z += 0.22)
-      if ((x / 1.1) ** 2 + (z / 0.8) ** 2 < 1)
-        pool.add(
-          poolCenter[0] + x,
-          poolCenter[1],
-          poolCenter[2] + z,
-          0.23,
-          0.05,
-          0.23,
-          "#a8dcd5",
-        );
-  pool.build(false);
+  const pool = ctx.mesh(
+    new T.CircleGeometry(1, 48).rotateX(-Math.PI / 2),
+    springMat,
+    villageDetail,
+    ...poolCenter,
+  );
+  pool.scale.set(1.1, 1, 0.8);
+  pool.castShadow = false;
   const rim = new Batch(villageDetail);
+  const stones = new ctx.PuffBatch(villageDetail);
   for (let i = 0; i < 22; i++) {
     const a = (i * TAU) / 22;
-    rim.add(
+    stones.add(
       poolCenter[0] + Math.cos(a) * 1.2,
       poolCenter[1] + 0.05,
       poolCenter[2] + Math.sin(a) * 0.9,
@@ -316,6 +267,7 @@ export function createFarIslands(ctx: SceneContext) {
       0,
     );
   }
+  stones.build(false);
   // Bridge arch across the pool's short axis.
   const rails: [Point3[], Point3[]] = [[], []];
   for (let i = 0; i <= 12; i++) {

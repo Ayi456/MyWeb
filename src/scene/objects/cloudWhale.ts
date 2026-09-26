@@ -22,7 +22,7 @@ export function createCloudWhale(ctx: SceneContext) {
     color: "#fff6e8",
     roughness: 0.9,
   });
-  const ink = new T.MeshStandardMaterial({ color: "#444961", roughness: 0.3 });
+  const ink = new T.MeshStandardMaterial({ color: "#444961", roughness: 0.65 });
 
   // Revolve a soft profile along +X, rather than leaving a hollow voxel shell.
   const profile = new T.CatmullRomCurve3(
@@ -118,7 +118,7 @@ export function createCloudWhale(ctx: SceneContext) {
   }
 
   const eyeGeometry = new T.SphereGeometry(0.085, 12, 8);
-  const sparkleGeometry = new T.SphereGeometry(0.026, 8, 6);
+  const sparkleGeometry = new T.SphereGeometry(0.018, 8, 6);
   const cheekMaterial = new T.MeshStandardMaterial({
     color: "#dfb9cb",
     roughness: 0.9,
@@ -148,7 +148,7 @@ export function createCloudWhale(ctx: SceneContext) {
   spout.position.set(1.03, 0.95, 0);
   spout.visible = false;
   whale.add(spout);
-  const mistGeometry = new T.IcosahedronGeometry(1, 1);
+  const mistGeometry = ctx.puff;
   const mistMaterial = new T.MeshStandardMaterial({
     color: "#f8f5ff",
     transparent: true,

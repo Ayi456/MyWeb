@@ -27,7 +27,7 @@ export interface SeasonalData {
   /** Copy of the built instance matrices, used as the scale baseline. */
   base?: Float32Array;
 }
-/** Shared cube/material ownership belongs to the scene, not each batch. */
+/** Shared geometry/material ownership belongs to the scene, not each batch. */
 export class VoxelBatch {
   readonly cells: Cell[] = [];
   private seasonal = new Map<number, SeasonalCell>();
@@ -36,7 +36,7 @@ export class VoxelBatch {
   constructor(
     private parent: T.Object3D,
     private mat: T.Material,
-    private cube: T.BoxGeometry,
+    private cube: T.BufferGeometry,
   ) {}
   add(
     x: number,

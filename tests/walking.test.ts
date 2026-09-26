@@ -9,29 +9,19 @@ function map() {
   const ctx = createContext();
   return { ctx, ...createIsland(ctx) };
 }
-it("reads heights from the actual grass cubes, including uneven terrain", () => {
+it("aligns walking heights with the visible sculpted surface, including uneven terrain", () => {
   const o = map(),
     walker = new IslandWalker(o.walkTiles, []);
-  const grass = o.ctx.world.children[1] as T.InstancedMesh;
-  const matrix = new T.Matrix4();
-  for (const tile of o.walkTiles.filter((_, i) => i % 17 === 0)) {
-    let found = false;
-    for (let i = 0; i < grass.count; i++) {
-      grass.getMatrixAt(i, matrix);
-      if (
-        Math.abs(matrix.elements[12] - tile.x) < 0.001 &&
-        Math.abs(matrix.elements[14] - tile.z) < 0.001 &&
-        Math.abs(matrix.elements[5] - 0.14) < 0.001
-      ) {
-        expect(walker.height(tile.x, tile.z)).toBeCloseTo(
-          matrix.elements[13] + matrix.elements[5] / 2,
-          5,
-        );
-        found = true;
-        break;
-      }
-    }
-    expect(found).toBe(true);
+  o.ctx.scene.updateMatrixWorld(true);
+  const grass = o.ctx.world.getObjectByName("continuous-seasonal-grass")!;
+  const ray = new T.Raycaster();
+  for (const tile of o.walkTiles.filter((_, i) => i % 13 === 0)) {
+    ray.set(new T.Vector3(tile.x, 10, tile.z), new T.Vector3(0, -1, 0));
+    const hit = ray.intersectObject(grass)[0];
+    expect(hit, `missing ground at ${tile.x},${tile.z}`).toBeDefined();
+    expect(Math.abs(hit.point.y - walker.height(tile.x, tile.z)!)).toBeLessThan(
+      0.015,
+    );
   }
 });
 it("cannot walk off any island edge even after sustained or diagonal input", () => {

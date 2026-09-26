@@ -8,7 +8,7 @@ import {
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createFlowers(ctx: SceneContext) {
-  const { range, Batch, ground } = ctx;
+  const { range, PuffBatch: Batch, ground } = ctx;
   // Flower borders and little tufts, all batched into a single mesh.
   const flowers = new Batch();
   for (let i = 0; i < 220; i++) {

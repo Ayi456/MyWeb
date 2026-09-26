@@ -3,7 +3,7 @@ import { type SceneContext } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createWildlife(ctx: SceneContext) {
-  const { scene, world, Batch } = ctx;
+  const { scene, world, PuffBatch: Batch } = ctx;
   const butterflies = [];
   for (let i = 0; i < 12; i++) {
     const g = new T.Group();

@@ -1,5 +1,5 @@
 import * as T from "three";
-import { type SceneContext, TAU, PI } from "../core/context";
+import { type SceneContext, PI } from "../core/context";
 import { seededRandom } from "../utils/seededRandom";
 import { createCloudWhale } from "./cloudWhale";
 
@@ -8,7 +8,7 @@ import { createCloudWhale } from "./cloudWhale";
  * built once and hidden until an event brings it on stage.
  */
 export function createVisitors(ctx: SceneContext) {
-  const { scene, Batch, U, rod } = ctx;
+  const { scene, SoftBatch: Batch, U, rod } = ctx;
   const random = seededRandom(577215);
   const cloudWhale = createCloudWhale(ctx);
   // Preserve the weather seed sequence previously used by the spout.
@@ -19,22 +19,28 @@ export function createVisitors(ctx: SceneContext) {
   balloon.visible = false;
   scene.add(balloon);
   const bb = new Batch(balloon);
-  for (let y = -0.9; y <= 0.9; y += 0.18)
-    for (let x = -0.9; x <= 0.9; x += 0.18)
-      for (let z = -0.9; z <= 0.9; z += 0.18) {
-        const d = (x / 0.9) ** 2 + ((y + 0.15) / 1.0) ** 2 + (z / 0.9) ** 2;
-        if (d > 1 || d < 0.6) continue;
-        const stripe = Math.floor((Math.atan2(z, x) / TAU + 0.5) * 8) % 2;
-        bb.add(
-          x,
-          2.1 + y,
-          z,
-          0.185,
-          0.185,
-          0.185,
-          stripe ? "#f0c7a0" : "#c884a1",
-        );
-      }
+  const balloonGeometry = new T.SphereGeometry(1, 48, 32);
+  balloonGeometry.scale(0.9, 1, 0.9);
+  const paintCanvas = document.createElement("canvas");
+  paintCanvas.width = 256;
+  paintCanvas.height = 32;
+  const paint = paintCanvas.getContext("2d");
+  if (!paint) throw new Error("Unable to paint the balloon");
+  for (let stripe = 0; stripe < 8; stripe++) {
+    paint.fillStyle = stripe % 2 ? "#f0c7a0" : "#c884a1";
+    paint.fillRect(stripe * 32, 0, 32, 32);
+  }
+  const balloonTexture = new T.CanvasTexture(paintCanvas);
+  balloonTexture.colorSpace = T.SRGBColorSpace;
+  const skin = ctx.mesh(
+    balloonGeometry,
+    new T.MeshStandardMaterial({ map: balloonTexture, roughness: 0.9 }),
+    balloon,
+    0,
+    1.95,
+    0,
+  );
+  skin.castShadow = false;
   bb.add(0, 1.02, 0, 0.36, 0.14, 0.36, "#b48a72");
   bb.add(0, 0.3, 0, 0.55, 0.42, 0.55, "#c9a57e");
   bb.add(0, 0.52, 0, 0.6, 0.05, 0.6, "#e5cba4");

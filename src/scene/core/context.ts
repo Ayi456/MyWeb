@@ -1,4 +1,5 @@
 import * as T from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { CONFIG } from "../config";
 import { VoxelBatch } from "../utils/voxelBatch";
 import { hash, seededRandom } from "../utils/seededRandom";
@@ -10,11 +11,7 @@ export const PI = Math.PI,
   clamp = T.MathUtils.clamp,
   lerp = T.MathUtils.lerp;
 export function ground(x: number, z: number) {
-  return (
-    1.03 +
-    Math.round((0.1 * Math.sin(x * 1.2) + 0.08 * Math.cos(z * 1.5)) / 0.075) *
-      0.075
-  );
+  return 1.03 + 0.1 * Math.sin(x * 1.2) + 0.08 * Math.cos(z * 1.5);
 }
 export function createContext() {
   const scene = new T.Scene();
@@ -45,14 +42,17 @@ export function createContext() {
   };
   const seasonal = new SeasonalPalette();
   const cube = new T.BoxGeometry(1, 1, 1);
+  const softCube = new RoundedBoxGeometry(1, 1, 1, 2, 0.1);
+  // Unit diameter keeps the familiar batch dimensions consistent across shapes.
+  const puff = new T.SphereGeometry(0.5, 16, 12);
   const matte = new T.MeshStandardMaterial({
     roughness: 0.84,
     metalness: 0.015,
-    flatShading: true,
+    flatShading: false,
   });
   const rockMat = new T.MeshStandardMaterial({
     roughness: 0.98,
-    flatShading: true,
+    flatShading: false,
   });
   const lampMat = new T.MeshStandardMaterial({
     color: "#fff1c9",
@@ -65,6 +65,18 @@ export function createContext() {
   class Batch extends VoxelBatch {
     constructor(parent: T.Object3D = world, mat: T.Material = matte) {
       super(parent, mat, cube);
+      this.onSeasonal = (data) => seasonal.register(data);
+    }
+  }
+  class SoftBatch extends VoxelBatch {
+    constructor(parent: T.Object3D = world, mat: T.Material = matte) {
+      super(parent, mat, softCube);
+      this.onSeasonal = (data) => seasonal.register(data);
+    }
+  }
+  class PuffBatch extends VoxelBatch {
+    constructor(parent: T.Object3D = world, mat: T.Material = matte) {
+      super(parent, mat, puff);
       this.onSeasonal = (data) => seasonal.register(data);
     }
   }
@@ -154,6 +166,8 @@ export function createContext() {
     U,
     seasonal,
     cube,
+    softCube,
+    puff,
     matte,
     rockMat,
     lampMat,
@@ -161,6 +175,8 @@ export function createContext() {
     range,
     hash,
     Batch,
+    SoftBatch,
+    PuffBatch,
     mesh,
     rod,
     line,

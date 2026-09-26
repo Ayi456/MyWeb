@@ -3,7 +3,7 @@ import { type SceneContext, type Point3, PI, lerp } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createLanterns(ctx: SceneContext) {
-  const { world, lampMat, Batch, line } = ctx;
+  const { world, lampMat, SoftBatch: Batch, line } = ctx;
   const lanternMat = lampMat.clone();
   // Lantern strands follow shallow catenaries, with warm glowing paper cubes at night.
   const lanterns: T.Group[] = [],

@@ -3,7 +3,7 @@ import { type SceneContext } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createFurniture(ctx: SceneContext, tree: T.Group) {
-  const { world, Batch, line, ground } = ctx;
+  const { world, SoftBatch: Batch, line, ground } = ctx;
   // Furniture under the tree and a gently swinging seat.
   const bench = new T.Group();
   bench.position.set(-1.35, ground(-1.35, 1.85) + 0.12, 1.85);

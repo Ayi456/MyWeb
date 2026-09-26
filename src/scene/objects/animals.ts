@@ -8,7 +8,7 @@ export function createAnimals(
   ctx: SceneContext,
   bench: ReturnType<typeof createFurniture>["bench"],
 ) {
-  const { world, Batch, mesh, rod } = ctx;
+  const { world, SoftBatch: Batch, mesh, rod } = ctx;
   const bunny = createBunny(ctx);
   const writer = bunny(bench, -0.22, 0.36, 0.025, "#cea2b1", 0.8);
   writer.g.rotation.y = 0.18;
@@ -52,7 +52,7 @@ export function createAnimals(
   cat.position.set(0.23, 0.38, 0.06);
   cat.rotation.y = -0.3;
   bench.add(cat);
-  const ct = new Batch(cat);
+  const ct = new ctx.PuffBatch(cat);
   ct.add(0, 0.08, 0, 0.27, 0.16, 0.18, "#b4a6a5");
   ct.add(0.17, 0.17, 0, 0.18, 0.17, 0.18, "#c8b9b0");
   for (const s of [-1, 1]) {
@@ -76,13 +76,13 @@ export function createAnimals(
   const paw = new T.Group();
   paw.position.set(0.15, 0.02, 0.1);
   cat.add(paw);
-  const cp = new Batch(paw);
+  const cp = new ctx.PuffBatch(paw);
   cp.add(0.055, 0, 0, 0.16, 0.07, 0.072, "#d5c5b7");
   cp.build();
   const tail = new T.Group();
   tail.position.set(-0.14, 0.1, 0);
   cat.add(tail);
-  const tb = new Batch(tail);
+  const tb = new ctx.PuffBatch(tail);
   tb.add(-0.09, 0.02, 0, 0.21, 0.073, 0.07, "#aa9d9e", 0, 0, -0.35);
   tb.add(-0.18, 0.082, 0, 0.07, 0.11, 0.07, "#c2b3ab");
   tb.build();

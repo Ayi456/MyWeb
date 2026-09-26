@@ -1,7 +1,8 @@
 import * as T from "three";
 import type { SceneContext } from "../core/context";
 import { DEPOT_ISLAND, ROPEWAY } from "../worldLayout";
-import { ISLET_GRASS } from "./seasonalColors";
+import { createClayRoof } from "./clayRoof";
+import { createSoftTerrain } from "./softTerrain";
 import { ropewayPoint } from "../systems/ropeway";
 
 /** Appended world content; no random calls or changes to existing island batches. */
@@ -10,40 +11,20 @@ export function createDepot(ctx: SceneContext) {
   depotIsland.name = "postal-depot-island";
   depotIsland.position.set(...DEPOT_ISLAND.center);
   ctx.world.add(depotIsland);
-  const stone = new ctx.Batch(depotIsland, ctx.rockMat),
-    grass = new ctx.Batch(depotIsland);
-  const [rx, rz] = DEPOT_ISLAND.radius;
-  for (let x = -rx; x <= rx; x += 0.28)
-    for (let z = -rz; z <= rz; z += 0.28) {
-      const d = (x / rx) ** 2 + (z / rz) ** 2;
-      if (d > 1) continue;
-      const h = 0.4 + 2.3 * (1 - d) ** 0.65;
-      stone.add(x, -h / 2, z, 0.29, h, 0.29, d > 0.8 ? "#d0b9b0" : "#b6a4a9");
-      grass.addSeasonal(
-        x,
-        0.05,
-        z,
-        0.29,
-        0.13,
-        0.29,
-        ISLET_GRASS[Math.abs(Math.round(x * 13 + z * 7)) % 3],
-      );
-    }
-  stone.build(false);
-  grass.build(false);
-  const detail = new ctx.Batch(depotIsland);
+  createSoftTerrain(ctx, depotIsland, DEPOT_ISLAND.radius, 2.7, () => 0);
+  const detail = new ctx.SoftBatch(depotIsland);
   detail.add(-0.55, 0.65, -0.35, 1.6, 1.1, 1.05, "#f1dfc2");
   detail.add(-0.55, 0.14, -0.35, 1.85, 0.18, 1.3, "#bca48e");
-  for (let tier = 0; tier < 5; tier++)
-    detail.add(
-      -0.55,
-      1.27 + tier * 0.09,
-      -0.35,
-      1.95 - tier * 0.16,
-      0.1,
-      1.3 - tier * 0.18,
-      "#b78391",
-    );
+  createClayRoof(
+    ctx,
+    depotIsland,
+    [-0.55, 1.19, -0.35],
+    1.96,
+    1.36,
+    0.48,
+    "#b78391",
+    "#f1dfc2",
+  );
   detail.add(-0.57, 0.56, 0.19, 0.36, 0.78, 0.035, "#a78a74");
   for (const x of [-1.1, 0.0]) {
     detail.add(x, 0.84, 0.2, 0.3, 0.32, 0.04, "#789c9d");
@@ -62,7 +43,7 @@ export function createDepot(ctx: SceneContext) {
   detail.add(1.1, 1.02, 0.65, 0.12, 1.9, 0.12, "#8e9b94");
   detail.add(1.1, 2.0, 0.65, 0.7, 0.12, 0.18, "#b2b8a4");
   detail.build(false);
-  const infrastructure = new ctx.Batch();
+  const infrastructure = new ctx.SoftBatch();
   const stationGround = ctx.ground(ROPEWAY.start[0], ROPEWAY.start[2]) + 0.09;
   const supportTop = ROPEWAY.start[1] - 0.04;
   infrastructure.add(
@@ -97,7 +78,7 @@ export function createDepot(ctx: SceneContext) {
   const cablecar = new T.Group();
   cablecar.name = "postal-cablecar";
   ctx.world.add(cablecar);
-  const car = new ctx.Batch(cablecar);
+  const car = new ctx.SoftBatch(cablecar);
   car.add(0, -0.3, 0, 0.045, 0.6, 0.045, "#8e9b94");
   car.add(0, -0.58, 0, 0.7, 0.08, 0.52, "#bc8e99");
   car.add(0, -0.96, 0, 0.68, 0.08, 0.5, "#b5a385");

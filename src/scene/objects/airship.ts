@@ -4,37 +4,55 @@ import { createBunny } from "./bunny";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createAirship(ctx: SceneContext) {
-  const { world, Batch, mesh, rod, line, paperTexture } = ctx;
+  const { world, SoftBatch: Batch, mesh, rod, line, paperTexture } = ctx;
   const bunny = createBunny(ctx);
-  // Airship: a scalloped voxel balloon, suspended postal gondola, rigging and a turning propeller.
+  // Continuous balloon skin with painted bands, matching the cloud whale's curves.
   const airship = new T.Group();
   world.add(airship);
-  const envelope = new Batch(airship);
-  for (let x = -2.04; x <= 2.04; x += 0.15)
-    for (let y = -0.9; y <= 0.9; y += 0.15)
-      for (let z = -0.9; z <= 0.9; z += 0.15) {
-        const d = (x / 2.08) ** 2 + (y / 0.87) ** 2 + (z / 0.81) ** 2;
-        if (d > 1 || d < 0.67) continue;
-        const band =
-          (Math.abs(x) > 0.75 && Math.abs(x) < 1.04) || Math.abs(x) < 0.14;
-        const c = band
-          ? y > 0.15
-            ? "#e8adb9"
-            : "#ce90a5"
-          : y > 0.1
-            ? "#fff0d7"
-            : "#e6cebd";
-        envelope.add(x, 1.92 + y, z, 0.155, 0.155, 0.155, c);
-      }
-  envelope.build();
-  const shipWood = new Batch(airship);
-  for (let x = -0.76; x < 0.81; x += 0.105) {
-    const w = 0.34 * Math.sqrt(Math.max(0, 1 - (x / 0.89) ** 2));
-    shipWood.add(x, 0.17, 0, 0.11, 0.28, w * 2, "#c3a186");
-    shipWood.add(x, 0.34, 0, 0.11, 0.035, w * 2, "#efd7b0");
-    for (const s of [-1, 1])
-      shipWood.add(x, 0.4, s * w, 0.11, 0.18, 0.035, "#f8e6cb");
+  const geometry = new T.SphereGeometry(1, 48, 32);
+  geometry.rotateZ(-Math.PI / 2);
+  geometry.scale(2.08, 0.87, 0.81);
+  const canvas = document.createElement("canvas");
+  canvas.width = 16;
+  canvas.height = 512;
+  const paint = canvas.getContext("2d");
+  if (!paint) throw new Error("Unable to paint the airship envelope");
+  for (let row = 0; row < canvas.height; row++) {
+    const x = Math.abs(Math.cos((row / (canvas.height - 1)) * Math.PI) * 2.08);
+    const band = Math.max(
+      1 - T.MathUtils.smoothstep(x, 0.11, 0.17),
+      T.MathUtils.smoothstep(x, 0.73, 0.79) *
+        (1 - T.MathUtils.smoothstep(x, 1.01, 1.07)),
+    );
+    const color = new T.Color("#fff0d7").lerp(new T.Color("#d69caf"), band);
+    paint.fillStyle = "#" + color.getHexString();
+    paint.fillRect(0, row, 16, 1);
   }
+  const texture = new T.CanvasTexture(canvas);
+  texture.colorSpace = T.SRGBColorSpace;
+  mesh(
+    geometry,
+    new T.MeshStandardMaterial({ map: texture, roughness: 0.88 }),
+    airship,
+    0,
+    1.92,
+    0,
+  );
+  const hull = mesh(
+    ctx.puff,
+    new T.MeshStandardMaterial({ color: "#c3a186", roughness: 0.93 }),
+    airship,
+    0,
+    0.2,
+    0,
+  );
+  hull.scale.set(1.74, 0.4, 0.69);
+  const shipWood = new Batch(airship);
+  shipWood.add(0, 0.34, 0, 1.55, 0.06, 0.6, "#efd7b0");
+  for (const side of [-1, 1])
+    shipWood.add(0, 0.43, side * 0.29, 1.43, 0.18, 0.05, "#f8e6cb");
+  for (const x of [-0.73, 0.73])
+    shipWood.add(x, 0.42, 0, 0.05, 0.18, 0.48, "#f8e6cb");
   shipWood.add(0, 0.06, 0, 1.0, 0.06, 0.36, "#927d6d");
   shipWood.add(-0.51, 0.51, 0, 0.25, 0.12, 0.49, "#e5d2ac");
   shipWood.add(0.44, 0.49, -0.07, 0.21, 0.19, 0.28, "#d3b592");
@@ -85,7 +103,7 @@ export function createAirship(ctx: SceneContext) {
   const propeller = new T.Group();
   propeller.position.set(-1.14, 0.47, 0);
   airship.add(propeller);
-  const pb = new Batch(propeller);
+  const pb = new ctx.PuffBatch(propeller);
   pb.add(0, 0, 0, 0.07, 0.095, 0.095, "#ae977c");
   pb.add(0, 0, 0, 0.025, 0.08, 0.56, "#b98593");
   pb.add(0, 0, 0, 0.025, 0.56, 0.08, "#d4b093");

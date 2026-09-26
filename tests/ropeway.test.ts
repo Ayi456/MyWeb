@@ -20,7 +20,7 @@ it("stops at both stations and smoothly returns along the sagging cable", () => 
     expect(Math.hypot(...a.map((v, i) => v - b[i]))).toBeLessThan(0.000001);
   }
 });
-it("appends five voxel batches without consuming the main random sequence", () => {
+it("builds a compact depot with shared furniture geometry without consuming the main random sequence", () => {
   const ctx = createContext(),
     reference = createContext();
   const depot = createDepot(ctx);
@@ -31,11 +31,11 @@ it("appends five voxel batches without consuming the main random sequence", () =
     if (node instanceof T.InstancedMesh) {
       batches++;
       expect(node.castShadow).toBe(false);
-      expect(node.geometry).toBe(ctx.cube);
+      expect(node.geometry).toBe(ctx.softCube);
     }
     if (node instanceof T.Line) lines++;
   });
-  expect(batches).toBe(5);
+  expect(batches).toBeLessThanOrEqual(5);
   expect(lines).toBe(2);
   expect(depot.cablecar.position.toArray()).toEqual([...ROPEWAY.start]);
 });

@@ -3,8 +3,8 @@ import { type SceneContext } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createPostOffice(ctx: SceneContext) {
-  const { world, lampMat, Batch, mesh, ground, paperTexture } = ctx;
-  // Postal cottage, cedar framework, individually stepped terracotta tiles and a brass bell.
+  const { world, lampMat, SoftBatch: Batch, mesh, ground, paperTexture } = ctx;
+  // A miniature clay cottage with a continuous gable and softly edged tiles.
   const house = new T.Group();
   house.position.set(1.85, ground(1.85, 0.15) + 0.1, 0.15);
   world.add(house);
@@ -14,24 +14,41 @@ export function createPostOffice(ctx: SceneContext) {
   for (const x of [-0.84, 0.84])
     for (const z of [-0.62, 0.62])
       hb.add(x, 0.62, z, 0.075, 1.2, 0.075, "#ad8e71");
-  for (let k = 0; k < 6; k++)
-    hb.add(0, 1.18 + k * 0.11, 0, 1.78 - k * 0.27, 0.115, 1.35, "#f6e2c1");
+  const gable = new T.Shape();
+  gable.moveTo(-0.89, 1.13);
+  gable.lineTo(0.89, 1.13);
+  gable.lineTo(0, 1.89);
+  gable.closePath();
+  const gableGeometry = new T.ExtrudeGeometry(gable, {
+    depth: 1.3,
+    bevelEnabled: true,
+    bevelSize: 0.025,
+    bevelThickness: 0.025,
+    bevelSegments: 2,
+    steps: 1,
+  });
+  gableGeometry.translate(0, 0, -0.65);
+  mesh(
+    gableGeometry,
+    new T.MeshStandardMaterial({ color: "#f6e2c1", roughness: 0.9 }),
+    house,
+  );
   for (const side of [-1, 1])
-    for (let k = 0; k < 7; k++) {
-      const x = side * (0.99 - k * 0.143),
-        y = 1.19 + k * 0.115;
-      for (let zz = -0.81; zz < 0.84; zz += 0.15)
+    for (let k = 0; k < 5; k++) {
+      const x = side * (0.97 - k * 0.218),
+        y = 1.22 + k * 0.175;
+      for (let zz = -0.64; zz <= 0.65; zz += 0.425)
         hb.add(
           x,
           y,
           zz,
-          0.175,
-          0.11,
-          0.156,
+          0.32,
+          0.115,
+          0.445,
           (k + Math.round(zz * 10)) % 3 ? "#bd7d83" : "#d79495",
           0,
           0,
-          side * -0.08,
+          side * -0.675,
         );
     }
   hb.add(0, 2.0, 0, 0.14, 0.1, 1.7, "#e5aaa5");

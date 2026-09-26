@@ -1,17 +1,12 @@
 import * as T from "three";
 import { type SceneContext, type Point3, TAU } from "../core/context";
+import { createSoftTerrain } from "./softTerrain";
 import { seededRandom } from "../utils/seededRandom";
 import { GARDEN_ISLAND, LIGHTHOUSE_ISLAND } from "../worldLayout";
-import {
-  FLOWER_LEAF,
-  FLOWER_STEM,
-  ISLET_GRASS,
-  LEAF,
-  flowerHead,
-} from "./seasonalColors";
+import { FLOWER_LEAF, FLOWER_STEM, LEAF, flowerHead } from "./seasonalColors";
 
 export function createArchipelago(ctx: SceneContext) {
-  const { world, Batch, rockMat, lampMat, rod } = ctx;
+  const { world, SoftBatch: Batch, lampMat, rod } = ctx;
   // Independent seed: adding the islands does not move existing flowers or clouds.
   const random = seededRandom(271828);
   const range = (a: number, b: number) => a + (b - a) * random();
@@ -26,39 +21,8 @@ export function createArchipelago(ctx: SceneContext) {
     group.name = name;
     group.position.set(...center);
     world.add(group);
-    const stone = new Batch(group, rockMat),
-      grass = new Batch(group);
-    const step = 0.25;
-    for (let x = -radius[0]; x <= radius[0]; x += step) {
-      for (let z = -radius[1]; z <= radius[1]; z += step) {
-        const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2;
-        if (d > 0.97 + Math.sin(x * 7 + z * 4) * 0.055) continue;
-        const height = 0.3 + depth * Math.pow(1 - Math.min(d, 1), 0.65);
-        for (let layer = 0; layer < 3; layer++) {
-          stone.add(
-            x,
-            -height + ((layer + 0.5) * height) / 3,
-            z,
-            step + 0.008,
-            height / 3 + 0.012,
-            step + 0.008,
-            ["#9b91a6", "#bcaaa9", "#d1bdae"][layer],
-          );
-        }
-        grass.addSeasonal(
-          x,
-          0.055,
-          z,
-          step + 0.008,
-          0.14,
-          step + 0.008,
-          ISLET_GRASS[Math.floor(random() * 3)],
-        );
-      }
-    }
-    stone.build(false);
-    grass.build(false);
-    const roots = new Batch(group);
+    createSoftTerrain(ctx, group, radius, depth, () => 0);
+    const roots = new ctx.PuffBatch(group);
     for (let i = 0; i < 12; i++) {
       const angle = (i * TAU) / 12;
       const x = Math.cos(angle) * radius[0] * 0.86;
@@ -86,6 +50,7 @@ export function createArchipelago(ctx: SceneContext) {
     1.9,
   );
   const garden = new Batch(gardenIsland);
+  const flowers = new ctx.PuffBatch(gardenIsland);
   // A pale stone path leads off the bridge, through two planted flower beds.
   for (let i = 0; i < 10; i++) {
     const x = 1.65 - i * 0.26;
@@ -106,8 +71,8 @@ export function createArchipelago(ctx: SceneContext) {
       continue;
     if (x < -0.45 && z < -0.15) continue;
     const h = range(0.13, 0.28);
-    garden.addSeasonal(x, 0.14 + h / 2, z, 0.025, h, 0.025, FLOWER_STEM);
-    garden.addSeasonal(
+    flowers.addSeasonal(x, 0.14 + h / 2, z, 0.025, h, 0.025, FLOWER_STEM);
+    flowers.addSeasonal(
       x,
       0.14 + h,
       z,
@@ -116,7 +81,7 @@ export function createArchipelago(ctx: SceneContext) {
       0.1,
       flowerHead(["#ebbbc7", "#f1dda6", "#b6abd2", "#faf1d9"][i % 4]),
     );
-    garden.addSeasonal(
+    flowers.addSeasonal(
       x - 0.04,
       0.14 + h * 0.4,
       z,
@@ -129,30 +94,51 @@ export function createArchipelago(ctx: SceneContext) {
       0.3,
     );
   }
-  // A little sage windmill: stepped body, pink cap, wooden lattice sails.
-  for (let i = 0; i < 7; i++) {
-    const width = 0.72 - i * 0.055;
-    garden.add(
-      -0.68,
-      0.25 + i * 0.22,
-      -0.48,
-      width,
-      0.23,
-      width,
-      i === 1 || i === 5 ? "#a6bfb0" : "#f0dfc3",
+  flowers.build(false);
+  // Tapered clay windmill with a soft pink cap and lattice sails.
+  const towerMesh = (
+    parent: T.Group,
+    geometry: T.BufferGeometry,
+    color: string,
+    x: number,
+    y: number,
+    z: number,
+  ) => {
+    const object = ctx.mesh(
+      geometry,
+      new T.MeshStandardMaterial({ color, roughness: 0.9 }),
+      parent,
+      x,
+      y,
+      z,
     );
-  }
-  for (let i = 0; i < 4; i++) {
-    garden.add(
-      -0.68,
-      1.79 + i * 0.13,
-      -0.48,
-      0.79 - i * 0.18,
-      0.14,
-      0.79 - i * 0.18,
-      i % 2 ? "#d4a7af" : "#c493a0",
-    );
-  }
+    object.castShadow = false;
+    return object;
+  };
+  towerMesh(
+    gardenIsland,
+    new T.CylinderGeometry(0.23, 0.39, 1.55, 24),
+    "#f0dfc3",
+    -0.68,
+    0.91,
+    -0.48,
+  );
+  towerMesh(
+    gardenIsland,
+    new T.CylinderGeometry(0.34, 0.35, 0.19, 24),
+    "#a6bfb0",
+    -0.68,
+    0.57,
+    -0.48,
+  );
+  towerMesh(
+    gardenIsland,
+    new T.ConeGeometry(0.45, 0.55, 24),
+    "#c493a0",
+    -0.68,
+    1.97,
+    -0.48,
+  );
   garden.add(-0.68, 0.39, -0.105, 0.19, 0.4, 0.025, "#9c8579");
   garden.add(-0.68, 1.02, -0.2, 0.14, 0.19, 0.035, "#7f9e9e");
   // Bench at the edge, and a small watering can beside the flowers.
@@ -249,36 +235,63 @@ export function createArchipelago(ctx: SceneContext) {
     2.1,
   );
   const tower = new Batch(lighthouseIsland);
-  for (let i = 0; i < 10; i++) {
-    const width = 0.84 - i * 0.027;
-    tower.add(
+  towerMesh(
+    lighthouseIsland,
+    new T.CylinderGeometry(0.3, 0.44, 2.3, 32),
+    "#f1e5cc",
+    -0.25,
+    1.3,
+    -0.18,
+  );
+  for (const [y, r, h] of [
+    [0.85, 0.403, 0.39],
+    [1.88, 0.343, 0.22],
+  ])
+    towerMesh(
+      lighthouseIsland,
+      new T.CylinderGeometry(r - 0.006, r + 0.006, h, 32),
+      "#9bb8af",
       -0.25,
-      0.27 + i * 0.23,
+      y,
       -0.18,
-      width,
-      0.24,
-      width,
-      i === 2 || i === 3 || i === 7 ? "#9bb8af" : "#f1e5cc",
     );
-  }
   tower.add(-0.25, 0.4, 0.25, 0.24, 0.49, 0.025, "#998778");
   tower.add(-0.25, 1.3, 0.18, 0.15, 0.26, 0.03, "#809f9e");
-  tower.add(-0.25, 2.52, -0.18, 1.04, 0.12, 1.04, "#bba992");
-  tower.add(-0.25, 3.03, -0.18, 0.94, 0.09, 0.94, "#c9b299");
-  for (let i = 0; i < 4; i++) {
+  towerMesh(
+    lighthouseIsland,
+    new T.CylinderGeometry(0.53, 0.53, 0.12, 32),
+    "#bba992",
+    -0.25,
+    2.52,
+    -0.18,
+  );
+  towerMesh(
+    lighthouseIsland,
+    new T.CylinderGeometry(0.48, 0.48, 0.09, 32),
+    "#c9b299",
+    -0.25,
+    3.03,
+    -0.18,
+  );
+  towerMesh(
+    lighthouseIsland,
+    new T.ConeGeometry(0.56, 0.48, 32),
+    "#90aaa2",
+    -0.25,
+    3.31,
+    -0.18,
+  );
+  for (let i = 0; i < 6; i++) {
+    const a = (i * TAU) / 6;
     tower.add(
-      -0.25,
-      3.12 + i * 0.12,
-      -0.18,
-      1.08 - i * 0.24,
-      0.13,
-      1.08 - i * 0.24,
-      i % 2 ? "#a6bbad" : "#90aaa2",
+      -0.25 + Math.cos(a) * 0.4,
+      2.8,
+      -0.18 + Math.sin(a) * 0.4,
+      0.045,
+      0.53,
+      0.045,
+      "#a9927c",
     );
-  }
-  for (const x of [-0.62, 0.12]) {
-    for (const z of [-0.55, 0.19])
-      tower.add(x, 2.8, z, 0.055, 0.53, 0.055, "#a9927c");
   }
   // A small landing beside the beacon gives the postal ship a real destination.
   for (let i = 0; i < 18; i++) {
@@ -317,9 +330,15 @@ export function createArchipelago(ctx: SceneContext) {
     );
   }
   tower.build(false);
-  const beacon = new Batch(lighthouseIsland, lampMat);
-  beacon.add(-0.25, 2.79, -0.18, 0.46, 0.38, 0.46, "#fff0cd");
-  beacon.build(false);
+  const beacon = ctx.mesh(
+    new T.CylinderGeometry(0.25, 0.25, 0.38, 24),
+    lampMat,
+    lighthouseIsland,
+    -0.25,
+    2.79,
+    -0.18,
+  );
+  beacon.castShadow = false;
   const beaconLight = new T.PointLight("#ffd9a0", 0, 7, 2);
   beaconLight.position.set(-0.25, 2.8, -0.18);
   lighthouseIsland.add(beaconLight);

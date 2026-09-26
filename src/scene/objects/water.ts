@@ -1,9 +1,10 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
+import { VoxelBatch } from "../utils/voxelBatch";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createWater(ctx: SceneContext) {
-  const { world, U, Batch, mesh } = ctx;
+  const { world, U, mesh } = ctx;
   // A small spring pool spills over the island's edge into cloud mist.
   const poolMat = new T.ShaderMaterial({
     uniforms: U,
@@ -12,13 +13,12 @@ export function createWater(ctx: SceneContext) {
     vertexShader: `uniform float uTime;uniform float uWind;uniform vec4 uSeason;uniform float uRipple;varying vec3 vP;varying float vH;void main(){vec4 p=instanceMatrix*vec4(position,1.);float calm=1.-uSeason.w;vH=sin(p.x*6.+uTime)*sin(p.z*5.+uTime*.6)*(.012+uWind*.016)*calm;float r=length(p.xz-vec2(-2.72,1.38));vH+=sin(r*22.-uTime*9.)*.02*uRipple*smoothstep(.9,0.,r);p.y+=vH;vP=p.xyz;gl_Position=projectionMatrix*modelViewMatrix*p;}`,
     fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;varying float vH;void main(){float glint=pow(max(0.,sin(vP.x*17.+vP.z*10.+uTime)),30.);vec3 c=mix(vec3(.32,.66,.68),vec3(.76,.91,.84),.25+glint*.65);vec3 ice=mix(vec3(.78,.86,.92),vec3(.93,.96,1.),.5+.5*sin(vP.x*9.+vP.z*7.));c=mix(c,ice,uSeason.w);c*=1.-uNight*.48;gl_FragColor=vec4(c,.90);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
   });
-  const pool = new Batch(world, poolMat);
-  for (let x = -0.64; x < 0.65; x += 0.13)
-    for (let z = -0.5; z < 0.5; z += 0.13)
-      if ((x * x) / 0.42 + (z * z) / 0.25 < 1)
-        pool.add(-2.72 + x, 1.14, 1.38 + z, 0.134, 0.035, 0.134, "#c9ede2");
+  const poolGeometry = new T.CircleGeometry(0.5, 48).rotateX(-Math.PI / 2);
+  const pool = new VoxelBatch(world, poolMat, poolGeometry);
+  pool.add(-2.72, 1.14, 1.38, 1.3, 1, 1, "#c9ede2");
+  const stream = new ctx.SoftBatch(world, poolMat);
   for (let k = 0; k < 6; k++)
-    pool.add(
+    stream.add(
       -3.05 - k * 0.1,
       1.1 - k * 0.012,
       1.55 + k * 0.045,
@@ -29,7 +29,8 @@ export function createWater(ctx: SceneContext) {
     );
   const poolMesh = pool.build(false);
   poolMesh.renderOrder = 8;
-  const pondStones = new Batch();
+  stream.build(false).renderOrder = 8;
+  const pondStones = new ctx.PuffBatch();
   for (let i = 0; i < 15; i++) {
     const a = (i * TAU) / 15;
     pondStones.add(

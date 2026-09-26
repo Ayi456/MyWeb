@@ -22,7 +22,7 @@ export const CONFIG = {
   maxLettersInFlight: 24,
   petals: 1250,
   exposure: 0.95,
-  fogDensity: 0.014,
+  fogDensity: 0.011,
   uiInterval: 300,
   statsInterval: 1000,
   autoOrbitDelay: 8500,

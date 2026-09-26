@@ -1,0 +1,41 @@
+Three.js revision: 186
+mount 1: first frame 587 ms
+PASS one visible canvas
+PASS one pending animation frame
+PASS accept an in-memory letter
+PASS all simulation is paused while slider and letter UI work
+PASS letter reaches moving ship and is removed
+PASS wind returns smoothly to calm
+PASS season jumps to winter on request
+PASS taps raise scene notices
+PASS a forced shower becomes the active event
+PASS camera follows the airship on request
+PASS reset leaves the ride
+PASS a reply lands in the mailbox after the ship returns
+PASS all 12 resource-test letters are accepted
+PASS GPU geometry/texture counts return to baseline after 12 deliveries
+steady FPS: 60, 60, 60, 60, 60, 60, 60, 60, 60, 60; 287 calls; 4450 instances; 1581 × 900
+GPU resources: 71 geometries, 9 textures
+GPU: ANGLE (NVIDIA, NVIDIA GeForce GTX 1650 (0x00001F99) Direct3D11 vs_5_0 ps_5_0, D3D11)
+Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36
+PASS dispose is idempotent and cancels RAF and subscriptions
+mount 2: first frame 705 ms
+PASS one visible canvas
+PASS one pending animation frame
+PASS accept an in-memory letter
+PASS all simulation is paused while slider and letter UI work
+PASS letter reaches moving ship and is removed
+PASS wind returns smoothly to calm
+PASS dispose is idempotent and cancels RAF and subscriptions
+mount 3: first frame 536 ms
+PASS one visible canvas
+PASS one pending animation frame
+PASS accept an in-memory letter
+PASS all simulation is paused while slider and letter UI work
+PASS letter reaches moving ship and is removed
+PASS wind returns smoothly to calm
+PASS dispose is idempotent and cancels RAF and subscriptions
+PASS WebGL unavailable fails explicitly
+PASS context loss stops the loop and raises an actionable error
+PASS a new scene renders after context loss
+ALL BROWSER ENGINE CHECKS PASSED

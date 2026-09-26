@@ -3,7 +3,7 @@ import { type SceneContext } from "../core/context";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createBunny(ctx: SceneContext) {
-  const { Batch } = ctx;
+  const { PuffBatch: Batch } = ctx;
   function bunny(
     parent: T.Object3D,
     x: number,

@@ -4,7 +4,7 @@ import { MAIN_ISLAND, MAIN_MAILBOX } from "../worldLayout";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createDock(ctx: SceneContext) {
-  const { world, Batch, mesh, rod, ground } = ctx;
+  const { world, SoftBatch: Batch, mesh, rod, ground } = ctx;
   // Floating wooden landing and garden fences.
   const dock = new Batch();
   for (let i = 0; i < 17; i++)

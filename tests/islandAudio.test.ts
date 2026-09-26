@@ -64,7 +64,7 @@ describe("garden gramophone", () => {
     ctx.world.add(garden);
     return { ctx, garden, ...createGramophone(ctx, garden) };
   }
-  it("adds two shared-resource voxel batches on the garden and leaves the main seed alone", () => {
+  it("adds two shared-resource furniture batches on the garden and leaves the main seed alone", () => {
     const o = build(),
       reference = createContext();
     expect(o.ctx.rand()).toBe(reference.rand());
@@ -77,14 +77,14 @@ describe("garden gramophone", () => {
     expect(
       batches.every(
         (node) =>
-          node.geometry === o.ctx.cube &&
+          node.geometry === o.ctx.softCube &&
           node.material === o.ctx.matte &&
           !node.castShadow,
       ),
     ).toBe(true);
     const tracker = new ResourceTracker();
     const disposed = vi.fn();
-    o.ctx.cube.addEventListener("dispose", disposed);
+    o.ctx.softCube.addEventListener("dispose", disposed);
     tracker.track(o.ctx.scene);
     tracker.dispose();
     tracker.dispose();

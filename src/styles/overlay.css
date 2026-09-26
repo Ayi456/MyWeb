@@ -1,4 +1,23 @@
-/* Responsive and accessible refinements over the reference's unchanged palette. */
+/* Cream paper surfaces echo the warm, matte miniature scenery. */
+:root {
+  --paper-surface: #fff8eef0;
+  --paper-edge: #bd9ca438;
+  --paper-shadow: 0 5px 18px #72556212, inset 0 1px 0 #ffffffb3;
+}
+.round,
+.radio-toggle {
+  background: var(--paper-surface);
+  border-color: var(--paper-edge);
+  box-shadow: var(--paper-shadow);
+}
+.action {
+  border-radius: 16px;
+  box-shadow: var(--paper-shadow);
+}
+.time-panel,
+.radio-panel {
+  border-radius: 20px;
+}
 html,
 body,
 #root {
