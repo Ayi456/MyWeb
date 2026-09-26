@@ -38,6 +38,7 @@ import {
 import { Ambience, type SoundName } from "./systems/ambience";
 import { soundCues, type SoundState } from "./systems/soundCues";
 import { Foghorn, foghornWeather } from "./systems/foghorn";
+import { sampleRopeway } from "./systems/ropeway";
 import { updateFestival } from "./systems/festival";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
@@ -74,6 +75,7 @@ export function createScene(
   const ambience = new Ambience();
   const foghorn = new Foghorn();
   let radioPlaying = false;
+  let ropewayTime = 0;
   let captions = false;
   const lastCue = new Map<string, number>();
   const soundLabels: Record<SoundName, string> = {
@@ -338,6 +340,9 @@ export function createScene(
           gramophoneRotation: objects.gramophoneRecord.rotation.y,
           foghornCount: foghorn.count,
           foghornRemaining: foghorn.remaining,
+          cablecar: objects.cablecar.position.toArray(),
+          ropewayStopped: sampleRopeway(ropewayTime).stopped,
+          ropewayTime,
         });
     }
     function resize() {
@@ -478,6 +483,8 @@ export function createScene(
         )
           ambience.play("foghorn");
         updateGramophone(objects, dt, radioPlaying, reducedMotion);
+        if (!reducedMotion) ropewayTime += dt;
+        objects.cablecar.position.set(...sampleRopeway(ropewayTime).position);
         const route = flight.update(objects, dt, clock.time, motionWind);
         snapshot.journey = journeyLine(route.phase, scriptContext());
         ctx.U.uShip.value.copy(objects.airship.position);

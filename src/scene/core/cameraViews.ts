@@ -7,9 +7,16 @@ import {
   LIGHTHOUSE_ISLAND,
   TEA_ISLAND,
   VILLAGE_ISLAND,
+  DEPOT_ISLAND,
 } from "../worldLayout";
 
 export const CAMERA_VIEWS: Record<Exclude<CameraPreset, "ride">, CameraView> = {
+  depot: {
+    azimuth: 0.5,
+    elevation: 0.32,
+    distance: 17,
+    focus: [DEPOT_ISLAND.center[0], 1.25, DEPOT_ISLAND.center[2]],
+  },
   reset: {
     azimuth: CONFIG.camera.azimuth,
     elevation: CONFIG.camera.elevation,
@@ -69,17 +76,21 @@ export const HOTSPOT_VIEWS: Record<HotspotId, CameraPreset> = {
   teahouse: "teahouse",
   village: "village",
   gramophone: "garden",
+  depot: "depot",
+  cablecar: "depot",
 };
 export const ISLAND_VIEWS = [
   { preset: "garden", label: "花园岛" },
   { preset: "lighthouse", label: "灯塔" },
   { preset: "teahouse", label: "茶山" },
   { preset: "village", label: "温泉村" },
+  { preset: "depot", label: "驿站岛" },
 ] as const;
 
 const tourStops = [
   "reset",
   "garden",
+  "depot",
   "teahouse",
   "village",
   "lighthouse",

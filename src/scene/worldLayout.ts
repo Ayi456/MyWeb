@@ -29,3 +29,14 @@ export const FLIGHT_STOPS = {
   westTurn: 52,
   southTurn: 64,
 } as const;
+
+export const DEPOT_ISLAND = {
+  center: [-12.5, 0.3, -7.4] as const,
+  radius: [2.2, 1.8] as const,
+};
+export const ROPEWAY = {
+  start: [-3.6, 3.35, -1.75] as const,
+  end: [-11.4, 2.45, -6.75] as const,
+  duration: 44,
+  stop: 6,
+};

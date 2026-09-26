@@ -132,7 +132,9 @@ test("a real garden click controls the radio, keyboard resumes and the record fo
   await page.screenshot({ path: "docs/screenshots/garden-gramophone.png" });
   await page.reload();
   await expect(page.locator(".loader")).toHaveCount(0);
-  expect((await diagnostics(page)).gramophonePlaying).toBe(false);
+  await expect
+    .poll(async () => (await diagnostics(page)).gramophonePlaying)
+    .toBe(false);
   await expect(page.locator(".radio-panel")).toHaveCount(0);
 });
 

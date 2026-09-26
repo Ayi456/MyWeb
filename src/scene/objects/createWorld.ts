@@ -21,6 +21,7 @@ import { createVisitors } from "./visitors";
 import { createFestive } from "./festive";
 import { createAurora } from "./aurora";
 import { createGramophone } from "./gramophone";
+import { createDepot } from "./depot";
 
 export function createWorld(ctx: SceneContext) {
   const sky = createSky(ctx);
@@ -45,6 +46,7 @@ export function createWorld(ctx: SceneContext) {
   const festive = createFestive(ctx);
   const aurora = createAurora(ctx);
   const gramophone = createGramophone(ctx, archipelago.gardenIsland);
+  const depot = createDepot(ctx);
   return {
     ...sky,
     ...sakura,
@@ -66,6 +68,7 @@ export function createWorld(ctx: SceneContext) {
     ...festive,
     ...aurora,
     ...gramophone,
+    ...depot,
   };
 }
 export type WorldObjects = ReturnType<typeof createWorld>;

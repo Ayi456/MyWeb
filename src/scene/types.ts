@@ -8,7 +8,14 @@ export type Speed = 0 | 1 | 4 | 12;
 export type QualityLevel = "high" | "medium" | "low";
 export type QualityMode = "auto" | QualityLevel;
 export type CameraPreset =
-  "reset" | "tree" | "ride" | "garden" | "lighthouse" | "teahouse" | "village";
+  | "reset"
+  | "tree"
+  | "ride"
+  | "garden"
+  | "lighthouse"
+  | "teahouse"
+  | "village"
+  | "depot";
 export interface CameraView {
   azimuth: number;
   elevation: number;

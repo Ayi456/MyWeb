@@ -16,6 +16,8 @@ export const HOTSPOTS = [
   "teahouse",
   "village",
   "gramophone",
+  "depot",
+  "cablecar",
 ] as const;
 export type HotspotId = (typeof HOTSPOTS)[number];
 /** Layer 1 is raycast only: never rendered, never in the shadow pass. */
@@ -70,6 +72,8 @@ export function createInteractions(ctx: SceneContext, o: WorldObjects) {
   hit("teahouse", o.teaIsland, 0.2, 1.4, -2.6, 2.2, 2.4, 2.0);
   hit("village", o.villageIsland, 0.9, 0.6, 1.3, 3.0, 1.4, 2.8);
   hit("gramophone", o.gramophone, -0.05, 0.55, 0.02, 0.75, 1.15, 0.65);
+  hit("depot", o.depotIsland, -0.55, 0.85, -0.35, 1.9, 1.6, 1.4);
+  hit("cablecar", o.cablecar, 0, -0.7, 0, 0.85, 0.8, 0.7);
 
   const impulses = Object.fromEntries(
     HOTSPOTS.map((id) => [id, new Impulse()]),
