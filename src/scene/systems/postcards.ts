@@ -97,6 +97,12 @@ export const STAMPS = [
   { id: "rain", label: "虹", title: "彩虹邮戳", hint: "遇见一场太阳雨" },
   { id: "star", label: "星", title: "流星邮戳", hint: "看见一颗流星" },
   { id: "whale", label: "鲸", title: "云鲸邮戳", hint: "遇见云鲸" },
+  {
+    id: "treasure",
+    label: "寻",
+    title: "寻宝邮戳",
+    hint: "找齐一周的群岛线索",
+  },
   { id: "seasons", label: "岁", title: "四季邮戳", hint: "看过四个季节" },
   {
     id: "touch",

@@ -124,7 +124,7 @@ export function PostcardPanel({
           </>
         )}
         <div className="fine">
-          邮戳、回信和累计计数保存在此设备。寄出的信件文字不会保存。
+          邮戳、回信、累计计数和寻宝进度保存在此设备，清空收藏会一并清除。寄出的信件文字不会保存。
         </div>
         <div className="collection-actions">
           {confirmClear ? (

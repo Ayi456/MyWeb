@@ -73,6 +73,7 @@ export interface SceneController {
   setCaptions(on: boolean): void;
   setSoundVolume(volume: number): void;
   clearCollection(): void;
+  completeTreasure(): void;
   visitDays(days: number): void;
   setCalendarContext(
     kind: FestivalKind | null,

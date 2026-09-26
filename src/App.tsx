@@ -6,6 +6,7 @@ import { SeasonControls } from "./components/SeasonControls";
 import { ActionControls } from "./components/ActionControls";
 import { LetterDialog } from "./components/LetterDialog";
 import { HelpPanel } from "./components/HelpPanel";
+import { TreasureHunt } from "./components/TreasureHunt";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ErrorFallback } from "./components/ErrorFallback";
 import { CloudRadio } from "./components/CloudRadio";
@@ -32,6 +33,15 @@ import {
   solarTerm,
 } from "./content/calendar";
 import { loadVisits, recordVisit, saveVisits } from "./persist/visits";
+import { loadTreasure, saveTreasure } from "./persist/treasure";
+import {
+  emptyTreasure,
+  findTreasure,
+  treasureRoute,
+  TREASURE_STOPS,
+  validateTreasure,
+  type TreasureProgress,
+} from "./content/treasure";
 import { buildSceneLink, parseSceneLink } from "./content/sceneLink";
 import { moonPhase } from "./content/moon";
 import { letterPrompt } from "./scene/systems/script";
@@ -76,6 +86,24 @@ export default function App() {
   const visitsRef = useRef(visits);
   const visitRecorded = useRef(false);
   const [today, setToday] = useState(() => new Date());
+  const [treasure, setTreasure] = useState(() => loadTreasure());
+  const treasureRef = useRef(treasure);
+  const updateTreasure = useCallback((next: TreasureProgress) => {
+    const current = treasureRef.current;
+    if (
+      current.week === next.week &&
+      current.started === next.started &&
+      current.found === next.found
+    )
+      return;
+    treasureRef.current = next;
+    setTreasure(next);
+    saveTreasure(next);
+  }, []);
+  const weeklyTreasure = useMemo(
+    () => validateTreasure(treasure, today),
+    [treasure, today],
+  );
   const todayKey = localDateKey(today);
   const term = useMemo(() => solarTerm(today), [today]);
   const festival = useMemo(
@@ -175,6 +203,22 @@ export default function App() {
   useEffect(() => {
     writePreference("time-collapsed", timeCollapsed);
   }, [timeCollapsed]);
+  useEffect(() => {
+    updateTreasure(validateTreasure(treasureRef.current, today));
+  }, [today, updateTreasure]);
+  useEffect(() => {
+    const refreshDate = () => {
+      if (document.hidden) return;
+      const date = new Date();
+      if (localDateKey(date) !== todayKey) setToday(date);
+    };
+    window.addEventListener("focus", refreshDate);
+    document.addEventListener("visibilitychange", refreshDate);
+    return () => {
+      window.removeEventListener("focus", refreshDate);
+      document.removeEventListener("visibilitychange", refreshDate);
+    };
+  }, [todayKey]);
   // Keep the loader mounted through its 0.7 s fade while the camera glides in,
   // and stagger the chrome in only during that window so H toggles stay instant.
   const ready = !!snapshot?.ready;
@@ -301,8 +345,34 @@ export default function App() {
       } else if (n.type === "sound")
         notify({ kind: "tap", tone: "sound", text: n.text });
       else notify({ kind: n.type === "tap" ? "tap" : "event", text: n.text });
+      if (n.type === "tap") {
+        const date = new Date();
+        setToday((currentDate) =>
+          localDateKey(currentDate) === localDateKey(date) ? currentDate : date,
+        );
+        const current = validateTreasure(treasureRef.current, date);
+        const next = findTreasure(current, n.id, date);
+        updateTreasure(next);
+        if (next.found > current.found) {
+          const clue = treasureRoute(date)[next.found];
+          notify({
+            kind: "event",
+            text: clue
+              ? `找到第 ${next.found} 处。下一张线索：${clue.clue}`
+              : "本周群岛线索已找齐，下周一再来走一条新邮路。",
+          });
+        }
+      }
     });
-  }, [controller, snapshot?.ready, notify, updateCollection]);
+  }, [controller, snapshot?.ready, notify, updateCollection, updateTreasure]);
+  useEffect(() => {
+    if (
+      snapshot?.ready &&
+      weeklyTreasure.started &&
+      weeklyTreasure.found === TREASURE_STOPS.length
+    )
+      controller.current?.completeTreasure();
+  }, [controller, snapshot?.ready, weeklyTreasure]);
   useEffect(() => {
     if (snapshot?.ready) controller.current?.visitDays(visits.days.length);
   }, [controller, snapshot?.ready, visits.days.length]);
@@ -505,6 +575,22 @@ export default function App() {
               controller.current?.setCameraPreset(preset);
               setHelpOpen(false);
             }}
+            treasure={
+              <TreasureHunt
+                progress={weeklyTreasure}
+                date={today}
+                onStart={() => {
+                  const date = new Date();
+                  setToday(date);
+                  const next = validateTreasure(treasureRef.current, date);
+                  updateTreasure({ ...next, started: true });
+                }}
+                onVisit={(preset) => {
+                  controller.current?.setCameraPreset(preset);
+                  setHelpOpen(false);
+                }}
+              />
+            }
             onClose={() => setHelpOpen(false)}
           />
         )}
@@ -639,6 +725,9 @@ export default function App() {
             setReplies([]);
             setOldReplies([]);
             updateCollection(() => emptyCollection());
+            const next = emptyTreasure(new Date());
+            updateTreasure(next);
+            saveTreasure(next);
           }}
           onClose={() => setPostcardsOpen(false)}
         />

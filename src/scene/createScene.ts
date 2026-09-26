@@ -665,6 +665,9 @@ export function createScene(
         ledger.received = [];
         emit();
       },
+      completeTreasure() {
+        stamps.award("treasure");
+      },
       visitDays(days) {
         stamps.visitDays(days);
         emit();

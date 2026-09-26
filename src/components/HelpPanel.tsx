@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { CameraPreset, QualityMode } from "../scene/types";
 import { ISLAND_VIEWS } from "../scene/core/cameraViews";
 import type { HotspotId } from "../scene/systems/interactions";
@@ -15,6 +16,7 @@ export function HelpPanel({
   onRestartGuide,
   onPoke,
   onVisit,
+  treasure,
   onClose,
 }: {
   quality: QualityMode;
@@ -29,6 +31,7 @@ export function HelpPanel({
   onRestartGuide: () => void;
   onPoke: (id: HotspotId) => void;
   onVisit: (preset: CameraPreset) => void;
+  treasure: ReactNode;
   onClose: () => void;
 }) {
   return (
@@ -78,6 +81,7 @@ export function HelpPanel({
           </button>
         ))}
       </div>
+      {treasure}
       <button type="button" className="guide-restart" onClick={onRestartGuide}>
         重看三步引导
       </button>
