@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { SceneSnapshot } from "../scene/types";
 import { PhotoButton } from "./PhotoButton";
+import { SceneIcon } from "./SceneIcon";
 export function SceneOverlay({
   snapshot,
   hidden,
@@ -39,6 +40,11 @@ export function SceneOverlay({
     import.meta.env.DEV ||
     new URLSearchParams(location.search).get("debug") === "1";
   const stampCount = snapshot?.stamps.length ?? 0;
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const runTool = (action: () => void) => () => {
+    setToolsOpen(false);
+    action();
+  };
   return (
     <main
       className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""} ${arriving ? "arriving" : ""}`}
@@ -46,11 +52,13 @@ export function SceneOverlay({
       {!hidden && (
         <>
           <header className="masthead">
-            <div className="eyebrow">POSTCARDS FROM THE SKY</div>
+            <div className="brand-line">
+              <SceneIcon name="letter" />
+              <span className="eyebrow">POSTCARDS FROM THE SKY</span>
+            </div>
             <h1 className="title">
-              云上的
-              <br />
-              春日邮局
+              <span className="title-prefix">云上的</span>
+              <span>春日邮局</span>
             </h1>
             <div className="subtitle">写给远方，也写给你。</div>
           </header>
@@ -67,6 +75,7 @@ export function SceneOverlay({
                 ? `STAMPS · ${String(stampCount).padStart(2, "0")}`
                 : "SPRING · 01"}
             </span>
+            <span className="stamp-caption">信箱 · 集章</span>
             {replyCount > 0 && (
               <i className="stamp-badge" aria-hidden="true">
                 {replyCount}
@@ -76,51 +85,66 @@ export function SceneOverlay({
         </>
       )}
       <nav
-        className={`side ${hidden ? "side-minimal" : ""}`}
+        className={`side ${hidden ? "side-minimal" : ""} ${toolsOpen ? "tools-open" : ""}`}
         aria-label="场景视角"
       >
         {!hidden && (
           <>
             <button
+              className="side-toggle"
+              aria-label={toolsOpen ? "收起漫游工具" : "展开漫游工具"}
+              aria-expanded={toolsOpen}
+              onClick={() => setToolsOpen((open) => !open)}
+            >
+              <SceneIcon name="compass" />
+              <span>{toolsOpen ? "收起" : "漫游"}</span>
+            </button>
+            <span className="side-label" aria-hidden="true">
+              云间漫游
+            </span>
+            <button
               className="round"
               aria-label="复位视角"
               title="复位视角 · R"
-              onClick={onReset}
+              onClick={runTool(onReset)}
             >
-              ↺
+              <SceneIcon name="reset" />
             </button>
             <button
               className="round"
               aria-label="走近樱花树"
-              onClick={onCloseup}
+              onClick={runTool(onCloseup)}
             >
-              ⌕
+              <SceneIcon name="search" />
             </button>
             <button
               className={`round ${snapshot?.riding ? "pressed" : ""}`}
               aria-label={snapshot?.riding ? "离开飞艇" : "登上飞艇，跟随邮路"}
               aria-pressed={!!snapshot?.riding}
               title="登上飞艇 · F"
-              onClick={onRide}
+              onClick={runTool(onRide)}
             >
-              ➶
+              <SceneIcon name="ride" />
             </button>
             <button
               className={`round ${snapshot?.sound ? "pressed" : ""}`}
               aria-label={snapshot?.sound ? "关闭环境音效" : "打开环境音效"}
               aria-pressed={!!snapshot?.sound}
               title="环境音效 · M"
-              onClick={onSound}
+              onClick={runTool(onSound)}
             >
-              {snapshot?.sound ? "♫" : "♪"}
+              <SceneIcon name="sound" />
             </button>
-            <PhotoButton onClick={onPhoto} disabled={!snapshot?.ready} />
+            <PhotoButton
+              onClick={runTool(onPhoto)}
+              disabled={!snapshot?.ready}
+            />
             <button
               className="round"
               aria-label="复制此刻链接"
               title="复制此刻链接"
               disabled={!snapshot?.ready}
-              onClick={onCopy}
+              onClick={runTool(onCopy)}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -136,9 +160,9 @@ export function SceneOverlay({
           className="round"
           aria-label={hidden ? "显示界面" : "隐藏界面"}
           title="界面显示 · H"
-          onClick={onToggle}
+          onClick={runTool(onToggle)}
         >
-          ⛶
+          <SceneIcon name="frame" />
         </button>
         {!hidden && (
           <button
@@ -146,9 +170,9 @@ export function SceneOverlay({
             aria-label="操作指南"
             aria-expanded={helpOpen}
             aria-controls="help-panel"
-            onClick={onHelp}
+            onClick={runTool(onHelp)}
           >
-            ?
+            <SceneIcon name="help" />
           </button>
         )}
       </nav>

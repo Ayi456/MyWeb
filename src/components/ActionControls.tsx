@@ -1,4 +1,5 @@
 import type { useWindInput } from "../hooks/useWindInput";
+import { SceneIcon } from "./SceneIcon";
 export function ActionControls({
   onWrite,
   wind,
@@ -11,10 +12,7 @@ export function ActionControls({
   return (
     <div className="actions">
       <button className="action primary" onClick={onWrite} disabled={disabled}>
-        <svg className="icon" viewBox="0 0 20 20" aria-hidden="true">
-          <rect x="2" y="4" width="16" height="12" rx="1.5" />
-          <path d="m2 5 8 6 8-6" />
-        </svg>
+        <SceneIcon name="letter" />
         寄一封春天
       </button>
       <button
@@ -52,7 +50,8 @@ export function ActionControls({
           if (e.detail === 0) wind.toggle();
         }}
       >
-        <span className="key">SPACE</span>唤起春风
+        <SceneIcon name="wind" />
+        唤起春风<span className="key">SPACE</span>
       </button>
     </div>
   );

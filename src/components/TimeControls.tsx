@@ -45,17 +45,15 @@ export function TimeControls({
         onClick={onToggle}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          {collapsed ? (
-            <>
-              <circle cx="12" cy="12" r="8" />
-              <path d="M12 7v5l3 2" />
-            </>
-          ) : (
-            <path d="m8 10 4 4 4-4" />
-          )}
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 7v5l3 2" />
         </svg>
+        <span className="time-summary" aria-hidden="true">
+          <span>{phase}</span>
+          <time>{time}</time>
+        </span>
       </button>
-      <div id="time-panel-content" hidden={collapsed}>
+      <div id="time-panel-content" className="time-content" hidden={collapsed}>
         <div className="time-top">
           <span className="phase-icon" aria-hidden="true">
             {(snapshot?.night ?? 0) > 0.65 ? "☾" : "☀"}

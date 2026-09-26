@@ -1,6 +1,6 @@
 import type { SceneSnapshot } from "../scene/types";
 import { SEASONS, SEASON_LABELS } from "../scene/systems/season";
-const ICONS = { spring: "✿", summer: "☼", autumn: "❦", winter: "❄" } as const;
+import { SceneIcon } from "./SceneIcon";
 export function SeasonControls({
   snapshot,
   onSeason,
@@ -20,7 +20,7 @@ export function SeasonControls({
           title={`${SEASON_LABELS[name]}天`}
           onClick={() => onSeason(i)}
         >
-          <span aria-hidden="true">{ICONS[name]}</span>
+          <SceneIcon name={name} />
           {SEASON_LABELS[name]}
         </button>
       ))}

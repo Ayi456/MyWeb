@@ -5,6 +5,7 @@ import App from "./App";
 import { registerServiceWorker } from "./pwa/register";
 import "./styles/global.css";
 import "./styles/overlay.css";
+import "./styles/polish.css";
 registerServiceWorker();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

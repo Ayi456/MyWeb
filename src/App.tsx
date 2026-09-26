@@ -626,8 +626,13 @@ export default function App() {
         )}
         <footer className="bottom">
           <div className="notes">
-            <div className="tiny">TODAY'S LITTLE JOURNEY</div>
-            <p>{snapshot?.journey ?? "飞艇正在等一封信。"}</p>
+            <div className="tiny">
+              <span>今日邮路</span>
+              <span>THE LITTLE JOURNEY</span>
+            </div>
+            <p className="journey-line">
+              {snapshot?.journey ?? "飞艇正在等一封信。"}
+            </p>
             {!CLASSIC && (
               <p className="almanac-line">
                 {today.getMonth() + 1} 月 {today.getDate()} 日 · {lineToday}
@@ -638,14 +643,19 @@ export default function App() {
                 欢迎回来，这是你第 {visits.count} 次来到邮局。
               </p>
             )}
-            <p>
+            <p className="journey-meta">
               {snapshot?.sentCount || collection.totalSent
                 ? `本次已放飞 ${String(snapshot?.sentCount ?? 0).padStart(2, "0")} 封 · 累计 ${collection.totalSent} 封${
                     snapshot?.repliesWaiting
                       ? ` · ${snapshot.repliesWaiting} 封回信在路上`
                       : ""
                   }`
-                : "春天，还很长。"}
+                : {
+                    spring: "春天，还很长。",
+                    summer: "把夏日的风，装进信封。",
+                    autumn: "等一片落叶，也等一封来信。",
+                    winter: "雪落得很慢，心意会抵达。",
+                  }[snapshot?.season ?? "spring"]}
             </p>
           </div>
           <div className="time-stack">
