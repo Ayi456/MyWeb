@@ -58,7 +58,9 @@ export function createCloudWhale(ctx: SceneContext) {
     colors.set([color.r, color.g, color.b], i * 3);
   }
   bodyGeometry.setAttribute("color", new T.BufferAttribute(colors, 3));
-  whale.add(new T.Mesh(bodyGeometry, skin));
+  const body = new T.Mesh(bodyGeometry, skin);
+  body.name = "whale-body";
+  whale.add(body);
 
   // Bevelled silhouettes give fins a soft edge without new textures.
   function finGeometry(shape: T.Shape, horizontal = true) {
@@ -135,13 +137,25 @@ export function createCloudWhale(ctx: SceneContext) {
     cheek.position.set(1.59, -0.3, side * 0.93);
     cheek.scale.set(1.6, 0.58, 0.2);
     whale.add(cheek);
-    const smile = new T.CatmullRomCurve3([
-      new T.Vector3(1.85, -0.42, side * 0.79),
-      new T.Vector3(2.04, -0.39, side * 0.61),
-      new T.Vector3(2.19, -0.3, side * 0.4),
-    ]);
-    whale.add(new T.Mesh(new T.TubeGeometry(smile, 12, 0.015, 5, false), ink));
   }
+
+  // Wrap one smile around the nose. Project onto the actual face so the middle
+  // cannot disappear inside the rounded body when viewed from the front.
+  body.updateMatrixWorld(true);
+  const faceRay = new T.Raycaster();
+  const smilePoints = Array.from({ length: 33 }, (_, i) => {
+    const t = (i / 32) * 2 - 1;
+    faceRay.set(
+      new T.Vector3(3, -0.42 + 0.17 * t * t, 0.8 * t),
+      new T.Vector3(-1, 0, 0),
+    );
+    const surface = faceRay.intersectObject(body)[0];
+    return surface.point.clone().add(new T.Vector3(0.03, 0, 0));
+  });
+  const smile = new T.CatmullRomCurve3(smilePoints);
+  const mouth = new T.Mesh(new T.TubeGeometry(smile, 64, 0.013, 6, false), ink);
+  mouth.name = "whale-smile";
+  whale.add(mouth);
 
   // A small puff dissolves above the blowhole instead of a stack of cubes.
   const spout = new T.Group();

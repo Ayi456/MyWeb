@@ -2,9 +2,30 @@ import { describe, expect, it, vi } from "vitest";
 import * as T from "three";
 import { createContext } from "../src/scene/core/context";
 import { createSakura } from "../src/scene/objects/sakura";
+import { createCloudWhale } from "../src/scene/objects/cloudWhale";
 import { ResourceTracker } from "../src/scene/core/resourceTracker";
 
 describe("sculpted island scenery", () => {
+  it("keeps the entire whale smile visible in front of its curved face", () => {
+    const { whale } = createCloudWhale(createContext());
+    whale.updateMatrixWorld(true);
+    const body = whale.getObjectByName("whale-body") as T.Mesh;
+    const mouth = whale.getObjectByName(
+      "whale-smile",
+    ) as T.Mesh<T.TubeGeometry>;
+    const path = mouth.geometry.parameters.path;
+    const camera = new T.Vector3(8, 0, 0);
+    const ray = new T.Raycaster();
+    for (const point of path.getPoints(128)) {
+      ray.set(camera, point.clone().sub(camera).normalize());
+      const surface = ray.intersectObject(body)[0];
+      expect(surface.distance).toBeGreaterThan(camera.distanceTo(point));
+    }
+    // The middle sits below both corners, reading as a smile from the front.
+    expect(path.getPoint(0.5).y).toBeLessThan(path.getPoint(0).y);
+    expect(path.getPoint(0.5).y).toBeLessThan(path.getPoint(1).y);
+  });
+
   it("preserves seasonal crown blending while using a compact tree", () => {
     const ctx = createContext();
     const { tree, blossomCount } = createSakura(ctx);
