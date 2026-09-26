@@ -13,6 +13,7 @@ import { createAirship } from "./airship";
 import { createClouds } from "./clouds";
 import { createWildlife } from "./wildlife";
 import { createPetals } from "./petals";
+import { createSnow } from "./snow";
 import { createNightSky } from "./nightSky";
 import { createArchipelago } from "./archipelago";
 import { createRainbow } from "./rainbow";
@@ -38,6 +39,7 @@ export function createWorld(ctx: SceneContext) {
   const clouds = createClouds(ctx);
   const wildlife = createWildlife(ctx);
   const petals = createPetals(ctx);
+  const snow = createSnow(ctx);
   const nightSky = createNightSky(ctx);
   const archipelago = createArchipelago(ctx);
   const rainbow = createRainbow(ctx);
@@ -61,6 +63,7 @@ export function createWorld(ctx: SceneContext) {
     ...clouds,
     ...wildlife,
     ...petals,
+    ...snow,
     ...nightSky,
     ...archipelago,
     ...rainbow,

@@ -41,7 +41,28 @@ export const CONFIG = {
 } as const;
 
 export const QUALITY = {
-  high: { dpr: 1.6, shadows: 1024, petals: 1250, bloom: 1, farDetail: true },
-  medium: { dpr: 1.2, shadows: 768, petals: 850, bloom: 0.6, farDetail: true },
-  low: { dpr: 0.9, shadows: 512, petals: 480, bloom: 0, farDetail: false },
+  high: {
+    dpr: 1.6,
+    shadows: 1024,
+    petals: 1250,
+    snow: 1100,
+    bloom: 1,
+    farDetail: true,
+  },
+  medium: {
+    dpr: 1.2,
+    shadows: 768,
+    petals: 850,
+    snow: 750,
+    bloom: 0.6,
+    farDetail: true,
+  },
+  low: {
+    dpr: 0.9,
+    shadows: 512,
+    petals: 480,
+    snow: 420,
+    bloom: 0,
+    farDetail: false,
+  },
 } as const;

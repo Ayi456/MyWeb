@@ -147,7 +147,31 @@ if (params.get("mode") === "visual") {
           snapshot!.season === "winter",
           "season jumps to winter on request",
         );
+        const winterData = JSON.parse(canvas.dataset.diagnostics!);
+        assert(
+          winterData.snowParticles > 0 && winterData.petalParticles === 0,
+          "winter uses full-view snowfall instead of island-local petals",
+        );
+        controller!.setQuality("low");
+        await delay(350);
+        const lowSnow = JSON.parse(canvas.dataset.diagnostics!);
+        assert(
+          lowSnow.snowParticles > 0 &&
+            lowSnow.snowParticles < winterData.snowParticles,
+          "low quality reduces snow count while keeping snowfall active",
+        );
+        assert(
+          lowSnow.snowTime === winterData.snowTime,
+          "snowfall motion freezes with the paused simulation",
+        );
+        controller!.setQuality("high");
         controller!.setSeason(0);
+        await delay(350);
+        const springData = JSON.parse(canvas.dataset.diagnostics!);
+        assert(
+          springData.snowParticles === 0 && springData.petalParticles > 0,
+          "spring restores petals and hides winter snowfall",
+        );
         let notices = 0;
         const stopNotices = controller!.onNotice(() => notices++);
         controller!.poke("tree");

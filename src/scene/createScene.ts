@@ -351,6 +351,9 @@ export function createScene(
           aurora: objects.auroraMat.uniforms.uStrength.value,
           auroraMotion: objects.auroraMat.uniforms.uMotion.value,
           treeBurst: ctx.U.uBurst.value,
+          snowParticles: objects.snow.visible ? objects.snow.count : 0,
+          petalParticles: objects.petals.visible ? objects.petals.count : 0,
+          snowTime: objects.snowTime.value,
           gramophonePlaying: radioPlaying,
           gramophoneRotation: objects.gramophoneRecord.rotation.y,
           foghornCount: foghorn.count,
@@ -371,6 +374,7 @@ export function createScene(
     function applyQuality() {
       const profile = QUALITY[quality.level];
       objects.petals.count = profile.petals;
+      objects.snow.count = profile.snow;
       objects.sunLight.shadow.mapSize.set(profile.shadows, profile.shadows);
       objects.sunLight.shadow.map?.dispose();
       objects.sunLight.shadow.map = null;
@@ -433,6 +437,7 @@ export function createScene(
           wind = windSystem.update(dt, reducedMotion ? 0.35 : 1);
         const motionWind = reducedMotion ? wind * 0.35 : wind;
         petalTime += dt * (1 + motionWind * 0.62);
+        objects.snowTime.value += dt * (reducedMotion ? 0.25 : 1);
         ctx.U.uTime.value = clock.time;
         ctx.U.uWind.value = motionWind;
         ctx.U.uCloudTravel.value = windSystem.cloudTravel;
@@ -442,6 +447,8 @@ export function createScene(
         seasons.advance(dt);
         const weights = seasons.weights;
         ctx.U.uSeason.value.fromArray(weights);
+        objects.petals.visible = weights[3] < 0.999;
+        objects.snow.visible = weights[3] > 0.001;
         ctx.seasonal.apply(weights);
         seasonChanged();
         // Occasional surprises.
@@ -594,8 +601,10 @@ export function createScene(
             drawCalls: info.render.calls,
             instances:
               baseInstances -
-              CONFIG.petals +
-              objects.petals.count +
+              CONFIG.petals -
+              QUALITY.high.snow +
+              (objects.petals.visible ? objects.petals.count : 0) +
+              (objects.snow.visible ? objects.snow.count : 0) +
               delivery.count * 4,
             geometries: info.memory.geometries,
             textures: info.memory.textures,
