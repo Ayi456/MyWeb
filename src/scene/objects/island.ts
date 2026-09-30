@@ -23,12 +23,12 @@ export function createIsland(ctx: SceneContext) {
       x,
       ground(x, z) + 0.105,
       z,
-      0.28,
-      0.055,
-      0.37,
+      0.27 + (i % 3) * 0.01,
+      0.045 + (i % 2) * 0.008,
+      0.35 + (i % 4) * 0.012,
       i % 3 ? "#e6d8bc" : "#d7c9ae",
       0,
-      Math.cos(x * 1.15) * -0.24,
+      Math.cos(x * 1.15) * -0.24 + Math.sin(i * 2.4) * 0.06,
     );
   }
   for (let i = 0; i < 9; i++) {

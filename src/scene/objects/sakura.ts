@@ -70,17 +70,18 @@ export function createSakura(ctx: SceneContext) {
       rz * 1.9,
       blossom(colors[index % 4], true),
     );
-    // A handful of overlapping petals softens each crown without granular noise.
-    for (let j = 0; j < 8; j++) {
-      const a = (j * TAU) / 8 + index * 0.37,
-        high = j % 3 === 0;
+    // Broad secondary lobes leave quiet surfaces between the blossom clusters.
+    for (let j = 0; j < 3; j++) {
+      const a = (j * TAU) / 3 + index * 0.73,
+        high = j === 0;
+      const size = 0.9 + ((index + j) % 3) * 0.12;
       blossoms.addSeasonal(
-        x + Math.cos(a) * rx * 0.65,
-        y + (high ? 0.5 : -0.04) * ry,
-        z + Math.sin(a) * rz * 0.65,
-        rx * 0.92,
-        ry * (high ? 0.95 : 0.8),
-        rz * 0.95,
+        x + Math.cos(a) * rx * 0.56,
+        y + (high ? 0.4 : -0.08) * ry,
+        z + Math.sin(a) * rz * 0.56,
+        rx * size,
+        ry * (high ? 1.06 : 0.88),
+        rz * size,
         blossom(colors[(index + j) % 4], high),
         0,
         a,

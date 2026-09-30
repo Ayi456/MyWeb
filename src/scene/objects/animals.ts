@@ -10,17 +10,35 @@ export function createAnimals(
 ) {
   const { world, SoftBatch: Batch, mesh, rod } = ctx;
   const bunny = createBunny(ctx);
-  const writer = bunny(bench, -0.22, 0.36, 0.025, "#cea2b1", 0.8);
+  const writer = bunny(bench, -0.22, 0.36, 0.025, "#cea2b1", 0.88, "writer");
   writer.g.rotation.y = 0.18;
   writer.arms[0].rotation.x = -0.7;
   writer.arms[1].rotation.x = -0.7;
-  const note = new Batch(writer.g);
-  note.add(0, 0.33, 0.18, 0.2, 0.13, 0.016, "#fff5df", -0.2, 0, 0);
-  note.add(0, 0.35, 0.193, 0.1, 0.011, 0.005, "#c898a6");
+  const paper = new T.Group();
+  paper.position.set(0, 0.32, 0.187);
+  paper.rotation.x = -0.24;
+  writer.g.add(paper);
+  const note = new Batch(paper);
+  note.add(0, 0, 0, 0.215, 0.15, 0.015, "#fff5df");
+  for (let i = 0; i < 3; i++)
+    note.add(
+      -0.016,
+      0.025 - i * 0.026,
+      0.01,
+      0.105 - i * 0.012,
+      0.005,
+      0.003,
+      "#caa3a1",
+    );
+  note.add(0.07, 0.04, 0.01, 0.028, 0.027, 0.003, "#d5a1ad");
   note.build(false);
-  const courier = bunny(world, 2.54, 1.2, 0.25, "#91b4b0", 0.92);
+  const pen = new Batch(writer.arms[0]);
+  pen.add(0.021, -0.15, 0.07, 0.012, 0.012, 0.16, "#a98769", 0.05, 0.65, 0);
+  pen.build(false);
+  const courier = bunny(world, 2.54, 1.2, 0.25, "#91b4b0", 1, "courier");
   courier.g.rotation.y = PI / 2;
   const cart = new T.Group();
+  cart.scale.setScalar(0.8);
   world.add(cart);
   const cb = new Batch(cart);
   cb.add(0, 0.19, 0, 0.52, 0.09, 0.4, "#ad8e76");
@@ -28,7 +46,9 @@ export function createAnimals(
     cb.add(0, 0.36, z, 0.55, 0.26, 0.044, "#d0b291");
   for (const x of [-0.27, 0.27])
     cb.add(x, 0.36, 0, 0.04, 0.27, 0.45, "#c2a080");
-  rod(cb, [0.23, 0.28, 0], [0.63, 0.57, 0], 0.039, "#a38976");
+  for (const z of [-0.175, 0.175])
+    rod(cb, [0.23, 0.28, z], [0.525, 0.34, z], 0.03, "#a38976");
+  rod(cb, [0.525, 0.34, -0.175], [0.525, 0.34, 0.175], 0.034, "#a38976");
   cb.add(-0.07, 0.37, 0.03, 0.22, 0.24, 0.24, "#d9c5a0");
   cb.add(-0.07, 0.495, 0.03, 0.025, 0.013, 0.25, "#b3877d");
   cb.add(0.13, 0.42, -0.01, 0.15, 0.33, 0.28, "#efd9b1");

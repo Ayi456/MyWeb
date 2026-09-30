@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { clickSceneTool } from "./helpers";
 
 test("island views are keyboard reachable and their copied links replay", async ({
   page,
@@ -21,7 +22,7 @@ test("island views are keyboard reachable and their copied links replay", async 
     ["茶山", "teahouse"],
     ["温泉村", "village"],
   ]) {
-    await page.getByRole("button", { name: "操作指南" }).click();
+    await clickSceneTool(page, "操作指南");
     const button = page.getByRole("button", {
       name: `去看${label}`,
       exact: true,
@@ -43,7 +44,7 @@ test("island views are keyboard reachable and their copied links replay", async 
     .poll(async () => (await diagnostics()).cameraPreset)
     .toBe("village");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "操作指南" }).click();
+  await clickSceneTool(page, "操作指南");
   await page.getByRole("button", { name: "去看茶山", exact: true }).click();
   await expect
     .poll(async () => (await diagnostics()).cameraPreset)
@@ -105,7 +106,7 @@ test("idle touring stops for pause, panels and reduced motion", async ({
   await page.waitForTimeout(700);
   expect((await diagnostics()).cameraView).toEqual(paused);
   await page.getByRole("button", { name: "时间倍率 1", exact: true }).click();
-  await page.getByRole("button", { name: "操作指南" }).click();
+  await clickSceneTool(page, "操作指南");
   await page.waitForTimeout(9000);
   expect((await diagnostics()).autoOrbit).toBe(false);
   await page.getByRole("button", { name: "关闭操作指南" }).click();

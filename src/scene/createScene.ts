@@ -514,7 +514,14 @@ export function createScene(
         const route = flight.update(objects, dt, clock.time, motionWind);
         snapshot.journey = journeyLine(route.phase, scriptContext());
         ctx.U.uShip.value.copy(objects.airship.position);
-        updateAmbient(objects, clock.time, motionWind, route.phase, windSystem);
+        updateAmbient(
+          objects,
+          clock.time,
+          motionWind,
+          route.phase,
+          windSystem,
+          reducedMotion,
+        );
         interactions.update(dt, clock.time);
         musicPulse.update(
           realDt,

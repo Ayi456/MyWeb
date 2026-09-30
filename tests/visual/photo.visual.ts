@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { clickSceneTool } from "./helpers";
 import { readFile } from "node:fs/promises";
 
 test("exports a real PNG and includes letter text only on this export's checked consent", async ({
@@ -34,7 +35,7 @@ test("exports a real PNG and includes letter text only on this export's checked 
     .getByRole("textbox", { name: "想随春风寄出的话" })
     .fill("今晚的心意");
   await page.getByRole("button", { name: /让心意随风出发/ }).click();
-  await page.getByRole("button", { name: "拍照明信片" }).click();
+  await clickSceneTool(page, "拍照明信片");
   const optIn = page.getByRole("checkbox", {
     name: "在图片中加入最近一封信的文字",
   });
@@ -82,7 +83,7 @@ test("exports a real PNG and includes letter text only on this export's checked 
   });
   expect(distinct).toBe(true);
 
-  await page.getByRole("button", { name: "拍照明信片" }).click();
+  await clickSceneTool(page, "拍照明信片");
   await expect(optIn).not.toBeChecked();
   await optIn.check();
   const second = page.waitForEvent("download");
@@ -116,12 +117,12 @@ test("camera and guide remain clickable beside controls on desktop and phones", 
     { width: 844, height: 390 },
   ]) {
     await page.setViewportSize(viewport);
-    await page.getByRole("button", { name: "拍照明信片" }).click();
+    await clickSceneTool(page, "拍照明信片");
     await expect(
       page.getByRole("dialog", { name: "拍下此刻的邮局" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "关闭拍照窗口" }).click();
-    await page.getByRole("button", { name: "操作指南" }).click();
+    await clickSceneTool(page, "操作指南");
     await expect(
       page.getByRole("complementary", { name: "操作指南" }),
     ).toBeVisible();

@@ -2,6 +2,7 @@ import { PI, TAU } from "../core/context";
 import type { WorldObjects } from "../objects/createWorld";
 import { CONFIG } from "../config";
 import type { WindSystem } from "./wind";
+import { courierPose, updateBunnyMotion } from "./bunnyMotion";
 
 export function updateAmbient(
   objects: WorldObjects,
@@ -9,6 +10,7 @@ export function updateAmbient(
   wind: number,
   f: number,
   windMotion?: WindSystem,
+  reducedMotion = false,
 ) {
   const {
     tree,
@@ -36,27 +38,35 @@ export function updateAmbient(
       (l.rotation.z =
         Math.sin(simTime * 1.15 + i * 0.44) * (0.025 + wind * 0.1)),
   );
-  writer.head.rotation.y = Math.sin(simTime * 0.45) * 0.11;
-  writer.head.rotation.x = 0.05 + Math.sin(simTime * 0.6) * 0.04;
+  updateBunnyMotion(writer, simTime, reducedMotion);
+  updateBunnyMotion(courier, simTime, reducedMotion);
+  updateBunnyMotion(objects.pilot, simTime, reducedMotion);
+  const writing = !reducedMotion && simTime % 13 < 8;
+  writer.head.rotation.y = reducedMotion ? 0 : Math.sin(simTime * 0.28) * 0.08;
+  writer.head.rotation.x = writing
+    ? 0.14 + Math.sin(simTime * 1.8) * 0.015
+    : 0.025;
+  writer.arms[0].rotation.x =
+    -0.7 + (writing ? Math.sin(simTime * 3.4) * 0.035 : 0);
+  writer.arms[0].rotation.y = writing ? Math.sin(simTime * 2.2) * 0.035 : 0;
   tail.rotation.y = Math.sin(simTime * 1.2) * 0.36;
   paw.rotation.z =
     -0.12 - Math.pow(Math.max(0, Math.sin(simTime * 0.75)), 7) * 0.95;
-  // The route stays on the extended dock; the cart clears the cottage wall.
-  const busy = f < CONFIG.dockDuration || f > CONFIG.flightDuration - 6,
-    walk = busy
-      ? Math.sin(simTime * 0.72) * 0.45
-      : Math.sin(simTime * 0.28) * 0.12;
-  courier.g.position.set(5.0 + walk, 1.21, 0.18);
-  courier.g.rotation.y = walk >= 0 ? PI / 2 : -PI / 2;
-  courier.g.position.y += busy ? Math.abs(Math.sin(simTime * 4)) * 0.018 : 0;
-  courier.legs.forEach(
-    (l, i) => (l.rotation.x = busy ? Math.sin(simTime * 4 + i * PI) * 0.3 : 0),
-  );
-  courier.arms[0].rotation.z = busy
-    ? -0.1
-    : -0.8 + Math.sin(simTime * 3) * 0.28;
-  cart.position.set(4.46 + walk, 1.19, 0.18);
-  wheels.forEach((w) => (w.rotation.y = busy ? simTime * 2 : 0));
+  const busy = f < CONFIG.dockDuration || f > CONFIG.flightDuration - 6;
+  const pose = courierPose(simTime, reducedMotion);
+  const dx = Math.cos(pose.yaw) * 0.27;
+  const dz = -Math.sin(pose.yaw) * 0.27;
+  courier.g.position.set(pose.x + dx, 1.21, 0.17 + dz);
+  courier.g.rotation.y = pose.yaw - PI / 2;
+  courier.legs.forEach((leg, i) => {
+    leg.rotation.x = pose.stride * (i ? -1 : 1);
+  });
+  courier.arms.forEach((arm) => arm.rotation.set(-0.95, 0, 0));
+  courier.head.rotation.y =
+    !busy && !reducedMotion ? Math.sin(simTime * 0.4) * 0.06 : 0;
+  cart.position.set(pose.x - dx, 1.194, 0.17 - dz);
+  cart.rotation.y = pose.yaw;
+  wheels.forEach((wheel) => (wheel.rotation.y = pose.wheel));
   butterflies.forEach(({ g, wings }, i) => {
     const a = simTime * (0.34 + i * 0.008) + i * 2.41;
     g.position.set(

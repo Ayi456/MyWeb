@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { clickSceneTool } from "./helpers";
 import * as T from "three";
 import { GARDEN_ISLAND } from "../../src/scene/worldLayout";
 
@@ -40,7 +41,7 @@ async function fakeMedia(page: Page) {
 }
 
 async function pokeGramophone(page: Page) {
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await page
     .getByRole("group", { name: "点一点岛上的角落" })
     .getByRole("button", { name: "花园留声机" })
@@ -114,7 +115,7 @@ test("a real garden click controls the radio, keyboard resumes and the record fo
   await expect
     .poll(async () => (await diagnostics(page)).gramophonePlaying)
     .toBe(false);
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await page.getByRole("button", { name: "花园留声机", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(
@@ -260,7 +261,7 @@ test("night foghorn schedules WebAudio notes, captions while muted and freezes o
   await page.goto("/?hour=23&season=3&debug=1");
   await expect(page.locator(".loader")).toHaveCount(0);
   await page.getByRole("button", { name: "暂停", exact: true }).click();
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await page.getByRole("checkbox", { name: /音效字幕/ }).check();
   await page.getByRole("button", { name: "关闭操作指南" }).click();
   await page.getByRole("button", { name: "时间倍率 12", exact: true }).click();

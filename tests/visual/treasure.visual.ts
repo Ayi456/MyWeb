@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { clickSceneTool } from "./helpers";
 
 test.use({ timezoneId: "Asia/Shanghai" });
 
@@ -14,7 +15,7 @@ test("weekly hunt follows ordered clues, resumes, rewards and clears", async ({
 }) => {
   await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   const hunt = page.getByRole("region", { name: "本周群岛寻宝" });
   const hotspots = page.getByRole("group", { name: "点一点岛上的角落" });
   await hotspots.getByRole("button", { name: /灯塔/ }).click();
@@ -29,13 +30,13 @@ test("weekly hunt follows ordered clues, resumes, rewards and clears", async ({
   await expect(hunt).toContainText("已找到 1 / 4 处");
   await page.reload();
   await expect(page.locator(".loader")).toHaveCount(0);
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await expect(hunt).toContainText("已找到 1 / 4 处");
   await hunt.getByRole("button", { name: "带我去线索附近" }).click();
   await expect(hunt).toHaveCount(0);
   // The view hint only moves the camera; keyboard interaction finds the clue.
   await page.keyboard.press("Digit5");
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await expect(hunt).toContainText("已找到 2 / 4 处");
   await hotspots.getByRole("button", { name: /温泉村/ }).focus();
   await page.keyboard.press("Enter");
@@ -56,7 +57,7 @@ test("weekly hunt follows ordered clues, resumes, rewards and clears", async ({
   await page.getByRole("button", { name: "确认清空收藏" }).click();
   await expect(page.locator(".stamp-slot.earned")).toHaveCount(0);
   await page.getByRole("button", { name: "关闭信箱" }).click();
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await expect(
     hunt.getByRole("button", { name: "开始本周寻宝" }),
   ).toBeVisible();
@@ -80,7 +81,7 @@ test("new local week resets clues while retaining the stamp on a narrow viewport
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   await expect(
     page.getByRole("region", { name: "本周群岛寻宝" }),
   ).toContainText("本周线索已找齐");
@@ -122,7 +123,7 @@ test("a hunt can finish when local storage is unavailable", async ({
   });
   await page.goto("/");
   await expect(page.locator(".loader")).toHaveCount(0);
-  await page.getByRole("button", { name: "操作指南", exact: true }).click();
+  await clickSceneTool(page, "操作指南");
   const hunt = page.getByRole("region", { name: "本周群岛寻宝" });
   await hunt.getByRole("button", { name: "开始本周寻宝" }).click();
   for (const name of ["灯塔", "风车", "温泉村", "茶山"]) {

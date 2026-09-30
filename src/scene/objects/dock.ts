@@ -14,15 +14,15 @@ export function createDock(ctx: SceneContext) {
       0.17,
       0.124,
       0.1,
-      1.0,
+      1.2,
       i % 3 ? "#d0b38f" : "#e3c39d",
     );
-  for (const z of [-0.36, 0.7])
+  for (const z of [-0.46, 0.8])
     for (const x of [4.0, 4.75, 5.95]) {
       dock.add(x, 1.32, z, 0.075, 0.5, 0.075, "#b59175");
       dock.add(x, 1.59, z, 0.1, 0.065, 0.1, "#f1d6ad");
     }
-  for (const z of [-0.36, 0.7]) {
+  for (const z of [-0.46, 0.8]) {
     dock.add(5.0, 1.5, z, 2.0, 0.035, 0.04, "#be9a7b");
     dock.add(5.0, 0.85, z, 2.2, 0.11, 0.08, "#997862");
   }
