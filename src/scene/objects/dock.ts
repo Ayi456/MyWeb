@@ -7,7 +7,7 @@ export function createDock(ctx: SceneContext) {
   const { world, SoftBatch: Batch, mesh, rod, ground } = ctx;
   // Floating wooden landing and garden fences.
   const dock = new Batch();
-  for (let i = 0; i < 17; i++)
+  for (let i = 0; i < 32; i++)
     dock.add(
       3.83 + i * 0.133,
       1.16,
@@ -18,16 +18,16 @@ export function createDock(ctx: SceneContext) {
       i % 3 ? "#d0b38f" : "#e3c39d",
     );
   for (const z of [-0.46, 0.8])
-    for (const x of [4.0, 4.75, 5.95]) {
+    for (const x of [4.0, 4.75, 5.95, 6.8, 7.35, 7.95]) {
       dock.add(x, 1.32, z, 0.075, 0.5, 0.075, "#b59175");
       dock.add(x, 1.59, z, 0.1, 0.065, 0.1, "#f1d6ad");
     }
   for (const z of [-0.46, 0.8]) {
-    dock.add(5.0, 1.5, z, 2.0, 0.035, 0.04, "#be9a7b");
-    dock.add(5.0, 0.85, z, 2.2, 0.11, 0.08, "#997862");
+    dock.add(5.95, 1.5, z, 3.85, 0.035, 0.04, "#be9a7b");
+    dock.add(5.95, 0.85, z, 4.05, 0.11, 0.08, "#997862");
   }
-  rod(dock, [3.9, 0.0, -0.3], [5.35, 1.12, -0.3], 0.13, "#a88973");
-  rod(dock, [3.9, 0.0, 0.6], [5.35, 1.12, 0.6], 0.13, "#a88973");
+  rod(dock, [3.9, 0.0, -0.3], [7.75, 1.12, -0.3], 0.13, "#a88973");
+  rod(dock, [3.9, 0.0, 0.6], [7.75, 1.12, 0.6], 0.13, "#a88973");
   dock.build();
   const fence = new Batch();
   for (let i = 0; i < 22; i++) {

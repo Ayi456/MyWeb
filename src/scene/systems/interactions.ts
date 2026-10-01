@@ -66,7 +66,7 @@ export function createInteractions(ctx: SceneContext, o: WorldObjects) {
   hit("cat", o.bench, 0.28, 0.55, 0.06, 0.5, 0.45, 0.4);
   hit("windmill", o.gardenIsland, -0.68, 1.35, -0.25, 1.9, 2.2, 0.9);
   hit("bell", o.house, 0.68, 1.12, 0.9, 0.34, 0.5, 0.3);
-  hit("pool", ctx.world, -2.72, 1.16, 1.38, 1.5, 0.45, 1.2);
+  hit("pool", ctx.world, -2.72, 1.11, 1.38, 1.7, 0.45, 1.2);
   hit("airship", o.airship, 0, 1.4, 0, 4.4, 3.1, 2.0);
   hit("lighthouse", o.lighthouseIsland, -0.25, 1.9, -0.18, 1.3, 3.8, 1.3);
   hit("teahouse", o.teaIsland, 0.2, 1.4, -2.6, 2.2, 2.4, 2.0);

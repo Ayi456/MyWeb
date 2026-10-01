@@ -1,45 +1,88 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
-import { VoxelBatch } from "../utils/voxelBatch";
 
-/** Geometry and palette migrated from the original spring-post-office.html. */
+/** A calm spring pool that turns into a continuous ribbon before leaving the island. */
 export function createWater(ctx: SceneContext) {
-  const { world, U, mesh } = ctx;
-  // A small spring pool spills over the island's edge into cloud mist.
+  const { world, U, mesh, ground } = ctx;
+  const waterVertex = `uniform float uTime;uniform float uWind;uniform float uRipple;uniform vec4 uSeason;varying vec2 vUv;varying vec3 vP;void main(){vec3 p=position;float calm=1.-uSeason.w;p.y+=sin(p.x*7.+p.z*4.+uTime*1.35)*(.008+uWind*.012)*calm;float r=length(p.xz);p.y+=sin(r*22.-uTime*9.)*.014*uRipple*(1.-smoothstep(0.,.9,r));vUv=uv;vP=p;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`;
+  const waterFragment = `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec2 vUv;varying vec3 vP;void main(){float glint=pow(max(0.,sin(vP.x*15.+vP.z*11.+uTime*1.4)),22.);vec3 spring=mix(vec3(.30,.64,.67),vec3(.74,.91,.85),.22+glint*.55);vec3 winter=mix(vec3(.70,.81,.91),vec3(.92,.97,1.),.45+glint*.35);vec3 c=mix(spring,winter,uSeason.w);c*=1.-uNight*.34;float edge=smoothstep(0.,.08,min(vUv.x,1.-vUv.x))*smoothstep(0.,.08,min(vUv.y,1.-vUv.y));gl_FragColor=vec4(c,.82*edge+.06);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>}`;
   const poolMat = new T.ShaderMaterial({
     uniforms: U,
     transparent: true,
     depthWrite: false,
-    vertexShader: `uniform float uTime;uniform float uWind;uniform vec4 uSeason;uniform float uRipple;varying vec3 vP;varying float vH;void main(){vec4 p=instanceMatrix*vec4(position,1.);float calm=1.-uSeason.w;vH=sin(p.x*6.+uTime)*sin(p.z*5.+uTime*.6)*(.012+uWind*.016)*calm;float r=length(p.xz-vec2(-2.72,1.38));vH+=sin(r*22.-uTime*9.)*.02*uRipple*smoothstep(.9,0.,r);p.y+=vH;vP=p.xyz;gl_Position=projectionMatrix*modelViewMatrix*p;}`,
-    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;varying float vH;void main(){float glint=pow(max(0.,sin(vP.x*17.+vP.z*10.+uTime)),30.);vec3 c=mix(vec3(.32,.66,.68),vec3(.76,.91,.84),.25+glint*.65);vec3 ice=mix(vec3(.78,.86,.92),vec3(.93,.96,1.),.5+.5*sin(vP.x*9.+vP.z*7.));c=mix(c,ice,uSeason.w);c*=1.-uNight*.48;gl_FragColor=vec4(c,.90);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
+    vertexShader: waterVertex,
+    fragmentShader: waterFragment,
   });
+
+  // An irregular ellipse reads as a real pond instead of a perfectly stamped circle.
   const poolGeometry = new T.CircleGeometry(0.5, 48).rotateX(-Math.PI / 2);
-  const pool = new VoxelBatch(world, poolMat, poolGeometry);
-  pool.add(-2.72, 1.14, 1.38, 1.3, 1, 1, "#c9ede2");
-  const stream = new ctx.SoftBatch(world, poolMat);
-  for (let k = 0; k < 6; k++)
-    stream.add(
-      -3.05 - k * 0.1,
-      1.1 - k * 0.012,
-      1.55 + k * 0.045,
-      0.19,
-      0.035,
-      0.23,
-      "#c9ede2",
-    );
-  const poolMesh = pool.build(false);
+  const poolPositions = poolGeometry.getAttribute("position");
+  for (let i = 1; i < poolPositions.count; i++) {
+    const x = poolPositions.getX(i),
+      z = poolPositions.getZ(i),
+      angle = Math.atan2(z, x),
+      radius =
+        1 + Math.sin(angle * 3 + 0.4) * 0.07 + Math.cos(angle * 5) * 0.035;
+    poolPositions.setXYZ(i, x * radius, poolPositions.getY(i), z * radius);
+  }
+  poolPositions.needsUpdate = true;
+  const poolMesh = new T.Mesh(poolGeometry, poolMat);
+  poolMesh.position.set(-2.72, ground(-2.72, 1.38) + 0.09, 1.38);
+  poolMesh.scale.set(1.7, 1, 0.82);
   poolMesh.renderOrder = 8;
-  stream.build(false).renderOrder = 8;
+  poolMesh.castShadow = false;
+  poolMesh.receiveShadow = false;
+  world.add(poolMesh);
+
+  // The outflow is a curved ribbon with a foamy mouth, rather than separate blocks.
+  const streamPoints: [number, number, number][] = [
+    [-3.22, ground(-3.22, 1.49) + 0.095, 1.49],
+    [-3.47, ground(-3.47, 1.58) + 0.085, 1.58],
+    [-3.77, ground(-3.77, 1.72) + 0.065, 1.72],
+    [-4.13, ground(-4.13, 1.86) + 0.04, 1.86],
+  ];
+  const streamCurve = new T.CatmullRomCurve3(
+    streamPoints.map((p) => new T.Vector3(...p)),
+  );
+  const streamMesh = new T.Mesh(ribbonGeometry(streamCurve, 0.27, 20), poolMat);
+  streamMesh.renderOrder = 8;
+  streamMesh.castShadow = false;
+  streamMesh.receiveShadow = false;
+  world.add(streamMesh);
+
+  const foamMat = new T.MeshBasicMaterial({
+    color: "#e6f4e7",
+    transparent: true,
+    opacity: 0.72,
+    depthWrite: false,
+  });
+  const foam = new T.Group();
+  foam.position.set(-4.13, streamPoints.at(-1)![1] + 0.006, 1.86);
+  world.add(foam);
+  for (let i = 0; i < 5; i++) {
+    const bead = new T.Mesh(
+      new T.CircleGeometry(0.055 + (i % 2) * 0.022, 14),
+      foamMat,
+    );
+    bead.rotation.x = -Math.PI / 2;
+    bead.position.set(-i * 0.075, 0, (i % 2 ? 1 : -1) * 0.045);
+    foam.add(bead);
+  }
+
   const pondStones = new ctx.PuffBatch();
-  for (let i = 0; i < 15; i++) {
-    const a = (i * TAU) / 15;
+  for (let i = 0; i < 18; i++) {
+    const a = (i * TAU) / 18,
+      x = -2.72 + Math.cos(a) * 0.69,
+      z = 1.38 + Math.sin(a) * 0.53;
     pondStones.add(
-      -2.72 + Math.cos(a) * 0.69,
-      1.14,
-      1.38 + Math.sin(a) * 0.53,
-      0.17,
-      0.1,
-      0.14,
+      x,
+      ground(x, z) + 0.055,
+      z,
+      0.16 + (i % 3) * 0.025,
+      0.085 + (i % 2) * 0.02,
+      0.12 + (i % 3) * 0.02,
       i % 3 ? "#d1c4b3" : "#e9dac0",
       0,
       a,
@@ -47,24 +90,99 @@ export function createWater(ctx: SceneContext) {
     );
   }
   pondStones.build();
+
+  const lilyPads = new ctx.PuffBatch();
+  for (const [x, z, scale, rotation] of [
+    [-2.94, 1.28, 1, 0.2],
+    [-2.45, 1.58, 0.82, -0.35],
+    [-2.68, 1.72, 0.64, 0.7],
+  ] as const) {
+    lilyPads.add(
+      x,
+      ground(x, z) + 0.112,
+      z,
+      0.22 * scale,
+      0.022,
+      0.15 * scale,
+      scale > 0.9 ? "#86ae98" : "#9bc0a5",
+      0,
+      rotation,
+      0.12,
+    );
+  }
+  lilyPads.build(false);
+  const rippleMat = new T.MeshBasicMaterial({
+    color: "#e4f6ed",
+    transparent: true,
+    opacity: 0.42,
+    depthWrite: false,
+  });
+  for (const [x, z, radius, rotation] of [
+    [-2.75, 1.28, 0.38, 0.2],
+    [-2.48, 1.52, 0.24, -0.4],
+  ] as const) {
+    const ripple = new T.Mesh(
+      new T.RingGeometry(radius - 0.008, radius, 32, 1, 0.35, 1.8),
+      rippleMat,
+    );
+    ripple.position.set(x, ground(x, z) + 0.116, z);
+    ripple.rotation.x = -Math.PI / 2;
+    ripple.rotation.z = rotation;
+    ripple.renderOrder = 9;
+    world.add(ripple);
+  }
+
   const fallMat = new T.ShaderMaterial({
     uniforms: U,
     transparent: true,
     depthWrite: false,
     side: T.DoubleSide,
     vertexShader: `uniform float uTime;varying vec3 vP;void main(){vP=position;vec3 p=position;p.x+=sin(position.y*3.+uTime*1.3)*.025;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,
-    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.*(1.-uSeason.w*.9));float side=1.-smoothstep(.05,.21,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c=mix(c,vec3(.86,.92,.98),uSeason.w*.8);c*=1.-uNight*.40;float fade=smoothstep(-3.35,-2.7,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
+    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.*(1.-uSeason.w*.9));float side=1.-smoothstep(.05,.29,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c=mix(c,vec3(.86,.92,.98),uSeason.w*.8);c*=1.-uNight*.40;float fade=smoothstep(-3.35,-2.7,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>}`,
   });
   const waterfall = mesh(
-    new T.PlaneGeometry(0.43, 4.25, 2, 48),
+    new T.PlaneGeometry(0.58, 4.25, 2, 48),
     fallMat,
     world,
-    -3.54,
+    -4.22,
     -1.1,
-    1.8,
+    1.89,
   );
-  waterfall.rotation.y = -0.4;
+  waterfall.rotation.y = -0.18;
   waterfall.renderOrder = 9;
   waterfall.castShadow = false;
-  return { poolMesh, waterfall };
+  return { poolMesh, streamMesh, waterfall };
+}
+
+function ribbonGeometry(
+  curve: T.CatmullRomCurve3,
+  width: number,
+  segments: number,
+) {
+  const positions: number[] = [],
+    uvs: number[] = [],
+    indices: number[] = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments,
+      point = curve.getPoint(t),
+      tangent = curve.getTangent(t).setY(0).normalize(),
+      side = new T.Vector3(-tangent.z, 0, tangent.x).multiplyScalar(width / 2);
+    for (const sign of [-1, 1]) {
+      const p = point.clone().addScaledVector(side, sign);
+      positions.push(p.x, p.y, p.z);
+      uvs.push(sign < 0 ? 0 : 1, t);
+    }
+    if (i) {
+      const n = i * 2;
+      indices.push(n - 2, n, n - 1, n - 1, n, n + 1);
+    }
+  }
+  const geometry = new T.BufferGeometry();
+  geometry.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
 }

@@ -3,7 +3,10 @@ import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
 import { FLIGHT_STOPS, LIGHTHOUSE_ISLAND } from "../worldLayout";
 
-export const dockPoint = new T.Vector3(6.75, 1.21, 0.17);
+// The envelope is more than four world units long.  Keep the mooring just
+// beyond the main island's east rim so the balloon never sinks into the grass
+// when it is waiting for a letter.
+export const dockPoint = new T.Vector3(8.0, 1.35, 0.17);
 export const lighthouseDockPoint = new T.Vector3(...LIGHTHOUSE_ISLAND.berth);
 const westPoint = new T.Vector3(-14, 3, -4.1);
 const southPoint = new T.Vector3(-1.2, 1.9, 8.8);
@@ -30,8 +33,10 @@ export const routes = [
   ),
   new T.CubicBezierCurve3(
     southPoint,
-    new T.Vector3(6, 1.9, 8.8),
-    new T.Vector3(10.3, 1.21, 0.17),
+    // Rise over the main island before turning back to the mooring.  The
+    // previous low arc let the gondola clip the island rim on the return leg.
+    new T.Vector3(6, 3.6, 8.8),
+    new T.Vector3(13.5, 3.55, 0.17),
     dockPoint,
   ),
 ];

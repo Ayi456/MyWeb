@@ -21,8 +21,10 @@ export const CONFIG = {
   letterDuration: 4,
   maxLettersInFlight: 24,
   petals: 1250,
-  exposure: 0.95,
-  fogDensity: 0.011,
+  // A little more contrast keeps the miniature materials readable in the
+  // wide shot without losing the soft paper-and-clay atmosphere.
+  exposure: 0.92,
+  fogDensity: 0.0095,
   uiInterval: 300,
   statsInterval: 1000,
   autoOrbitDelay: 8500,

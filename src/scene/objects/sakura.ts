@@ -1,6 +1,11 @@
 import * as T from "three";
 import { type SceneContext, type Point3, TAU } from "../core/context";
-import { blossom, fallenPetal } from "./seasonalColors";
+import {
+  FLOWER_CENTER,
+  blossom,
+  fallenPetal,
+  flowerHead,
+} from "./seasonalColors";
 import { seededRandom } from "../utils/seededRandom";
 
 export function createSakura(ctx: SceneContext) {
@@ -65,16 +70,16 @@ export function createSakura(ctx: SceneContext) {
       x,
       y,
       z,
-      rx * 1.9,
-      ry * 1.9,
-      rz * 1.9,
+      rx * 1.64,
+      ry * 1.64,
+      rz * 1.64,
       blossom(colors[index % 4], true),
     );
     // Broad secondary lobes leave quiet surfaces between the blossom clusters.
     for (let j = 0; j < 3; j++) {
       const a = (j * TAU) / 3 + index * 0.73,
         high = j === 0;
-      const size = 0.9 + ((index + j) % 3) * 0.12;
+      const size = 0.78 + ((index + j) % 3) * 0.1;
       blossoms.addSeasonal(
         x + Math.cos(a) * rx * 0.56,
         y + (high ? 0.4 : -0.08) * ry,
@@ -90,6 +95,57 @@ export function createSakura(ctx: SceneContext) {
     }
   });
   blossoms.build();
+
+  // Small five-petal clusters break up the large crown volumes and give the
+  // tree a hand-planted, close-up read without turning every petal into a
+  // separate draw call.
+  const details = new PuffBatch(tree);
+  const petalColors = ["#e9a9bf", "#f4c2d0", "#f8d3dc", "#dda0b8"];
+  lobes.forEach(([x, y, z, rx, ry, rz], index) => {
+    for (let j = 0; j < 5; j++) {
+      const angle = (j * TAU) / 5 + index * 0.84,
+        radius = 1.05 + random() * 0.24,
+        px = x + Math.cos(angle) * rx * radius,
+        py = y + Math.sin(angle * 1.7) * ry * 0.58 + (j % 2) * 0.04,
+        pz = z + rz * (0.82 + random() * 0.18),
+        petal = 0.068 + random() * 0.022;
+      for (let k = 0; k < 5; k++) {
+        const a = (k * TAU) / 5;
+        details.addSeasonal(
+          px + Math.cos(a) * petal * 0.72,
+          py + Math.sin(a) * petal * 0.48,
+          pz + Math.sin(a) * petal * 0.72,
+          petal,
+          petal * 0.42,
+          petal * 0.82,
+          flowerHead(petalColors[(index + j + k) % petalColors.length]),
+          0,
+          a,
+          0,
+        );
+      }
+      details.addSeasonal(
+        px,
+        py + 0.012,
+        pz,
+        0.024,
+        0.018,
+        0.024,
+        FLOWER_CENTER,
+      );
+    }
+  });
+  // A few buds sit on the visible branch tips, making the crown feel attached
+  // to the wood instead of floating above it.
+  for (const [x, y, z] of [
+    [-1.78, 2.67, 0.27],
+    [1.6, 2.94, -0.7],
+    [-1, 3.65, -0.78],
+    [0.65, 3.12, 1.28],
+  ] as Point3[]) {
+    details.addSeasonal(x, y, z, 0.11, 0.11, 0.11, flowerHead("#df9db5"));
+  }
+  details.build(false);
   const fallen = new PuffBatch();
   for (let i = 0; i < 140; i++) {
     const x = range(-4.2, 0.4),
