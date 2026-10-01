@@ -4,6 +4,7 @@ import { type SceneContext, TAU } from "../core/context";
 /** A calm spring pool that turns into a continuous ribbon before leaving the island. */
 export function createWater(ctx: SceneContext) {
   const { world, U, mesh, ground } = ctx;
+  const poolCenter = { x: -2.72, z: 1.38 };
   const waterVertex = `uniform float uTime;uniform float uWind;uniform float uRipple;uniform vec4 uSeason;varying vec2 vUv;varying vec3 vP;void main(){vec3 p=position;float calm=1.-uSeason.w;p.y+=sin(p.x*7.+p.z*4.+uTime*1.35)*(.008+uWind*.012)*calm;float r=length(p.xz);p.y+=sin(r*22.-uTime*9.)*.014*uRipple*(1.-smoothstep(0.,.9,r));vUv=uv;vP=p;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`;
   const waterFragment = `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec2 vUv;varying vec3 vP;void main(){float glint=pow(max(0.,sin(vP.x*15.+vP.z*11.+uTime*1.4)),22.);vec3 spring=mix(vec3(.30,.64,.67),vec3(.74,.91,.85),.22+glint*.55);vec3 winter=mix(vec3(.70,.81,.91),vec3(.92,.97,1.),.45+glint*.35);vec3 c=mix(spring,winter,uSeason.w);c*=1.-uNight*.34;float edge=smoothstep(0.,.08,min(vUv.x,1.-vUv.x))*smoothstep(0.,.08,min(vUv.y,1.-vUv.y));gl_FragColor=vec4(c,.82*edge+.06);
 #include <tonemapping_fragment>
@@ -29,7 +30,11 @@ export function createWater(ctx: SceneContext) {
   }
   poolPositions.needsUpdate = true;
   const poolMesh = new T.Mesh(poolGeometry, poolMat);
-  poolMesh.position.set(-2.72, ground(-2.72, 1.38) + 0.09, 1.38);
+  poolMesh.position.set(
+    poolCenter.x,
+    ground(poolCenter.x, poolCenter.z) + 0.09,
+    poolCenter.z,
+  );
   poolMesh.scale.set(1.7, 1, 0.82);
   poolMesh.renderOrder = 8;
   poolMesh.castShadow = false;
@@ -38,15 +43,16 @@ export function createWater(ctx: SceneContext) {
 
   // The outflow is a curved ribbon with a foamy mouth, rather than separate blocks.
   const streamPoints: [number, number, number][] = [
-    [-3.22, ground(-3.22, 1.49) + 0.095, 1.49],
-    [-3.47, ground(-3.47, 1.58) + 0.085, 1.58],
-    [-3.77, ground(-3.77, 1.72) + 0.065, 1.72],
-    [-4.13, ground(-4.13, 1.86) + 0.04, 1.86],
+    [-3.39, ground(-3.39, 1.57) + 0.115, 1.57],
+    [-3.58, ground(-3.58, 1.65) + 0.112, 1.65],
+    [-3.82, ground(-3.82, 1.74) + 0.108, 1.74],
+    [-4.05, ground(-4.05, 1.82) + 0.104, 1.82],
+    [-4.16, ground(-4.16, 1.87) + 0.102, 1.87],
   ];
   const streamCurve = new T.CatmullRomCurve3(
     streamPoints.map((p) => new T.Vector3(...p)),
   );
-  const streamMesh = new T.Mesh(ribbonGeometry(streamCurve, 0.27, 20), poolMat);
+  const streamMesh = new T.Mesh(ribbonGeometry(streamCurve, 0.3, 24), poolMat);
   streamMesh.renderOrder = 8;
   streamMesh.castShadow = false;
   streamMesh.receiveShadow = false;
@@ -74,8 +80,8 @@ export function createWater(ctx: SceneContext) {
   const pondStones = new ctx.PuffBatch();
   for (let i = 0; i < 18; i++) {
     const a = (i * TAU) / 18,
-      x = -2.72 + Math.cos(a) * 0.69,
-      z = 1.38 + Math.sin(a) * 0.53;
+      x = poolCenter.x + Math.cos(a) * 0.69,
+      z = poolCenter.z + Math.sin(a) * 0.53;
     pondStones.add(
       x,
       ground(x, z) + 0.055,
@@ -93,9 +99,9 @@ export function createWater(ctx: SceneContext) {
 
   const lilyPads = new ctx.PuffBatch();
   for (const [x, z, scale, rotation] of [
-    [-2.94, 1.28, 1, 0.2],
-    [-2.45, 1.58, 0.82, -0.35],
-    [-2.68, 1.72, 0.64, 0.7],
+    [poolCenter.x - 0.22, poolCenter.z - 0.1, 1, 0.2],
+    [poolCenter.x + 0.27, poolCenter.z + 0.2, 0.82, -0.35],
+    [poolCenter.x + 0.04, poolCenter.z + 0.34, 0.64, 0.7],
   ] as const) {
     lilyPads.add(
       x,
@@ -118,8 +124,8 @@ export function createWater(ctx: SceneContext) {
     depthWrite: false,
   });
   for (const [x, z, radius, rotation] of [
-    [-2.75, 1.28, 0.38, 0.2],
-    [-2.48, 1.52, 0.24, -0.4],
+    [poolCenter.x - 0.03, poolCenter.z - 0.1, 0.38, 0.2],
+    [poolCenter.x + 0.24, poolCenter.z + 0.14, 0.24, -0.4],
   ] as const) {
     const ripple = new T.Mesh(
       new T.RingGeometry(radius - 0.008, radius, 32, 1, 0.35, 1.8),
@@ -147,7 +153,7 @@ export function createWater(ctx: SceneContext) {
     fallMat,
     world,
     -4.22,
-    -1.1,
+    -0.98,
     1.89,
   );
   waterfall.rotation.y = -0.18;
