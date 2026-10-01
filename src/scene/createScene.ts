@@ -43,6 +43,7 @@ import { IslandWalker, walkingObstacles } from "./systems/walking";
 import { MusicPulse } from "./systems/musicPulse";
 import { updateFestival } from "./systems/festival";
 import { createMicroAnimations } from "./systems/microAnimations";
+import { createRomanticElements } from "./systems/romanticElements";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
   pickLine,
@@ -411,6 +412,8 @@ export function createScene(
       swing: objects.swing,
       bunnies: objects.bunnies,
     });
+    // Initialize romantic elements: falling petals, fireflies, love letters
+    const romanticElements = createRomanticElements(ctx);
     function seasonChanged() {
       if (seasons.index === lastSeason) return;
       lastSeason = seasons.index;
@@ -578,6 +581,8 @@ export function createScene(
         pointer.lerp(pointerTarget, 1 - Math.exp(-realDt * 6));
         // Update micro-animations for element liveliness
         microAnimations.update();
+        // Update romantic elements: petals, fireflies, letters
+        romanticElements.update(realDt);
         ambience.update(
           motionWind,
           snapshot.night,
