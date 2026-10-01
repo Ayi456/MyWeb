@@ -117,7 +117,7 @@ export function createSakura(ctx: SceneContext) {
       for (let k = 0; k < 5; k++) {
         const a = (k * TAU) / 5;
         // Add subtle height variation to petals for depth
-        const heightOffset = Math.sin(k * TAU / 5) * 0.008;
+        const heightOffset = Math.sin((k * TAU) / 5) * 0.008;
         details.addSeasonal(
           px + Math.cos(a) * petal * 0.72,
           py + Math.sin(a) * petal * 0.48 + heightOffset,
@@ -175,7 +175,10 @@ export function createSakura(ctx: SceneContext) {
         0.035,
         0.035,
         0.035,
-        { colors: ["#c8456e", "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
+        {
+          colors: ["#c8456e", "#8ab276", "#d89a55", "#f9f7fa"],
+          scales: [1, 0.9, 0.8, 0],
+        },
       );
     }
   }

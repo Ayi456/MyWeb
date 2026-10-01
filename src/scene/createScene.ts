@@ -408,7 +408,13 @@ export function createScene(
     // Initialize micro-animations for subtle element movements
     const microAnimations = createMicroAnimations(ctx, {
       tree: objects.tree,
-      postOffice: objects.house ? { house: objects.house, bell: objects.bell, windowMesh: objects.windowMesh } : undefined,
+      postOffice: objects.house
+        ? {
+            house: objects.house,
+            bell: objects.bell,
+            windowMesh: objects.windowMesh,
+          }
+        : undefined,
       swing: objects.swing,
       bunnies: objects.bunnies,
     });

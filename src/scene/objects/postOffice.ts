@@ -227,7 +227,15 @@ export function createPostOffice(ctx: SceneContext) {
     // Tiny flowers in planters
     for (let f = 0; f < 2; f++) {
       const fz = z + (f - 0.5) * 0.04;
-      planters.add(0.97, 0.58, fz, 0.018, 0.025, 0.018, ["#f5b6d0", "#e7d5a8"][f]);
+      planters.add(
+        0.97,
+        0.58,
+        fz,
+        0.018,
+        0.025,
+        0.018,
+        ["#f5b6d0", "#e7d5a8"][f],
+      );
     }
   }
   planters.build(false);

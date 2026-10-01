@@ -199,5 +199,13 @@ export function createAnimals(
   }
 
   tb.build();
-  return { writer, courier, cart, wheels, paw, tail, bunnies: [writer, courier] };
+  return {
+    writer,
+    courier,
+    cart,
+    wheels,
+    paw,
+    tail,
+    bunnies: [writer, courier],
+  };
 }

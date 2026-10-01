@@ -45,7 +45,15 @@ export function createFlowers(ctx: SceneContext) {
 
     // Stem with subtle thickness variation
     const stemThickness = range(0.018, 0.024);
-    flowers.addSeasonal(x, y + h / 2, z, stemThickness, h, stemThickness, FLOWER_STEM);
+    flowers.addSeasonal(
+      x,
+      y + h / 2,
+      z,
+      stemThickness,
+      h,
+      stemThickness,
+      FLOWER_STEM,
+    );
 
     // Multiple leaves at different heights for richness
     flowers.addSeasonal(
@@ -106,17 +114,20 @@ export function createFlowers(ctx: SceneContext) {
       const budH = h * 0.65;
 
       // Bud stem
-      flowers.addSeasonal(budX, y + budH / 2, budZ, 0.015, budH, 0.015, FLOWER_STEM);
-      // Closed bud
       flowers.addSeasonal(
         budX,
-        y + budH,
+        y + budH / 2,
         budZ,
-        0.035,
-        0.05,
-        0.035,
-        { colors: [c, "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
+        0.015,
+        budH,
+        0.015,
+        FLOWER_STEM,
       );
+      // Closed bud
+      flowers.addSeasonal(budX, y + budH, budZ, 0.035, 0.05, 0.035, {
+        colors: [c, "#8ab276", "#d89a55", "#f9f7fa"],
+        scales: [1, 0.9, 0.8, 0],
+      });
     }
   }
   flowers.build(false);

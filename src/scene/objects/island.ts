@@ -162,15 +162,10 @@ export function createIsland(ctx: SceneContext) {
       // Stem
       wildflowers.add(x, y + 0.03, z, 0.012, 0.06, 0.012, stemColor);
       // Flower head
-      wildflowers.addSeasonal(
-        x,
-        y + 0.065,
-        z,
-        0.028,
-        0.028,
-        0.028,
-        { colors: [flowerColors[i % 4], "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
-      );
+      wildflowers.addSeasonal(x, y + 0.065, z, 0.028, 0.028, 0.028, {
+        colors: [flowerColors[i % 4], "#8ab276", "#d89a55", "#f9f7fa"],
+        scales: [1, 0.9, 0.8, 0],
+      });
     }
   }
   wildflowers.build(false);

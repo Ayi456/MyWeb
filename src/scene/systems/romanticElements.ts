@@ -209,7 +209,7 @@ export function createFireflies(ctx: SceneContext) {
     pointLights.push(light);
   }
 
-  function update(delta: number) {
+  function update(_delta: number) {
     const time = U.uTime.value;
     const nightBlend = U.uNight.value; // 夜间才显示
 
@@ -250,7 +250,7 @@ export function createFireflies(ctx: SceneContext) {
 
 /** 情书飞舞系统 */
 export function createLoveLetters(ctx: SceneContext) {
-  const { world, U } = ctx;
+  const { world } = ctx;
   const group = new T.Group();
   group.name = "love-letters";
   world.add(group);
@@ -345,8 +345,6 @@ export function createLoveLetters(ctx: SceneContext) {
       spawnTimer = 0;
     }
 
-    const time = U.uTime.value;
-
     letters.forEach((letter, i) => {
       if (letter.life <= 0) {
         meshes[i].visible = false;
@@ -357,7 +355,6 @@ export function createLoveLetters(ctx: SceneContext) {
       const lifeRatio = letter.life / letter.maxLife;
 
       // 螺旋上升运动
-      const spiralProgress = 1 - lifeRatio;
       letter.spiralPhase += delta * 0.8;
 
       letter.velocity.x =
@@ -372,9 +369,7 @@ export function createLoveLetters(ctx: SceneContext) {
         letter.velocity.y = -0.05;
       }
 
-      letter.position.add(
-        letter.velocity.clone().multiplyScalar(delta * 10),
-      );
+      letter.position.add(letter.velocity.clone().multiplyScalar(delta * 10));
 
       // 旋转
       letter.rotation.x += letter.rotationSpeed.x * delta;
