@@ -9,3 +9,8 @@ dist/
 test-results/
 playwright-report/
 .claude/
+
+# Generated visual-test evidence; keep baselines in tests/visual/*-snapshots/.
+/docs/screenshots/
+/docs/scene-detail-polish/
+/docs/browser-r186-results.txt

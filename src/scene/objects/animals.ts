@@ -42,17 +42,43 @@ export function createAnimals(
   world.add(cart);
   const cb = new Batch(cart);
   cb.add(0, 0.19, 0, 0.52, 0.09, 0.4, "#ad8e76");
+
+  // Add wood plank lines on the box for texture
+  for (let plank = 0; plank < 4; plank++) {
+    const pz = -0.15 + plank * 0.1;
+    cb.add(0, 0.19, pz, 0.53, 0.095, 0.012, "#9a7d68");
+  }
+
   for (const z of [-0.22, 0.22])
     cb.add(0, 0.36, z, 0.55, 0.26, 0.044, "#d0b291");
   for (const x of [-0.27, 0.27])
     cb.add(x, 0.36, 0, 0.04, 0.27, 0.45, "#c2a080");
+
+  // Add corner reinforcements
+  for (const x of [-0.27, 0.27])
+    for (const z of [-0.22, 0.22])
+      cb.add(x, 0.36, z, 0.045, 0.28, 0.048, "#a38976");
+
   for (const z of [-0.175, 0.175])
     rod(cb, [0.23, 0.28, z], [0.525, 0.34, z], 0.03, "#a38976");
   rod(cb, [0.525, 0.34, -0.175], [0.525, 0.34, 0.175], 0.034, "#a38976");
   cb.add(-0.07, 0.37, 0.03, 0.22, 0.24, 0.24, "#d9c5a0");
+
+  // Add rope/twine detail on packages
+  cb.add(-0.07, 0.37, 0.03, 0.24, 0.008, 0.008, "#8b6d5f");
+  cb.add(-0.07, 0.37, 0.03, 0.008, 0.008, 0.26, "#8b6d5f");
+
   cb.add(-0.07, 0.495, 0.03, 0.025, 0.013, 0.25, "#b3877d");
   cb.add(0.13, 0.42, -0.01, 0.15, 0.33, 0.28, "#efd9b1");
   cb.add(0.13, 0.44, 0.136, 0.06, 0.055, 0.008, "#c996a3");
+
+  // Add address label detail on package
+  cb.add(0.13, 0.45, 0.136, 0.045, 0.04, 0.01, "#f5ede0");
+  // Tiny lines simulating text
+  for (let line = 0; line < 3; line++) {
+    cb.add(0.13, 0.46 - line * 0.012, 0.137, 0.035, 0.003, 0.001, "#8a7070");
+  }
+
   cb.build();
   const wheels = [];
   for (const x of [-0.17, 0.17])
@@ -66,6 +92,19 @@ export function createAnimals(
         z,
       );
       w.rotation.x = PI / 2;
+
+      // Add wheel spokes for detail
+      const spokes = new ctx.PuffBatch(w);
+      for (let spoke = 0; spoke < 6; spoke++) {
+        const angle = (spoke / 6) * Math.PI * 2;
+        const spokeX = Math.cos(angle) * 0.05;
+        const spokeY = Math.sin(angle) * 0.05;
+        spokes.add(spokeX, spokeY, 0, 0.008, 0.008, 0.035, "#6a6066");
+      }
+      // Hub center
+      spokes.add(0, 0, 0, 0.025, 0.025, 0.046, "#5a5560");
+      spokes.build(false);
+
       wheels.push(w);
     }
   const cat = new T.Group();
@@ -92,12 +131,58 @@ export function createAnimals(
   }
   ct.add(0.272, 0.155, 0, 0.012, 0.016, 0.018, "#dbadac");
   ct.add(0.03, 0.166, 0.013, 0.12, 0.02, 0.12, "#988b92");
+
+  // Add inner ear detail (pink inner ear)
+  for (const s of [-1, 1]) {
+    ct.add(
+      0.16,
+      0.3,
+      s * 0.064,
+      0.045,
+      0.08,
+      0.038,
+      "#e5b5b8",
+      s * 0.12,
+      0,
+      0.16,
+    );
+  }
+
+  // Add whiskers as tiny lines
+  for (const s of [-1, 1]) {
+    for (let w = 0; w < 3; w++) {
+      const whiskerY = 0.16 + w * 0.015;
+      ct.add(
+        0.28 + w * 0.01,
+        whiskerY,
+        s * (0.02 + w * 0.01),
+        0.065,
+        0.002,
+        0.002,
+        "#f5f0eb",
+        0,
+        0,
+        s * 0.15,
+      );
+    }
+  }
+
   ct.build();
   const paw = new T.Group();
   paw.position.set(0.15, 0.02, 0.1);
   cat.add(paw);
   const cp = new ctx.PuffBatch(paw);
   cp.add(0.055, 0, 0, 0.16, 0.07, 0.072, "#d5c5b7");
+
+  // Add paw pads for detail
+  // Main pad
+  cp.add(0.055, -0.03, 0.04, 0.04, 0.015, 0.035, "#e8b5c0");
+  // Toe pads (3 small ones)
+  for (let t = 0; t < 3; t++) {
+    const tx = 0.08 + (t - 1) * 0.025;
+    cp.add(tx, -0.025, 0.065, 0.018, 0.012, 0.018, "#e8b5c0");
+  }
+
   cp.build();
   const tail = new T.Group();
   tail.position.set(-0.14, 0.1, 0);
@@ -105,6 +190,14 @@ export function createAnimals(
   const tb = new ctx.PuffBatch(tail);
   tb.add(-0.09, 0.02, 0, 0.21, 0.073, 0.07, "#aa9d9e", 0, 0, -0.35);
   tb.add(-0.18, 0.082, 0, 0.07, 0.11, 0.07, "#c2b3ab");
+
+  // Add tail stripes for texture
+  for (let stripe = 0; stripe < 3; stripe++) {
+    const sx = -0.06 - stripe * 0.055;
+    const sy = 0.025 + stripe * 0.015;
+    tb.add(sx, sy, 0, 0.045, 0.075, 0.072, "#978a8c", 0, 0, -0.35);
+  }
+
   tb.build();
-  return { writer, courier, cart, wheels, paw, tail };
+  return { writer, courier, cart, wheels, paw, tail, bunnies: [writer, courier] };
 }

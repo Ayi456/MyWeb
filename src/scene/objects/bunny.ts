@@ -45,7 +45,9 @@ function facePaint(eyes: boolean) {
     }
   } else {
     for (const side of [-1, 1]) {
-      oval(side * 0.105, -0.022, 0.025, 0.014, "#e9b6b6");
+      // Enhanced cheek blush with gradient
+      oval(side * 0.105, -0.022, 0.032, 0.018, "#f5dada"); // Outer fade
+      oval(side * 0.105, -0.022, 0.025, 0.014, "#e9b6b6"); // Main blush
       oval(side * 0.022, -0.047, 0.024, 0.017, "#fff5e4");
     }
     // A tiny Y-shaped smile is painted as a continuous ribbon on the muzzle.
@@ -127,6 +129,10 @@ export function createBunny(ctx: SceneContext) {
     g.scale.setScalar(scale);
     parent.add(g);
     const b = new ctx.PuffBatch(g);
+    // Subtle fur highlight layer for depth
+    const furHighlight = new ctx.PuffBatch(g);
+    furHighlight.add(0, 0.255, 0, 0.252, 0.282, 0.197, "#fffcf0");
+    furHighlight.build();
     b.add(0, 0.255, 0, 0.25, 0.28, 0.195, coat);
     for (const side of [-1, 1])
       b.add(side * 0.068, 0.12, 0.014, 0.118, 0.16, 0.142, "#fff0da");
@@ -136,6 +142,9 @@ export function createBunny(ctx: SceneContext) {
     b.add(0, 0.289, 0.099, 0.017, 0.017, 0.013, "#dab67c");
     b.add(0, 0.238, 0.1, 0.015, 0.015, 0.012, "#dab67c");
     b.add(0, 0.18, -0.105, 0.105, 0.1, 0.1, "#fff0da");
+    // Add tail fluff layers for volume
+    b.add(0, 0.175, -0.135, 0.095, 0.092, 0.085, "#fffcf0");
+    b.add(0, 0.165, -0.11, 0.082, 0.078, 0.075, "#fff5e8");
     if (role === "courier") {
       const bag = new ctx.SoftBatch(g);
       bag.add(0.123, 0.22, 0.01, 0.13, 0.145, 0.112, "#b88e70");
@@ -153,6 +162,13 @@ export function createBunny(ctx: SceneContext) {
     const face = ctx.mesh(faceGeometry, paint, head);
     face.name = "bunny-face-paint";
     face.castShadow = false;
+
+    // Add nose detail with highlight
+    const nose = new ctx.PuffBatch(head);
+    nose.add(0, 0.012, 0.136, 0.022, 0.018, 0.025, "#e8a8b4");
+    nose.add(0, 0.015, 0.138, 0.012, 0.008, 0.012, "#f5c5ce"); // Nose highlight
+    nose.build(false);
+
     const eyes = ctx.mesh(eyeGeometry, paint, head, 0, 0.028, 0);
     eyes.name = "bunny-eyes";
     eyes.castShadow = false;
@@ -169,6 +185,12 @@ export function createBunny(ctx: SceneContext) {
       const pigment = ctx.mesh(innerGeometry, innerMat, ear);
       pigment.name = "bunny-inner-ear";
       pigment.castShadow = false;
+
+      // Add ear tip color variation
+      const earTip = new ctx.PuffBatch(ear);
+      earTip.add(0, 0.195, 0, 0.048, 0.065, 0.03, coat, 0, 0, -0.08);
+      earTip.build(false);
+
       ears.push(ear);
     }
     if (role === "courier") {
@@ -187,6 +209,11 @@ export function createBunny(ctx: SceneContext) {
       const ab = new ctx.PuffBatch(arm);
       ab.add(0, -0.065, 0, 0.083, 0.15, 0.09, coat);
       ab.add(0, -0.139, 0.014, 0.085, 0.08, 0.09, "#fff0da");
+      // Add finger details on paw
+      for (let f = 0; f < 3; f++) {
+        const fx = (f - 1) * 0.022;
+        ab.add(fx, -0.175, 0.045, 0.018, 0.025, 0.035, "#fff5e8");
+      }
       ab.build();
       arms.push(arm);
       const leg = new T.Group();
@@ -194,6 +221,13 @@ export function createBunny(ctx: SceneContext) {
       g.add(leg);
       const lb = new ctx.PuffBatch(leg);
       lb.add(0, -0.052, 0.039, 0.105, 0.1, 0.172, "#f5e5ce");
+      // Add paw pads for detail - main pad
+      lb.add(0, -0.095, 0.11, 0.045, 0.018, 0.065, "#f0c9d5");
+      // Add individual toe pads (4 small pads)
+      for (let t = 0; t < 4; t++) {
+        const tx = side * (t - 1.5) * 0.018;
+        lb.add(tx, -0.085, 0.145, 0.016, 0.012, 0.022, "#f0c9d5");
+      }
       lb.build();
       legs.push(leg);
     }

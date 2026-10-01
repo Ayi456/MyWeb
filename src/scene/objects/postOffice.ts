@@ -16,6 +16,14 @@ export function createPostOffice(ctx: SceneContext) {
   world.add(house);
   const hb = new Batch(house);
   hb.add(0, 0.58, 0, 1.78, 1.16, 1.35, "#fff0d0");
+
+  // Add subtle wall texture with horizontal lines (simulating plaster layers)
+  for (let line = 0; line < 8; line++) {
+    const ly = 0.15 + line * 0.14;
+    hb.add(0, ly, 0.678, 1.8, 0.008, 0.005, "#f5e8c8");
+    hb.add(0, ly, -0.678, 1.8, 0.008, 0.005, "#f5e8c8");
+  }
+
   hb.add(0, 0.04, 0, 1.98, 0.15, 1.57, "#d6c19d");
   for (const x of [-0.84, 0.84])
     for (const z of [-0.62, 0.62])
@@ -74,11 +82,63 @@ export function createPostOffice(ctx: SceneContext) {
         side * -0.675,
       );
     hb.add(side * 0.99, 1.17, 0, 0.085, 0.1, 1.8, "#ad787a");
+    // Add roof tile shadow layers for depth
+    for (let k = 0; k < 5; k++) {
+      const x = side * (0.97 - k * 0.218);
+      const y = 1.22 + k * 0.175;
+      const shadowY = y - 0.012;
+      for (let zz = -0.64; zz <= 0.65; zz += 0.425) {
+        // Shadow layer beneath each tile
+        hb.add(
+          x,
+          shadowY,
+          zz,
+          0.33,
+          0.008,
+          0.46,
+          "#9a6568",
+          0,
+          0,
+          side * -0.675,
+        );
+      }
+    }
   }
   hb.add(0, 2.0, 0, 0.14, 0.1, 1.7, "#dba19d");
   hb.add(-0.56, 1.79, -0.38, 0.22, 0.66, 0.24, "#b78d87");
+
+  // Add brick texture to chimney with horizontal mortar lines
+  for (let brick = 0; brick < 5; brick++) {
+    const by = 1.5 + brick * 0.125;
+    hb.add(-0.56, by, -0.38, 0.23, 0.012, 0.25, "#a57a76");
+  }
+  // Add individual bricks (vertical divisions)
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 2; col++) {
+      const bx = -0.56 + (col - 0.5) * 0.06;
+      const by = 1.6 + row * 0.2;
+      hb.add(bx, by, -0.38, 0.008, 0.11, 0.24, "#a57a76");
+    }
+  }
+
   hb.add(-0.56, 2.12, -0.38, 0.3, 0.07, 0.31, "#dcc1a7");
+
+  // Add chimney cap detail (overhang edge)
+  hb.add(-0.56, 2.16, -0.38, 0.32, 0.015, 0.33, "#c9ad95");
   hb.add(0.35, 0.49, 0.692, 0.43, 0.94, 0.045, "#89a9a0");
+  // Door details: handle and horizontal planks
+  hb.add(0.54, 0.55, 0.715, 0.028, 0.028, 0.015, "#c9a578"); // Door handle
+  for (const y of [0.3, 0.5, 0.7])
+    hb.add(0.35, y, 0.698, 0.4, 0.018, 0.008, "#7a9690"); // Door planks
+
+  // Add decorative door panels (raised rectangles)
+  hb.add(0.35, 0.65, 0.695, 0.28, 0.38, 0.012, "#95bab0");
+  hb.add(0.35, 0.25, 0.695, 0.28, 0.28, 0.012, "#95bab0");
+
+  // Add door frame decorative trim
+  for (const x of [0.14, 0.56])
+    hb.add(x, 0.49, 0.73, 0.015, 1.02, 0.018, "#b89e82");
+
   for (const x of [0.108, 0.592])
     hb.add(x, 0.49, 0.727, 0.058, 1.0, 0.082, "#ccb393");
   for (const x of [0.242, 0.35, 0.458])
@@ -92,8 +152,14 @@ export function createPostOffice(ctx: SceneContext) {
   hb.add(-0.43, 0.61, 0.73, 0.48, 0.032, 0.03, "#e1c9a0");
   for (const z of [-0.3, 0.28]) {
     hb.add(0.908, 0.66, z, 0.035, 0.44, 0.33, "#b18e74");
+    // Window frame depth
+    hb.add(0.895, 0.66, z, 0.038, 0.46, 0.035, "#8d6f58"); // Outer frame
     hb.add(0.938, 0.66, z, 0.027, 0.035, 0.34, "#e7cba5");
     hb.add(0.938, 0.66, z, 0.027, 0.45, 0.027, "#e7cba5");
+
+    // Add window mullions (cross dividers for 4-pane window)
+    hb.add(0.929, 0.66, z, 0.018, 0.012, 0.28, "#9d806c"); // Horizontal mullion
+    hb.add(0.929, 0.66, z, 0.018, 0.37, 0.012, "#9d806c"); // Vertical mullion
   }
   hb.add(-0.43, 0.32, 0.81, 0.65, 0.17, 0.23, "#be8f83");
   hb.add(-0.43, 0.402, 0.81, 0.55, 0.017, 0.15, "#806d59");
@@ -133,6 +199,38 @@ export function createPostOffice(ctx: SceneContext) {
     blooms.addSeasonal(x, y + 0.012, z, 0.026, 0.025, 0.026, FLOWER_CENTER);
   }
   blooms.build(false);
+  // Add decorative elements around the house
+  // Mailbox beside the entrance
+  const mailbox = new ctx.SoftBatch(house);
+  mailbox.add(0.95, 0.28, 0.52, 0.15, 0.22, 0.12, "#c94a5e");
+  mailbox.add(0.95, 0.38, 0.52, 0.16, 0.04, 0.13, "#d86a78");
+  mailbox.add(1.02, 0.32, 0.52, 0.035, 0.045, 0.025, "#f4d8a5"); // Flag
+
+  // Add mail slot detail
+  mailbox.add(0.95, 0.29, 0.58, 0.12, 0.035, 0.008, "#2a2a2a"); // Mail slot
+  // Add decorative trim around mailbox top
+  mailbox.add(0.95, 0.39, 0.52, 0.17, 0.008, 0.14, "#b84256");
+
+  mailbox.build(false);
+  // Stepping stone path
+  const path = new ctx.SoftBatch(house);
+  for (let i = 0; i < 5; i++) {
+    const px = -0.5 + i * 0.35;
+    const pz = 0.8 + Math.sin(i * 0.8) * 0.1;
+    path.add(px, -0.08, pz, 0.22, 0.03, 0.18, "#a89475");
+  }
+  path.build(false);
+  // Window planter boxes
+  const planters = new ctx.SoftBatch(house);
+  for (const z of [-0.3, 0.28]) {
+    planters.add(0.97, 0.52, z, 0.065, 0.055, 0.065, "#b87d68");
+    // Tiny flowers in planters
+    for (let f = 0; f < 2; f++) {
+      const fz = z + (f - 0.5) * 0.04;
+      planters.add(0.97, 0.58, fz, 0.018, 0.025, 0.018, ["#f5b6d0", "#e7d5a8"][f]);
+    }
+  }
+  planters.build(false);
   for (let k = 0; k < 3; k++)
     hb.add(0.35, -0.03 - k * 0.07, 0.88 + k * 0.11, 0.66, 0.1, 0.18, "#e4d3b4");
   hb.build();
@@ -164,6 +262,13 @@ export function createPostOffice(ctx: SceneContext) {
   bellBatch.add(0, -0.21, 0, 0.1, 0.11, 0.1, "#d6b370");
   bellBatch.add(0, -0.285, 0, 0.13, 0.027, 0.13, "#deb96e");
   bellBatch.add(0, -0.1, 0, 0.03, 0.12, 0.03, "#b89a62");
+
+  // Add decorative band around bell body
+  bellBatch.add(0, -0.18, 0, 0.105, 0.015, 0.105, "#c4a066");
+  // Add bell clapper (tongue inside the bell)
+  bellBatch.add(0, -0.26, 0, 0.018, 0.08, 0.018, "#9a7a52");
+  bellBatch.add(0, -0.3, 0, 0.025, 0.025, 0.025, "#a5825a"); // Clapper ball
+
   bellBatch.build();
   const windowMesh = windows.build(false);
   return { house, bell, windowMesh };

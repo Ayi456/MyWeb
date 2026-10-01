@@ -42,7 +42,12 @@ export function createFlowers(ctx: SceneContext) {
       h = range(0.13, 0.29),
       c = ["#f2b4c6", "#fff0c5", "#deaccd", "#f6cf95", "#eac5dd"][i % 5];
     const head = flowerHead(c);
-    flowers.addSeasonal(x, y + h / 2, z, 0.021, h, 0.021, FLOWER_STEM);
+
+    // Stem with subtle thickness variation
+    const stemThickness = range(0.018, 0.024);
+    flowers.addSeasonal(x, y + h / 2, z, stemThickness, h, stemThickness, FLOWER_STEM);
+
+    // Multiple leaves at different heights for richness
     flowers.addSeasonal(
       x + 0.03,
       y + h * 0.35,
@@ -55,23 +60,64 @@ export function createFlowers(ctx: SceneContext) {
       0.3,
       0.4,
     );
+    // Second leaf on opposite side
+    flowers.addSeasonal(
+      x - 0.025,
+      y + h * 0.5,
+      z,
+      0.075,
+      0.02,
+      0.03,
+      FLOWER_LEAF,
+      0,
+      -0.4,
+      0.35,
+    );
+
+    // Main flower head
     flowers.addSeasonal(x, y + h, z, 0.08, 0.035, 0.08, head);
-    for (const [a, b] of [
-      [-0.051, 0],
-      [0.051, 0],
-      [0, -0.051],
-      [0, 0.051],
+
+    // Petals with subtle height variation
+    for (const [a, b, heightOffset] of [
+      [-0.051, 0, 0.008],
+      [0.051, 0, 0.008],
+      [0, -0.051, 0.01],
+      [0, 0.051, 0.006],
     ])
       flowers.addSeasonal(
         x + a,
-        y + h + 0.008,
+        y + h + heightOffset,
         z + b,
         0.046,
         0.025,
         0.046,
         head,
       );
+
+    // Flower center with slight dome
     flowers.addSeasonal(x, y + h + 0.03, z, 0.025, 0.015, 0.025, FLOWER_CENTER);
+
+    // Add tiny buds next to some flowers (every 4th flower)
+    if (i % 4 === 0) {
+      const budOffset = range(0.08, 0.12);
+      const budAngle = range(0, Math.PI * 2);
+      const budX = x + Math.cos(budAngle) * budOffset;
+      const budZ = z + Math.sin(budAngle) * budOffset;
+      const budH = h * 0.65;
+
+      // Bud stem
+      flowers.addSeasonal(budX, y + budH / 2, budZ, 0.015, budH, 0.015, FLOWER_STEM);
+      // Closed bud
+      flowers.addSeasonal(
+        budX,
+        y + budH,
+        budZ,
+        0.035,
+        0.05,
+        0.035,
+        { colors: [c, "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
+      );
+    }
   }
   flowers.build(false);
   return flowers.cells.length;

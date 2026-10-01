@@ -27,6 +27,8 @@ export function createSakura(ctx: SceneContext) {
     tree,
   );
   const bark = new PuffBatch(tree);
+  // Enhanced bark with color variation for natural wood texture
+  const barkColors = ["#967365", "#8b6a5e", "#a07968", "#856358"];
   const branches: [Point3, Point3, number][] = [
     [[-0.1, 1.6, 0], [-1, 2.1, 0.18], 0.32],
     [[-1, 2.1, 0.18], [-1.78, 2.67, 0.27], 0.2],
@@ -39,18 +41,21 @@ export function createSakura(ctx: SceneContext) {
     [[-0.8, 2, 0.15], [-1.05, 2.85, 1], 0.18],
   ];
   for (const [a, b, w] of branches) {
-    rod(bark, a, b, w, "#967365");
-    bark.add(...a, w, w, w, "#967365");
-    bark.add(...b, w * 0.85, w * 0.85, w * 0.85, "#967365");
+    const barkColor = barkColors[Math.floor(random() * barkColors.length)];
+    rod(bark, a, b, w, barkColor);
+    bark.add(...a, w, w, w, barkColor);
+    bark.add(...b, w * 0.85, w * 0.85, w * 0.85, barkColor);
   }
+  // Root flare with varied colors
   for (let i = 0; i < 7; i++) {
     const a = (i * TAU) / 7;
+    const rootColor = barkColors[(i * 3) % barkColors.length];
     rod(
       bark,
       [Math.cos(a) * 0.7, 0, Math.sin(a) * 0.5],
       [0, 0.22, 0],
       0.15,
-      "#a38369",
+      rootColor,
     );
   }
   bark.build();
@@ -111,9 +116,11 @@ export function createSakura(ctx: SceneContext) {
         petal = 0.068 + random() * 0.022;
       for (let k = 0; k < 5; k++) {
         const a = (k * TAU) / 5;
+        // Add subtle height variation to petals for depth
+        const heightOffset = Math.sin(k * TAU / 5) * 0.008;
         details.addSeasonal(
           px + Math.cos(a) * petal * 0.72,
-          py + Math.sin(a) * petal * 0.48,
+          py + Math.sin(a) * petal * 0.48 + heightOffset,
           pz + Math.sin(a) * petal * 0.72,
           petal,
           petal * 0.42,
@@ -137,13 +144,40 @@ export function createSakura(ctx: SceneContext) {
   });
   // A few buds sit on the visible branch tips, making the crown feel attached
   // to the wood instead of floating above it.
-  for (const [x, y, z] of [
+  const branchTips: Point3[] = [
     [-1.78, 2.67, 0.27],
     [1.6, 2.94, -0.7],
     [-1, 3.65, -0.78],
     [0.65, 3.12, 1.28],
-  ] as Point3[]) {
+  ];
+  for (const [x, y, z] of branchTips) {
     details.addSeasonal(x, y, z, 0.11, 0.11, 0.11, flowerHead("#df9db5"));
+    // Add smaller buds around main buds for richness
+    for (let b = 0; b < 3; b++) {
+      const ba = (b * TAU) / 3 + random() * 0.5;
+      details.addSeasonal(
+        x + Math.cos(ba) * 0.08,
+        y - 0.05 - random() * 0.03,
+        z + Math.sin(ba) * 0.08,
+        0.055,
+        0.055,
+        0.055,
+        flowerHead(["#c8456e", "#d89bb0", "#e0a5b8"][b]),
+      );
+    }
+    // Tiny spring buds - seasonal markers
+    for (let t = 0; t < 5; t++) {
+      const ta = (t * TAU) / 5;
+      details.addSeasonal(
+        x + Math.cos(ta) * 0.12,
+        y - 0.08 - random() * 0.04,
+        z + Math.sin(ta) * 0.12,
+        0.035,
+        0.035,
+        0.035,
+        { colors: ["#c8456e", "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
+      );
+    }
   }
   details.build(false);
   const fallen = new PuffBatch();

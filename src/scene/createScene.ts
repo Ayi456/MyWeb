@@ -42,6 +42,7 @@ import { sampleRopeway } from "./systems/ropeway";
 import { IslandWalker, walkingObstacles } from "./systems/walking";
 import { MusicPulse } from "./systems/musicPulse";
 import { updateFestival } from "./systems/festival";
+import { createMicroAnimations } from "./systems/microAnimations";
 import { realLocalHour, realSeasonYear } from "../content/realTime";
 import {
   pickLine,
@@ -403,6 +404,13 @@ export function createScene(
       pointer = ctx.U.uPointer.value;
     ctx.seasonal.apply(seasons.weights, true);
     ctx.U.uSeason.value.fromArray(seasons.weights);
+    // Initialize micro-animations for subtle element movements
+    const microAnimations = createMicroAnimations(ctx, {
+      tree: objects.tree,
+      postOffice: objects.house ? { house: objects.house, bell: objects.bell, windowMesh: objects.windowMesh } : undefined,
+      swing: objects.swing,
+      bunnies: objects.bunnies,
+    });
     function seasonChanged() {
       if (seasons.index === lastSeason) return;
       lastSeason = seasons.index;
@@ -568,6 +576,8 @@ export function createScene(
           );
         else pointerTarget.w = 0;
         pointer.lerp(pointerTarget, 1 - Math.exp(-realDt * 6));
+        // Update micro-animations for element liveliness
+        microAnimations.update();
         ambience.update(
           motionWind,
           snapshot.night,

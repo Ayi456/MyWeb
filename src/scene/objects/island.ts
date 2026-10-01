@@ -109,6 +109,100 @@ export function createIsland(ctx: SceneContext) {
     }
   }
   vines.build();
+
+  // Add grass tufts scattered across the island for natural detail
+  const grass = new PuffBatch();
+  for (let i = 0; i < 45; i++) {
+    const a = rand() * TAU;
+    const r = range(0.3, 0.85);
+    const x = Math.cos(a) * radius[0] * r;
+    const z = Math.sin(a) * radius[1] * r;
+    const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2;
+    const outline = islandOutline(Math.atan2(z / radius[1], x / radius[0]));
+
+    if (d <= outline ** 2 * 0.7) {
+      const y = ground(x, z) + 0.08;
+      // Grass blade cluster (3-5 blades per tuft)
+      const bladeCount = 3 + Math.floor(rand() * 3);
+      for (let b = 0; b < bladeCount; b++) {
+        const angle = (b / bladeCount) * TAU + rand() * 0.3;
+        const offset = rand() * 0.025;
+        grass.addSeasonal(
+          x + Math.cos(angle) * offset,
+          y + 0.045,
+          z + Math.sin(angle) * offset,
+          0.018,
+          0.09,
+          0.018,
+          LEAF[b % LEAF.length],
+          0,
+          angle,
+          rand() * 0.2 - 0.1,
+        );
+      }
+    }
+  }
+  grass.build(false);
+
+  // Small wildflowers dotted around
+  const wildflowers = new PuffBatch();
+  for (let i = 0; i < 25; i++) {
+    const a = rand() * TAU;
+    const r = range(0.35, 0.8);
+    const x = Math.cos(a) * radius[0] * r;
+    const z = Math.sin(a) * radius[1] * r;
+    const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2;
+    const outline = islandOutline(Math.atan2(z / radius[1], x / radius[0]));
+
+    if (d <= outline ** 2 * 0.65) {
+      const y = ground(x, z) + 0.09;
+      const flowerColors = ["#f5dfb6", "#e7afbd", "#d4c5e8", "#ffd4a3"];
+      const stemColor = i % 3 ? "#7a9b72" : "#6b8966";
+
+      // Stem
+      wildflowers.add(x, y + 0.03, z, 0.012, 0.06, 0.012, stemColor);
+      // Flower head
+      wildflowers.addSeasonal(
+        x,
+        y + 0.065,
+        z,
+        0.028,
+        0.028,
+        0.028,
+        { colors: [flowerColors[i % 4], "#8ab276", "#d89a55", "#f9f7fa"], scales: [1, 0.9, 0.8, 0] },
+      );
+    }
+  }
+  wildflowers.build(false);
+
+  // Decorative pebbles near the path
+  const pebbles = new PuffBatch(world, rockMat);
+  for (let i = 0; i < 30; i++) {
+    const a = rand() * TAU;
+    const r = range(0.25, 0.75);
+    const x = Math.cos(a) * radius[0] * r;
+    const z = Math.sin(a) * radius[1] * r;
+    const d = (x / radius[0]) ** 2 + (z / radius[1]) ** 2;
+    const outline = islandOutline(Math.atan2(z / radius[1], x / radius[0]));
+
+    if (d <= outline ** 2 * 0.72) {
+      const y = ground(x, z) + 0.04;
+      const size = range(0.03, 0.07);
+      pebbles.add(
+        x,
+        y,
+        z,
+        size,
+        size * range(0.6, 0.9),
+        size * range(0.8, 1.1),
+        ["#d8ccc1", "#c9bdb5", "#b5a99f"][i % 3],
+        0,
+        rand() * TAU,
+      );
+    }
+  }
+  pebbles.build(false);
+
   return {
     terrainCount: soil.geometry.getAttribute("position").count,
     walkTiles,

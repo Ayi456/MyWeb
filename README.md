@@ -107,7 +107,7 @@ npm run preview
 
 依赖 `@vercel/analytics` 和 React 组件已接入。手动部署前，在 Vercel 项目的 Analytics 页面确认 Web Analytics 已启用；部署完成后访问线上网站，再回到 Analytics 查看数据。详见 [Vercel 官方接入指南](https://vercel.com/docs/analytics/quickstart)。
 
-Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。构建时若能取得站点地址（优先 `SITE_URL`，其次 Vercel 自动提供的 `VERCEL_PROJECT_PRODUCTION_URL`），会自动写入 canonical、`og:url`、`og:image`（`public/og.jpg`，1200×630）与 `twitter:card`；取不到时不输出这些标签，不猜测域名。真实场景测试截图位于 `docs/screenshots/`。
+Vercel 部署由仓库导入后创建；仓库中没有预设线上域名。构建时若能取得站点地址（优先 `SITE_URL`，其次 Vercel 自动提供的 `VERCEL_PROJECT_PRODUCTION_URL`），会自动写入 canonical、`og:url`、`og:image`（`public/og.jpg`，1200×630）与 `twitter:card`；取不到时不输出这些标签，不猜测域名。视觉回归基线位于 `tests/visual/*-snapshots/`；历史截图与验收记录见 [验证记录](docs/VALIDATION.md)。
 
 ## 结构与维护
 

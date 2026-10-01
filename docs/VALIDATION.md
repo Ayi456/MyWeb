@@ -1,22 +1,30 @@
 # 验证记录
 
-**当前代码基线**：见 `git log`，2026-09-25 起每项提交都附带本文件对应条目。最近一次检查通过 TypeScript、ESLint、Prettier、生产构建、Vitest **138 / 138**、真实 r186 上的完整 Playwright **45 / 45**；补充截图、统一测试模块及加强信件数量断言后，相关回归 **7 / 7** 再次通过。四张原有主岛视觉基线在未修改的容差内通过，未重生成基线。下面保留各阶段实际结果，早期数量与性能数字只代表对应日期。实施状态见 [路线图第 7 节](ROADMAP.md#7-实施进度)。
+**当前代码基线**：`ad8d56c`。最近一次功能验收为 2026-09-30 的场景细节美化：TypeScript、ESLint、生产构建、Vitest **147 / 147**、完整 Playwright **60 / 60** 通过。以下保留各阶段的实际结果，测试数量与性能数字只代表对应日期，不表示本次目录清理重新执行了全部浏览器验收。实施状态见 [路线图第 7 节](ROADMAP.md#7-实施进度)。
+
+**历史资料归档**：2026-09-30 清理已完成的专项文档、过程截图和原始测试输出；本文相关链接固定到清理前的 Git 提交，仍可查看或恢复。正式测试源码和 `tests/visual/*-snapshots/` 中的 14 张视觉回归基线保留。未提交的旧设计稿与临时截图按确认范围删除，不在 Git 历史中。
+
+## 场景与界面收尾（截至 2026-09-30）
+
+- [圆润场景、云鲸嘴线与全屏冬雪](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/clay-scenery/README.md)：已完成模型风格统一、连续微笑和全视野飘雪；141 项单元测试、构建、lint 及专项浏览器检查通过，当时未运行完整 Playwright 套件。
+- [整页视觉整理](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/page-polish/README.md)：已统一纸面界面、图标、昼夜配色和手机操作层次；141 项单元测试与构建检查通过。电台仅检查到连接失败状态，未验证真实音乐播放。
+- [兔子、邮局与场景细节美化](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/scene-detail-polish/README.md)：147 项单元测试、60 项完整浏览器回归、构建、类型与 lint 检查通过。视觉基线经实际截图审阅后更新，未放宽阈值。构建仍有 Three.js 分包超过 500 kB 的警告；移动视口检查不等于真机验证。
 
 ## Three.js r186 升级与渲染回归（2026-09-26）
 
 - 真实 npm 安装并锁定 `three` 和 `@types/three` 为 **0.186.0**。按 [官方迁移指南](https://github.com/mrdoob/three.js/wiki/Migration-Guide) 处理 WebGL 2 要求；依据 [r186 阴影实现](https://github.com/mrdoob/three.js/blob/r186/src/renderers/webgl/WebGLShadowMap.js) 将已移除的 PCFSoft 用法更新为 PCF，避免兼容回退警告。删除已废弃的 WebGL 2 capability 判断，HDR 半浮点目标保留 2 次采样，仍只在最终通道执行一次 ACES/sRGB，曝光 0.95。主岛模型、随机序列、布局、体素配色与根目录原 HTML 未改，原 HTML SHA-256 与下方历史记录一致。
 - 升级时发现已有开发进程仍提供优化缓存中的 r160；因此浏览器测试改用独立 **5175** 端口、独立 Vite 缓存并强制重新预构建，不复用日常开发服务。新增开发和新构建生产页面的运行版本断言，均实际读到 **186**；生产测试使用 4174 端口。手动开发需重启并运行 `npm run dev -- --force`。天空测试复用验证页的 Three 模块，避免重复实例警告。
-- [真实 WebGL 原始结果](browser-r186-results.txt)：三次创建/销毁、单一 RAF、重复 dispose、暂停、寄信和送达均通过；明确确认 12 封资源测试信全部被接受，再核对送达后 GPU 几何体与纹理回到基线。WebGL 2 不可用时明确报错且不尝试 WebGL 1；context loss 停止循环并提示，重新创建后恢复渲染。完整 45 项回归覆盖散步与触屏取消、驿站缆车、真实音频解码/CORS 回退、PWA 离线与原有交互；相关 7 项再次通过，未观察到非故障注入的未处理异常或 Shader 错误。
+- [真实 WebGL 原始结果](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/browser-r186-results.txt)：三次创建/销毁、单一 RAF、重复 dispose、暂停、寄信和送达均通过；明确确认 12 封资源测试信全部被接受，再核对送达后 GPU 几何体与纹理回到基线。WebGL 2 不可用时明确报错且不尝试 WebGL 1；context loss 停止循环并提示，重新创建后恢复渲染。完整 45 项回归覆盖散步与触屏取消、驿站缆车、真实音频解码/CORS 回退、PWA 离线与原有交互；相关 7 项再次通过，未观察到非故障注入的未处理异常或 Shader 错误。
 - GTX 1650 / ANGLE D3D11 / HeadlessChrome 153，1280×720：最新生命周期记录首帧 **1595 / 191 / 161 ms**（模块加载后开始计时，不含下载，首次受编译与并行测试影响）；十次稳态采样均 **60 FPS**，260 draw calls、15581 instances、26 geometries / 8 textures。这组桌面读数不能代替手机性能或长时间内存验证。Three 分包从 r160 的 491.28 kB / gzip 123.75 kB 增至 r186 的 558.11 kB / gzip 139.16 kB；gzip 增加 15.41 kB，构建仍提示分包超过 500 kB，未提高阈值掩盖提示。
 
-黄昏、正午近景、星夜和冬季均逐张检查。旧基线 PNG 保持原样，原 `maxDiffPixelRatio: 0.01` / `threshold: 0.15` 均通过，未宣称逐像素相同。下表全帧 RGB 平均绝对差（0–255）来自 [差异记录](three-r186-comparison.json)；旧 r160 基线早于本轮驿站等内容，指标包含新增场景与阴影/着色变化，不能当作纯渲染器差异。
+黄昏、正午近景、星夜和冬季均逐张检查。旧基线 PNG 保持原样，原 `maxDiffPixelRatio: 0.01` / `threshold: 0.15` 均通过，未宣称逐像素相同。下表全帧 RGB 平均绝对差（0–255）来自 [差异记录](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/three-r186-comparison.json)；旧 r160 基线早于本轮驿站等内容，指标包含新增场景与阴影/着色变化，不能当作纯渲染器差异。
 
 | 场景 | 原 r160 基线 | 当前 r186 | RGB 平均绝对差 |
 | --- | --- | --- | --- |
-| 黄昏 | [原图](screenshots/three-r160-dusk.png) | [升级后](screenshots/three-r186-dusk.png) | 0.8849 |
-| 正午樱花树近景 | [原图](screenshots/three-r160-day-tree.png) | [升级后](screenshots/three-r186-day-tree.png) | 1.3837 |
-| 星夜 | [原图](screenshots/three-r160-night.png) | [升级后](screenshots/three-r186-night.png) | 1.5660 |
-| 冬季 | [原图](screenshots/three-r160-winter.png) | [升级后](screenshots/three-r186-winter.png) | 0.9230 |
+| 黄昏 | [原图](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r160-dusk.png) | [升级后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r186-dusk.png) | 0.8849 |
+| 正午樱花树近景 | [原图](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r160-day-tree.png) | [升级后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r186-day-tree.png) | 1.3837 |
+| 星夜 | [原图](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r160-night.png) | [升级后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r186-night.png) | 1.5660 |
+| 冬季 | [原图](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r160-winter.png) | [升级后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/three-r186-winter.png) | 0.9230 |
 
 Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的是代码、文档、桌面回归及 GitHub 提交。
 
@@ -26,7 +34,7 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 根据 [Web Audio 规范](https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode-security)，未经许可的跨域媒体分析可能输出静音。只有允许分析的歌曲才设置 `crossOrigin=anonymous` 并接入一份 MediaElementSource→Analyser→扬声器的通路；不并行使用第二个解码器；主动开启或跨域回退可能重新准备当前曲目。后续歌曲不支持 CORS 时换成新的普通 audio 元素；HEAD 成功但媒体 GET 拒绝时同样只回退一次，不将这次跨域失败计入坏曲目预算。播放器进度、音量和操作仍保留；浏览器没有 WebAudio 时不创建分析通路。
 - 用户手势惰性建立/恢复 AudioContext，关闭页面释放节点和 Context；同一元素重复开启只建立一个 Source。512 点 FFT 读取 60–420 Hz 真实能量并平滑，音量为零、暂停、缓冲或后台时不输出能量；未播放或关闭律动时没有采样 RAF。只新增一个灯笼专用材质，避免邮局窗户一起律动；灯笼最多增加 22% 亮度、螺旋桨叠加小幅转速，不增加网格、贴图、随机调用或绘制次数。场景暂停冻结，减少动态效果清零响应，没有闪光或虚构拍点。
 - 新增四项单元测试验证频段、静音、平滑/冻结、CORS 失败和资源释放；四项浏览器测试用浏览器实际解码的 140 Hz 调幅 WAV 验证能量变化、灯笼与螺旋桨、静音与暂停/减少动态效果、播放中开启保持进度、Source 重用、本机偏好和刷新不自动播放。明确设置拒绝测试来源的跨域响应，验证逐曲回退、HEAD/GET 许可不一致与 WebAudio 不可用。最初受开发热更新及测试响应默认跨域补头影响的检查，固定测试后已回归；播放中开启的进度检查还发现受控 WAV 响应缺少 HTTP Range 导致 seek 被截回起点，补齐 206 / Content-Range / Accept-Ranges 后通过；线上网易云仅核对响应头，未声称全歌单真实可播或扬声器听感通过。
-- TypeScript、ESLint、Prettier、138 项单元测试、生产构建通过；43 项完整浏览器回归首轮 42 项通过，修正音频测试响应后四项受影响回归全部通过；四张主岛基线未改。实际画面见 [音乐律动](screenshots/music-pulse.png)。Safari / iOS / Android 的音频解锁、CDN 与真机性能仍需外部实测。
+- TypeScript、ESLint、Prettier、138 项单元测试、生产构建通过；43 项完整浏览器回归首轮 42 项通过，修正音频测试响应后四项受影响回归全部通过；四张主岛基线未改。实际画面见 [音乐律动](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/music-pulse.png)。Safari / iOS / Android 的音频解锁、CDN 与真机性能仍需外部实测。
 
 ## 第一人称岛上散步（2026-09-26）
 
@@ -34,13 +42,13 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - WASD、方向键与 44px 屏幕按钮移动，拖动调整朝向；斜向速度归一、单帧最大 50ms，无自动摇晃或惯性。移动不随模拟倍率变化，暂停世界仍能主动走动。面板、后台、失焦、方向按钮取消/失捕获都清除输入；退出恢复先前环视，复位与登船也退出。指南内 Escape 现可从按钮焦点关闭。
 - 分享只带有限的四个位置/朝向数值；解析拒绝非法值，加载时再核对实际地面和碰撞，不安全落点回到入口。经典模式忽略散步参数，不留存移动轨迹或个人文字。
 - 新增五项单元测试比较实际草地网格高度，验证持续移动不会跌落、墙面滑行、速度与输入清理、深链校验；两项浏览器测试验证键盘入口、暂停时移动、分享重载、面板/失焦停止、退出和手机视口。触摸取消通过 Chromium CDP 原生触摸事件注入验证；这是桌面浏览器测试，仍非真实手机。
-- TypeScript、ESLint、Prettier、134 项单元测试、生产构建、39 项完整浏览器回归通过，包括并行加入的天空覆盖回归。首轮分享测试误拿移动停止前的旧快照作比较，改为核对实际复制链接的坐标后通过；四张原主岛基线未更新。实际截图：[小兔视角](screenshots/rabbit-walk.png)、[手机视口](screenshots/rabbit-walk-mobile.png)。
+- TypeScript、ESLint、Prettier、134 项单元测试、生产构建、39 项完整浏览器回归通过，包括并行加入的天空覆盖回归。首轮分享测试误拿移动停止前的旧快照作比较，改为核对实际复制链接的坐标后通过；四张原主岛基线未更新。实际截图：[小兔视角](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/rabbit-walk.png)、[手机视口](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/rabbit-walk-mobile.png)。
 
 ## 驿站岛与索道缆车（2026-09-26）
 
 - 在现有世界生成之后追加驿站、邮包箱、双索道和悬挂缆车；五组共享体素批次、两条索道线，不消耗主岛随机序列，不新增贴图或投射阴影。资源仍由统一跟踪器释放。原飞艇航线保持不变。
 - 索道以轻微下垂曲线连接主岛西北端与驿站。44 秒往返，两端各停靠 6 秒，行程采用平滑缓动；独立累计模拟时间，暂停、后台和减少动态效果冻结后可原地继续。
-- 驿站预设支持深链与巡游；两处热点及指南键盘按钮追加在末尾，不改变原数字键。新增两项单元测试核对双端停靠、路径连续、下垂与随机/批次；新增浏览器检查键盘访问、运动、暂停和减少动态效果，截图见 [驿站与缆车](screenshots/depot-ropeway.png)。
+- 驿站预设支持深链与巡游；两处热点及指南键盘按钮追加在末尾，不改变原数字键。新增两项单元测试核对双端停靠、路径连续、下垂与随机/批次；新增浏览器检查键盘访问、运动、暂停和减少动态效果，截图见 [驿站与缆车](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/depot-ropeway.png)。
 - TypeScript、ESLint、Prettier、129 项单元测试与生产构建通过。36 项完整浏览器回归中四张旧主岛基线均通过；一项留声机刷新检查过早读取诊断，改为等待状态后与驿站测试一起复测，两项通过。基线文件未更新；桌面 WebGL 验证不代表移动真机通过。
 
 ## 花园留声机与灯塔低鸣（2026-09-26）
@@ -49,7 +57,7 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 画布点击或指南按钮播放/暂停现有电台并打开播放器。首次点击惰性加载歌单，期间再点取消待播放意图；失败后可重试，离线不启动音乐，浏览器拒绝自动播放后保留已加载曲目供再次主动播放。页面刷新后仍静音。唱片状态来自实际 `playing`/`pause`/`waiting` 事件，缓冲时停转且保留暂停按钮；动画只用模拟时间，场景暂停、后台或减少动态效果下冻结。
 - 灯塔仅在夜间的雨雾、云海雾潮或冬雾中低鸣：累计 6 个有效模拟秒后首次提示，之后每 60 个模拟秒一次，天气清除后重置。暂停不推进、长时间跳跃只触发一次，不补播积压。复用环境音效的 AudioContext 和主音量，98/147/196 Hz 合成短低音；音效关闭时仍可发出字幕提示。
 - 新增 7 项单元测试覆盖天气筛选、调度周期、暂停与无积压、静音提示、随机序列和资源释放、唱片冻结。5 项浏览器测试覆盖真实画布射线点击、键盘 Enter、加载取消、失败/离线重试、自动播放拒绝、刷新静音、唱片状态及原生 WebAudio 调度。电台 API 和音乐播放事件使用受控响应验证状态机，未用测试歌曲验证网易云线上可播性；低鸣通过浏览器原生音频节点核对频率与字幕，未做真实扬声器听感评估。
-- 390×844 视口实测指南按钮和电台可用、无横向溢出；实际画面见 [花园留声机](screenshots/garden-gramophone.png)，真实手机触摸与音频权限仍待真机验证。首轮离线测试读到上一轮诊断快照，改为等待场景确认状态后回归通过。
+- 390×844 视口实测指南按钮和电台可用、无横向溢出；实际画面见 [花园留声机](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/garden-gramophone.png)，真实手机触摸与音频权限仍待真机验证。首轮离线测试读到上一轮诊断快照，改为等待场景确认状态后回归通过。
 - TypeScript、ESLint、Prettier、Vitest **127 / 127**、生产构建、完整 Playwright **35 / 35** 通过；补上音频缓冲停转后，受影响的留声机浏览器回归 **1 / 1** 再次通过。四张主岛视觉基线在现有容差内通过，未更新基线文件；新增模型仅位于花园副岛，主岛构图、模型和随机顺序保持原样。
 
 ## 每周群岛寻宝（2026-09-26）
@@ -57,7 +65,7 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 指南里主动开始四步寻宝，线索对应现有风车、灯塔、茶山和温泉村。提示按钮只切换到附近视角，地标点击、数字键和指南热点按钮才推进；错误、提前或重复点击不跳步。找到地标后的下一张线索进入现有读屏通知队列。
 - 以本地周一为周标识，用日历日计算避免夏令时的小时差；固定轮换四个地标的 24 种顺序，同周稳定、相邻周不重复。跨周、后台返回与重新聚焦都会刷新进度，已获得的寻宝邮戳保留。
 - 独立版本化存储只接受周日期、开始标记和 0–4 步计数，剔除额外文字、错误类型和过期进度；不改动已有收藏结构。刷新续玩、完成授章、恢复不重复授章及确认清空收藏联动已验证；存储被禁用时仍能在本次访问完成。
-- 新增 16 项单元测试核对顺序、24 周路线、日期与年界、数据校验、损坏/禁用存储和邮戳去重；3 项浏览器测试核对上述完整流程、提示不自动解题、数字键及 Enter、窄视口与未重载页面跨周。390×844 视口没有横向溢出，寻宝按钮至少 44px 高；实际截图见 [寻宝线索](screenshots/treasure-hunt.png)。这是桌面浏览器视口验证，真实手机操作仍待实测。
+- 新增 16 项单元测试核对顺序、24 周路线、日期与年界、数据校验、损坏/禁用存储和邮戳去重；3 项浏览器测试核对上述完整流程、提示不自动解题、数字键及 Enter、窄视口与未重载页面跨周。390×844 视口没有横向溢出，寻宝按钮至少 44px 高；实际截图见 [寻宝线索](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/treasure-hunt.png)。这是桌面浏览器视口验证，真实手机操作仍待实测。
 - TypeScript、ESLint、Prettier、Vitest **120 / 120**、生产构建和完整 Playwright **30 / 30** 通过；四张主岛基线未变。仅复用现有热点、视角和邮戳提示，没有新增场景模型、渲染调用或主岛随机调用。
 
 ## 群岛视角与巡游（2026-09-26）
@@ -65,7 +73,7 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 指南新增花园岛、灯塔、茶山和温泉村视角按钮，键盘 Enter 可启用；双击可见热点平滑靠近对应地标，双击飞艇可登船。相机与目标点用共享地标位置构建，主岛默认与樱花近景参数保持原值。
 - 闲置 8.5 秒后就近接入 150 秒闭合样条路线，分别插值相机位置与视线目标；加入缓动过渡，拖动、控件操作、面板、暂停、后台与减少动态效果都会停止自动巡游。用户主动选择视角在暂停时仍可使用，减少动态效果时直接到达。
 - 新预设通过同一白名单进入分享链接；单元测试覆盖旧构图、热点映射、链接解析、整条巡游的数值边界、闭环连续性与就近接入。浏览器核对键盘操作、链接重演、双击后的实际相机距离、暂停及面板/减少动态效果停止巡游。
-- 实际截图已检查：[花园](screenshots/view-garden.png)、[灯塔](screenshots/view-lighthouse.png)、[茶山](screenshots/view-teahouse.png)、[温泉村](screenshots/view-village.png)。390×844 视口下实测指南中的视角按钮可点击，无横向溢出；这仍是桌面浏览器视口验证，双击触屏与真实移动 GPU 尚未真机验证。
+- 实际截图已检查：[花园](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/view-garden.png)、[灯塔](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/view-lighthouse.png)、[茶山](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/view-teahouse.png)、[温泉村](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/view-village.png)。390×844 视口下实测指南中的视角按钮可点击，无横向溢出；这仍是桌面浏览器视口验证，双击触屏与真实移动 GPU 尚未真机验证。
 - TypeScript、ESLint、Prettier、Vitest **104 / 104**、生产构建和完整 Playwright **27 / 27** 通过，四张主岛基线未变。补充手机视口与实际相机位置断言后，受影响的两项浏览器测试 **2 / 2** 再次通过；补充界面按钮停止巡游后，巡游回归 **1 / 1** 通过。
 
 ## 情境文案（2026-09-26）
@@ -79,14 +87,14 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 
 - 新增冬季晴夜事件 `aurora`，持续 56 个模拟秒并渐入渐出；仅在冬季夜晚进入事件池。换季、白天与雨天会隐藏光带，分享链接可重演。
 - 单网格与程序噪声 Shader 绘制绿紫光带，不使用贴图或外部素材，不消耗主岛模型随机序列；出现时增加一次 draw call，隐藏时不绘制。材质时间复用模拟时钟，暂停冻结，减少动态效果下保持静止。
-- 单元测试核对事件筛选、天气与季节隐藏、共享时钟、随机序列和重复资源释放。截图检查发现初版网格高出默认视角，调整后增加相机投影断言，确认位于可见天空。实际画面见 [冬夜极光](screenshots/event-aurora.png)。
+- 单元测试核对事件筛选、天气与季节隐藏、共享时钟、随机序列和重复资源释放。截图检查发现初版网格高出默认视角，调整后增加相机投影断言，确认位于可见天空。实际画面见 [冬夜极光](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/event-aurora.png)。
 - TypeScript、ESLint、Prettier、生产构建、Vitest **92 / 92** 通过；完整 Playwright **21 / 21** 通过，四张主岛基线未变。位置调整后再跑极光浏览器测试 **1 / 1** 通过，核对暂停、减少动态效果与实际截图。真实移动 GPU 性能仍待真机验证。
 
 ## 群岛新事件（2026-09-26）
 
 - 夜间孔明灯复用中秋天灯，清晨雾潮抬升现有云层并加深雾，夏夜雷阵雨复用雨粒子、天空和半球光；没有新增模型或持续 draw call。中秋不重复调度放灯。
 - 雷声在闪电后延迟响起，可通过字幕感知；系统减少动态效果下闪电变为单次柔和亮度变化。事件与延迟雷声都按模拟时钟推进。
-- 单元测试覆盖时辰与季节筛选、亮度曲线、暂停冻结、延迟雷声，以及雨、雾、天灯在结束后回落。浏览器实测三种效果和分享链接重演，截图见 [晨雾](screenshots/event-sea-mist.png)、[孔明灯](screenshots/event-sky-lanterns.png)、[雷阵雨](screenshots/event-thunderstorm.png)。
+- 单元测试覆盖时辰与季节筛选、亮度曲线、暂停冻结、延迟雷声，以及雨、雾、天灯在结束后回落。浏览器实测三种效果和分享链接重演，截图见 [晨雾](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/event-sea-mist.png)、[孔明灯](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/event-sky-lanterns.png)、[雷阵雨](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/event-thunderstorm.png)。
 - TypeScript、ESLint、Prettier、生产构建、Vitest **88 / 88**、Playwright **20 / 20** 通过，四张主岛基线未变。首次浏览器运行有两项在页面加载时超时，重启测试后完整通过；移动 GPU 与真实音频效果仍待真机验证。
 
 ## 第一印象与音效字幕（2026-09-24）
@@ -120,12 +128,12 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 
 - 2026-09-15 至 09-16 的后续提交将电台歌单上限从 30 首提高到 200 首，加入顺序 / 循环 / 随机播放模式与失败自动跳过，并为 `/api/music` 增加速率限制和安全响应头（见 [SECURITY.md](../SECURITY.md)）。
 - 这些提交推送时有 3 项测试失败：歌单上限断言仍为 30；限流代码直接读取请求头，测试中的模拟请求没有 `headers` 字段，预期的 400 变成了 503。本次已更新断言，并为请求头与 socket 访问加上保护，缺失时按「unknown」客户端计数。
-- 修复后 TypeScript strict、ESLint 通过，Vitest **37 / 37** 通过（Node.js 24.21.0）。本次未重新执行浏览器、音频播放或 Vercel 线上验证；[电台验证记录](cloud-radio-validation.md) 中的「前 30 首」是 2026-09-15 当时的实际结果，现为 200 首。
+- 修复后 TypeScript strict、ESLint 通过，Vitest **37 / 37** 通过（Node.js 24.21.0）。本次未重新执行浏览器、音频播放或 Vercel 线上验证；[电台验证记录](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/cloud-radio-validation.md) 中的「前 30 首」是 2026-09-15 当时的实际结果，现为 200 首。
 - 限流计数保存在函数实例内存中，Vercel 多实例或冷启动后各自独立计数，只能拦截轻度滥用；这一边界未做线上压测。
 
 ## 云上电台（2026-09-15）
 
-已加入网易云公开歌单、Vercel Function 和可收起播放器，完成真实音频播放及 37 项测试。已修复服务端编译产物残留 `.ts` 导入的问题，并验证官方构建器生成的独立函数包。结果与部署边界见 [电台验证记录](cloud-radio-validation.md)。下方静态托管说明属于电台加入前的历史基线；当前电台需要 Node.js Function。
+已加入网易云公开歌单、Vercel Function 和可收起播放器，完成真实音频播放及 37 项测试。已修复服务端编译产物残留 `.ts` 导入的问题，并验证官方构建器生成的独立函数包。结果与部署边界见 [电台验证记录](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/cloud-radio-validation.md)。下方静态托管说明属于电台加入前的历史基线；当前电台需要 Node.js Function。
 
 ## 群岛、邮路与彩虹（2026-09-15）
 
@@ -133,17 +141,17 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 彩虹为场景内半透明几何体，边缘和两端渐隐，具有正常深度遮挡；白天可见，23:00 隐去，灯塔暖光亮起。
 - **28 / 28** 个核心测试通过，包括所有新航线阶段的连续性、两端停泊时速度归零、灯塔停留、主岛闭环、风车与灯塔气囊避让距离，以及寄信触发离港时保留灯塔停靠。
 - TypeScript、ESLint、生产构建通过。生产页无控制台 error / warn。
-- [真实 WebGL 原始结果](archipelago-engine-results.txt)：三次完整创建/销毁、暂停、寄信与送达、12 封信后的 GPU 资源回落、WebGL 不可用、context loss 与恢复均通过。连续十次 FPS 采样均为 **60**，217 draw calls，9686 instances，22 geometries，6 textures；测试设备仍为 GTX 1650。
+- [真实 WebGL 原始结果](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/archipelago-engine-results.txt)：三次完整创建/销毁、暂停、寄信与送达、12 封信后的 GPU 资源回落、WebGL 不可用、context loss 与恢复均通过。连续十次 FPS 采样均为 **60**，217 draw calls，9686 instances，22 geometries，6 textures；测试设备仍为 GTX 1650。
 - 实际捕获了飞艇停靠灯塔小站的画面；状态文字与停泊位置一致。测试用时间倍率已恢复为 ×1。
 - 检查了 1280×720 桌面与 390×844 竖屏；竖屏默认角度稍向正面调整，灯塔避开右侧按钮。手机尺寸来自桌面浏览器模拟，不代表真机性能。
 - 开发热更新时出现过 WebGL 创建失败，点击「重新启程」可恢复；生产预览重新加载和独立场景重建测试正常。
 
 | 状态 | 当前截图 |
 | --- | --- |
-| 群岛与柔和彩虹 | [桌面](screenshots/archipelago-desktop.png) |
-| 灯塔停靠 | [邮路](screenshots/archipelago-lighthouse-stop.png) |
-| 入夜：彩虹隐去，灯塔亮起 | [夜景](screenshots/archipelago-night.png) |
-| 正午竖屏构图 | [手机模拟](screenshots/archipelago-mobile.png) |
+| 群岛与柔和彩虹 | [桌面](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/archipelago-desktop.png) |
+| 灯塔停靠 | [邮路](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/archipelago-lighthouse-stop.png) |
+| 入夜：彩虹隐去，灯塔亮起 | [夜景](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/archipelago-night.png) |
+| 正午竖屏构图 | [手机模拟](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/archipelago-mobile.png) |
 
 以下章节保留迁移基线的历史结果；新增副岛和彩虹后，不再以原 HTML 的像素一致性作为扩展场景的验收标准。
 
@@ -151,10 +159,10 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 
 - Node.js **24.21.0**、npm **11.19.0**；官方 Node 压缩包通过 SHA-256 校验，临时运行时位于被 gitignore 排除的 `.tools/`，未替换系统 Node。
 - 使用官方 npm registry 真实安装，生成 `package-lock.json`。最终工具链使用 ESLint 10，所有插件 peer dependencies 匹配。
-- 正常 `npm ci`（只指定本项目缓存目录）、TypeScript strict、ESLint、Vitest、Vite 生产构建结果见 [原始工程输出](engineering-results.txt)。
+- 正常 `npm ci`（只指定本项目缓存目录）、TypeScript strict、ESLint、Vitest、Vite 生产构建结果见 [原始工程输出](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/engineering-results.txt)。
 - **19 / 19** 个核心逻辑测试通过：三个倍率、暂停/恢复、跨午夜、暂停中拖动时间、随机数精确复现、风力平滑与暂停、五个航线连接点、循环闭合、航线避开岛体、信件从出发到送达、自动画质的时间窗口及手动选档。
 - Vite 产物按 React UI、场景系统、Three.js 拆包；Three.js r160 及匹配类型均固定为 0.160.0。生产包没有运行时第三方 CDN、开发机器绝对路径、localhost、iframe 或服务端调用。
-- `npm run preview` 已实际运行。静态 HTTP 资源检查单独记录在 [资源结果](static-assets.json)。
+- `npm run preview` 已实际运行。静态 HTTP 资源检查单独记录在 [资源结果](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/static-assets.json)。
 - 初次清洁安装时 Windows 锁定了运行中 Vite 的原生模块；停止开发/预览进程后重新安装成功，未强行删除使用中的文件。
 
 ## 浏览器与交互
@@ -173,7 +181,7 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 - 选择低画质后 framebuffer 从 1600×900 调整至 1152×648；恢复自动可回到初始画质档。
 - 模拟 WebGL 不可用时 React 显示明确失败说明；恢复测试环境后点击「重新启程」，场景重新加载，页面中只保留一个画布。
 
-[真实 WebGL 验证原始结果](browser-engine-results.txt) 包含三次完整创建/销毁、重复 dispose、单一 RAF、信件资源回收、WebGL unavailable、context loss 及重新创建。测试会拦截自己的 requestAnimationFrame 计数：运行时 1 个待执行回调，销毁后 0 个；销毁后订阅不再触发。
+[真实 WebGL 验证原始结果](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/browser-engine-results.txt) 包含三次完整创建/销毁、重复 dispose、单一 RAF、信件资源回收、WebGL unavailable、context loss 及重新创建。测试会拦截自己的 requestAnimationFrame 计数：运行时 1 个待执行回调，销毁后 0 个；销毁后订阅不再触发。
 
 ## 视觉对照
 
@@ -185,15 +193,15 @@ Safari / iOS / Android 真机和公开部署仍需外部验证；本轮完成的
 
 | 场景 | 参考 | 迁移后 | RGB 平均绝对差（0–255） |
 | --- | --- | --- | --- |
-| 16:19:48 黄昏，默认视角 | [参考](screenshots/reference-dusk.png) | [迁移后](screenshots/migrated-dusk.png) | 0.3676 |
-| 12:00 白天，樱花树近景 | [参考](screenshots/reference-day.png) | [迁移后](screenshots/migrated-day.png) | 0.0000 |
-| 23:00 星夜，默认视角 | [参考](screenshots/reference-night.png) | [迁移后](screenshots/migrated-night.png) | 0.0000 |
+| 16:19:48 黄昏，默认视角 | [参考](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/reference-dusk.png) | [迁移后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/migrated-dusk.png) | 0.3676 |
+| 12:00 白天，樱花树近景 | [参考](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/reference-day.png) | [迁移后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/migrated-day.png) | 0.0000 |
+| 23:00 星夜，默认视角 | [参考](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/reference-night.png) | [迁移后](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/migrated-night.png) | 0.0000 |
 
 樱花树、邮局、浮岛、飞艇、动物、灯串与水面保留。黄昏微小差异来自主灯色的连续插值，替代原型的阈值突变。这组静止截图的一致性不代表所有动画帧都逐像素一致：离港/靠港加减速、灯光过渡和风力时钟经过了修正。
 
 ## 响应式
 
-首次视口设置未立即作用到已有页面，因此先用独立测试容器，给**当前生产页面**提供真实 390×844 和 844×390 子视口。随后也在原生 390×844 标签页确认了实际 innerWidth/innerHeight，并检查写信窗口与 Escape 返回焦点。该测试容器不进入 dist，未嵌入旧 HTML。DOM 实测 clientWidth 与 scrollWidth 相等，未发现横向溢出。已保存 [竖屏](screenshots/mobile-portrait.png)、[手机写信窗口](screenshots/mobile-letter.png) 与 [横屏](screenshots/mobile-landscape.png) 证据。
+首次视口设置未立即作用到已有页面，因此先用独立测试容器，给**当前生产页面**提供真实 390×844 和 844×390 子视口。随后也在原生 390×844 标签页确认了实际 innerWidth/innerHeight，并检查写信窗口与 Escape 返回焦点。该测试容器不进入 dist，未嵌入旧 HTML。DOM 实测 clientWidth 与 scrollWidth 相等，未发现横向溢出。已保存 [竖屏](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/mobile-portrait.png)、[手机写信窗口](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/mobile-letter.png) 与 [横屏](https://github.com/Ayi456/MyWeb/blob/ad8d56c01690654cc8d5939930f0f375712fe7d9/docs/screenshots/mobile-landscape.png) 证据。
 
 竖屏检查发现并修复了原型的远距离天空裁切与雾过浓问题：竖屏天空跟随相机，远裁面按比例扩展，雾密度补偿响应式相机距离；桌面默认条件不变。控制区与主场景分离，侧边触控区域保留 44 px。
 

@@ -41,7 +41,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     depthWrite: false,
     vertexShader:
       "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}",
-    fragmentShader: `uniform sampler2D image;uniform vec2 resolution;uniform float bloom;varying vec2 vUv;void main(){vec3 c=texture2D(image,vUv).rgb;for(int i=0;i<8;i++){float a=float(i)*.785398;vec2 d=vec2(cos(a),sin(a))/resolution;c+=max(texture2D(image,vUv+d*5.).rgb-.88,0.)*.027*bloom;c+=max(texture2D(image,vUv+d*13.).rgb-.90,0.)*.014*bloom;}c*=1.-.085*pow(length((vUv-.5)*vec2(1.,.8)),1.4);c+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/350.;gl_FragColor=vec4(c,1.);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
+    fragmentShader: `uniform sampler2D image;uniform vec2 resolution;uniform float bloom;varying vec2 vUv;void main(){vec3 c=texture2D(image,vUv).rgb;for(int i=0;i<8;i++){float a=float(i)*.785398;vec2 d=vec2(cos(a),sin(a))/resolution;c+=max(texture2D(image,vUv+d*5.).rgb-.88,0.)*.027*bloom;c+=max(texture2D(image,vUv+d*13.).rgb-.90,0.)*.014*bloom;}c*=1.-.085*pow(length((vUv-.5)*vec2(1.,.8)),1.4);float ao=0.;for(int i=0;i<4;i++){float angle=float(i)*1.5708;vec2 offset=vec2(cos(angle),sin(angle))/resolution*2.5;vec3 sampleColor=texture2D(image,vUv+offset).rgb;float sampleBrightness=dot(sampleColor,vec3(.299,.587,.114));float centerBrightness=dot(c,vec3(.299,.587,.114));ao+=step(centerBrightness,sampleBrightness-0.05)*0.15;}c*=1.-ao*0.25;c+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/350.;gl_FragColor=vec4(c,1.);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}`,
   });
   postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), postMat));
   const size = new T.Vector2();
