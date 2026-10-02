@@ -63,70 +63,83 @@ export function LetterDialog({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <section className="letter-card">
-        <button className="close" aria-label="关闭写信窗口" onClick={onClose}>
+      <section className="letter-card letter-compose">
+        <button
+          className="close letter-close"
+          aria-label="关闭写信窗口"
+          onClick={onClose}
+        >
           ×
         </button>
-        <div className="eyebrow">A LITTLE NOTE, A LONG WAY HOME</div>
-        <h2 id="letter-title">寄一封春天</h2>
-        <p id="letter-description">
-          {invitation}
-          <br />
-          也可以写给未来的自己。
-        </p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (composing.current || !text.trim() || count > 80) return;
-            if (onSend(text.trim())) {
-              setText("");
-              onClose();
-            } else setError("邮路有些热闹，请等几封信送达后再寄出。");
-          }}
-        >
-          <label htmlFor="letter-text">想随春风寄出的话</label>
-          <textarea
-            id="letter-text"
-            ref={input}
-            rows={3}
-            value={text}
-            placeholder="愿你每一天，都有一点小小的开心。"
-            required
-            aria-describedby="letter-counter privacy-note"
-            onCompositionStart={() => {
-              composing.current = true;
-            }}
-            onCompositionEnd={(e) => {
-              composing.current = false;
-              setText(limit(e.currentTarget.value));
-            }}
-            onChange={(e) =>
-              setText(
-                composing.current ? e.target.value : limit(e.target.value),
-              )
-            }
-          />
-          <div className="letter-counter" id="letter-counter">
-            {count} / 80 字
+        <div className="letter-body">
+          <div className="eyebrow">A LITTLE NOTE, A LONG WAY HOME</div>
+          <div className="letter-address" aria-hidden="true">
+            <span>FROM · 云上的春日邮局</span>
+            <span>TO · 心里想念的人</span>
           </div>
-          {paused && (
-            <p className="paused-note">
-              时间已暂停，恢复播放后信封才会继续移动。
-            </p>
-          )}
-          {error && <p role="alert">{error}</p>}
-          <button
-            className="action primary submit"
-            type="submit"
-            disabled={!text.trim() || count > 80}
+          <h2 id="letter-title">寄一封春天</h2>
+          <p id="letter-description">
+            {invitation}
+            <br />
+            也可以写给未来的自己。
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (composing.current || !text.trim() || count > 80) return;
+              if (onSend(text.trim())) {
+                setText("");
+                onClose();
+              } else setError("邮路有些热闹，请等几封信送达后再寄出。");
+            }}
           >
-            让心意随风出发 ↗
-          </button>
-        </form>
-        <div className="fine" id="privacy-note">
-          这是虚拟邮局，文字不会发送到外部服务。
-          <br />
-          信件文字仅留在当前页面内存中，刷新后清空。邮戳与回信可保存在此设备。
+            <label htmlFor="letter-text">想随春风寄出的话</label>
+            <textarea
+              id="letter-text"
+              ref={input}
+              rows={3}
+              value={text}
+              placeholder="愿你每一天，都有一点小小的开心。"
+              required
+              aria-describedby="letter-counter privacy-note"
+              onCompositionStart={() => {
+                composing.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composing.current = false;
+                setText(limit(e.currentTarget.value));
+              }}
+              onChange={(e) =>
+                setText(
+                  composing.current ? e.target.value : limit(e.target.value),
+                )
+              }
+            />
+            <div className="letter-counter" id="letter-counter">
+              {count} / 80 字
+            </div>
+            {paused && (
+              <p className="paused-note">
+                时间已暂停，恢复播放后信封才会继续移动。
+              </p>
+            )}
+            {error && <p role="alert">{error}</p>}
+            <button
+              className="action primary submit"
+              type="submit"
+              disabled={!text.trim() || count > 80}
+            >
+              <span>让心意随风出发</span>
+              <span className="action-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </button>
+          </form>
+          <div className="fine" id="privacy-note">
+            这是虚拟邮局，文字不会发送到外部服务。
+            <br />
+            信件文字仅留在当前页面内存中，刷新后清空。邮戳与回信可保存在此设备。
+          </div>
         </div>
       </section>
     </dialog>

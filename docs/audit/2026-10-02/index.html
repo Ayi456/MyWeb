@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>云上的春日邮局 · 设计与交互复核</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f5f0e9;
+        color: #51424b;
+        font:
+          15px/1.8 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1180px;
+        padding: 64px 28px;
+        margin: auto;
+      }
+      h1,
+      h2 {
+        font-family: Georgia, "Songti SC", SimSun, serif;
+        font-weight: 400;
+      }
+      h1 {
+        font-size: clamp(30px, 5vw, 48px);
+        margin: 8px 0 20px;
+      }
+      h2 {
+        margin: 48px 0 18px;
+        font-size: 28px;
+      }
+      .kicker {
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: #806574;
+      }
+      p {
+        max-width: 800px;
+      }
+      a {
+        color: #925d73;
+        text-underline-offset: 4px;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .phones {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 24px;
+      }
+      figure {
+        margin: 0;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid #d9c9cf;
+      }
+      figcaption {
+        font-size: 13px;
+        margin: 10px 0 22px;
+        color: #77636e;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 14px 10px;
+        vertical-align: top;
+        border-bottom: 1px solid #d9c9cf;
+      }
+      th:first-child {
+        width: 110px;
+      }
+      .note {
+        padding: 18px 22px;
+        background: #fffaf2;
+        border-left: 3px solid #925d73;
+      }
+      code {
+        font-size: 13px;
+      }
+      @media (max-width: 700px) {
+        main {
+          padding: 36px 20px;
+        }
+        .pair {
+          grid-template-columns: 1fr;
+        }
+        .phones {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="kicker">POSTCARDS FROM THE SKY · 2026.10.02</div>
+      <h1>让界面成为小岛的信纸。</h1>
+      <p>
+        本轮以现有原创 Three.js
+        群岛为视觉中心，调整排版、留白、层级、色彩、动效、微交互与响应式。保留场景模型、世界规则、音乐和数据行为，加入四季来信编号，让品牌表达与季节变化相连。
+      </p>
+      <p>
+        <a href="http://127.0.0.1:4173/?classic=1">打开本地生产预览</a> ·
+        <a href="layout-checks.json">查看尺寸测量记录</a>
+      </p>
+
+      <h2>01 / 桌面首屏 · 已复核</h2>
+      <div class="pair">
+        <figure>
+          <img src="01-desktop-before.jpg" alt="调整前的1440×900桌面画面" />
+          <figcaption>
+            调整前：标题、辅助文字与操作区域的层级偏弱，界面中的圆角卡片较多。
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="12-desktop-final.jpg" alt="调整后的1440×900桌面画面" />
+          <figcaption>
+            调整后：更明确的宋体标题、四季编号与深玫瑰色寄信入口；统一页边距、信纸边框和底部对齐。两张图均为春季复位视角，场景中的时间和事件有所不同。
+          </figcaption>
+        </figure>
+      </div>
+
+      <h2>02 / 手机与寄信 · 已复核</h2>
+      <div class="phones">
+        <figure>
+          <img src="03-mobile-before.jpg" alt="调整前390像素手机首屏" />
+          <figcaption>
+            调整前：漫游工具位于岛屿中央，底部存在多层背景模糊。
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="13-mobile-final.jpg" alt="调整后390像素手机首屏" />
+          <figcaption>
+            调整后：漫游移至下方边缘，底部操作分组更清楚，主要触控目标保持至少44像素高度。
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="14-letter-final.jpg"
+            alt="320×568短屏信纸，滚动后关闭按钮仍可见，提交按钮有键盘焦点"
+          />
+          <figcaption>
+            320×568：信纸内部滚动，关闭入口独立固定。输入后 Tab 到提交，再 Tab
+            回到关闭按钮；Escape 关闭并恢复触发按钮焦点。
+          </figcaption>
+        </figure>
+      </div>
+
+      <h2>03 / 昼夜与响应式 · 已复核</h2>
+      <div class="pair">
+        <figure>
+          <img src="15-night-final.jpg" alt="最终生产版本的冬夜桌面画面" />
+          <figcaption>
+            冬夜：浅色标题、深色纸面与浅玫瑰主按钮形成清楚层级；四季编号切换为04。
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="09-landscape.jpg" alt="844×390横屏布局" />
+          <figcaption>
+            横屏复核：隐藏非必要说明，工具栏改为两排，底部按钮与季节控件保持可见。此图为第二轮复核，最终轮另去除了面板背景模糊。
+          </figcaption>
+        </figure>
+      </div>
+
+      <h2>八项自检</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>处理与复核</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>排版</th>
+            <td>
+              扩大宋体标题，整理英文眉题、正文与辅助信息字号；输入框采用16px，避免小字输入。
+            </td>
+          </tr>
+          <tr>
+            <th>留白</th>
+            <td>
+              桌面以56px页边距组织内容；手机缩至26px，漫游入口移离场景中心。
+            </td>
+          </tr>
+          <tr>
+            <th>视觉层级</th>
+            <td>
+              寄信为唯一实色主行动；春风降为轻量次操作，邮路、季节和时钟分层排列。
+            </td>
+          </tr>
+          <tr>
+            <th>色彩</th>
+            <td>
+              深玫瑰、暖纸白与墨色统一控件；夜间反转主按钮明度，增强文字可读性。
+            </td>
+          </tr>
+          <tr>
+            <th>动效</th>
+            <td>
+              面板与信纸采用短距离淡入，按钮反馈控制在220–360ms；新增效果遵守减少动态效果媒体查询。
+            </td>
+          </tr>
+          <tr>
+            <th>微交互</th>
+            <td>
+              时间卡片与手机工具支持点外部、Escape关闭；暂停状态直接显示，手机工具打开弹窗后焦点返回可见入口。
+            </td>
+          </tr>
+          <tr>
+            <th>响应式</th>
+            <td>
+              检查320×568、约602×800、768×1024、844×390、1440×900；主要布局区域均位于视口内。短屏信纸关闭按钮实测位于y=26。
+            </td>
+          </tr>
+          <tr>
+            <th>原创性</th>
+            <td>
+              延续程序生成的邮局群岛，新增四季来信编号和收寄地址细节；没有替换成通用营销页面。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>验证与范围</h2>
+      <ul>
+        <li>
+          Vitest：27个测试文件、147项测试通过；类型检查、ESLint、生产构建及差异空白检查通过。
+        </li>
+        <li>
+          浏览器实测：寄信成功、空输入禁用、Tab循环、Escape关闭、时间暂停、季节切换、工具展开收起、拍照弹窗返回焦点。
+        </li>
+        <li>
+          首次引导出现时暂时收起电台入口，避免两个面板重叠；引导结束后恢复。
+        </li>
+        <li>
+          去除纸面控件的背景模糊，消除复核中发现的方形合成边缘，同时减少多层背景采样。
+        </li>
+      </ul>
+      <p class="note">
+        截图来自本次实际运行。验证使用 Codex 内置 Chromium
+        浏览器和视口模拟，未覆盖真实 iOS/Android 设备、屏幕阅读器或全量
+        Playwright 回归；减少动态效果分支经过代码检查。开发热更新曾出现 WebGL
+        上下文重建失败，重试恢复，独立生产预览未复现。构建仍有现有 Three.js
+        分包大于500kB的提示。
+      </p>
+    </main>
+  </body>
+</html>

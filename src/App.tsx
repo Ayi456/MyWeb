@@ -704,7 +704,7 @@ export default function App() {
         controlRef={radioControl}
         onPlaybackChange={setRadioPlaying}
         onEnergy={(energy) => controller.current?.setMusicEnergy(energy)}
-        hidden={hidden || !snapshot?.ready || !!error || blocked}
+        hidden={hidden || !snapshot?.ready || !!error || blocked || !!guideStep}
         night={(snapshot?.night ?? 0) > 0.63}
         onCaption={
           captions

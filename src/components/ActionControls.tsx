@@ -11,9 +11,15 @@ export function ActionControls({
 }) {
   return (
     <div className="actions">
+      <span className="action-caption" aria-hidden="true">
+        把想念，交给风。
+      </span>
       <button className="action primary" onClick={onWrite} disabled={disabled}>
         <SceneIcon name="letter" />
-        寄一封春天
+        <span>寄一封春天</span>
+        <span className="action-arrow" aria-hidden="true">
+          ↗
+        </span>
       </button>
       <button
         className={`action breeze ${wind.active ? "active" : ""}`}

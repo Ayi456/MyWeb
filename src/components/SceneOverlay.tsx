@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { useDismissablePanel } from "../hooks/useDismissablePanel";
 import type { SceneSnapshot } from "../scene/types";
 import { PhotoButton } from "./PhotoButton";
 import { SceneIcon } from "./SceneIcon";
@@ -36,18 +37,38 @@ export function SceneOverlay({
   replyCount: number;
   children: ReactNode;
 }) {
+  const debugParam = new URLSearchParams(location.search).get("debug");
   const debug =
-    import.meta.env.DEV ||
-    new URLSearchParams(location.search).get("debug") === "1";
+    debugParam === "1" || (import.meta.env.DEV && debugParam !== "0");
   const stampCount = snapshot?.stamps.length ?? 0;
   const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLElement>(null);
+  const toolsToggle = useRef<HTMLButtonElement>(null);
+  useDismissablePanel(
+    toolsRef,
+    toolsOpen,
+    () => setToolsOpen(false),
+    toolsToggle,
+  );
+  const season = snapshot?.season ?? "spring";
+  const edition = {
+    spring: ["01", "春日来信", "SPRING"],
+    summer: ["02", "夏日来信", "SUMMER"],
+    autumn: ["03", "秋日来信", "AUTUMN"],
+    winter: ["04", "冬日来信", "WINTER"],
+  }[season];
   const runTool = (action: () => void) => () => {
+    // Dialogs should return focus to the visible mobile launcher, not a tool
+    // that disappears when its menu collapses.
+    if (toolsOpen && toolsToggle.current?.offsetWidth)
+      toolsToggle.current.focus({ preventScroll: true });
     setToolsOpen(false);
     action();
   };
   return (
     <main
       className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""} ${arriving ? "arriving" : ""}`}
+      data-season={season}
     >
       {!hidden && (
         <>
@@ -61,6 +82,16 @@ export function SceneOverlay({
               <span>春日邮局</span>
             </h1>
             <div className="subtitle">写给远方，也写给你。</div>
+            <div
+              className="edition"
+              aria-label={`四时来信，第 ${edition[0]} 章：${edition[1]}`}
+            >
+              <span className="edition-number">{edition[0]}</span>
+              <span>
+                {edition[1]}
+                <small>{edition[2]} CORRESPONDENCE</small>
+              </span>
+            </div>
           </header>
           <button
             className={`stamp stamp-button ${replyCount || stampCount ? "has-mail" : ""}`}
@@ -73,7 +104,7 @@ export function SceneOverlay({
             <span>
               {stampCount
                 ? `STAMPS · ${String(stampCount).padStart(2, "0")}`
-                : "SPRING · 01"}
+                : `${edition[2]} · ${edition[0]}`}
             </span>
             <span className="stamp-caption">信箱 · 集章</span>
             {replyCount > 0 && (
@@ -85,12 +116,14 @@ export function SceneOverlay({
         </>
       )}
       <nav
+        ref={toolsRef}
         className={`side ${hidden ? "side-minimal" : ""} ${toolsOpen ? "tools-open" : ""}`}
         aria-label="场景视角"
       >
         {!hidden && (
           <>
             <button
+              ref={toolsToggle}
               className="side-toggle"
               aria-label={toolsOpen ? "收起漫游工具" : "展开漫游工具"}
               aria-expanded={toolsOpen}

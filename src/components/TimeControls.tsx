@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useDismissablePanel } from "../hooks/useDismissablePanel";
 import type { SceneSnapshot, Speed } from "../scene/types";
 export function TimeControls({
   snapshot,
@@ -16,6 +18,9 @@ export function TimeControls({
   onRealTime: (on: boolean) => void;
   classic: boolean;
 }) {
+  const panel = useRef<HTMLElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  useDismissablePanel(panel, !collapsed, onToggle, toggle);
   const hour = snapshot?.hour ?? 16.33,
     speed = snapshot?.speed ?? 1;
   const phase =
@@ -33,10 +38,12 @@ export function TimeControls({
     .padStart(2, "0")}`;
   return (
     <section
+      ref={panel}
       className={`time-panel ${collapsed ? "time-panel-collapsed" : ""}`}
       aria-label="时间控制"
     >
       <button
+        ref={toggle}
         className="time-toggle"
         aria-label={collapsed ? "显示时间卡片" : "隐藏时间卡片"}
         title={collapsed ? "显示时间卡片" : "隐藏时间卡片"}
@@ -49,7 +56,7 @@ export function TimeControls({
           <path d="M12 7v5l3 2" />
         </svg>
         <span className="time-summary" aria-hidden="true">
-          <span>{phase}</span>
+          <span>{speed === 0 ? "已暂停" : phase}</span>
           <time>{time}</time>
         </span>
       </button>
