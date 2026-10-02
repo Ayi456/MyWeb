@@ -1,0 +1,397 @@
+/* A bounded field guide: the index and close stay in reach while pages scroll. */
+.overlay:has(.handbook) {
+  z-index: 6;
+}
+.help.handbook {
+  top: clamp(24px, 10vh, 100px);
+  right: 166px;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  height: min(700px, calc(100dvh - 150px));
+  max-height: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fffcf6, #f8f0e9);
+}
+.night .help.handbook {
+  background: linear-gradient(145deg, #534a60, #3c364a);
+}
+.handbook-header {
+  flex: none;
+  position: relative;
+  padding: 26px 24px 0;
+  border-bottom: 1px solid var(--paper-edge);
+}
+.handbook-kicker {
+  font: 8px/1.5 var(--ui-font);
+  letter-spacing: 1.8px;
+  color: var(--muted);
+}
+.handbook-header .close {
+  top: 10px;
+  right: 10px;
+}
+.help.handbook h2 {
+  margin: 13px 0 8px;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1.4;
+}
+.handbook h2:focus,
+.handbook-section:focus {
+  outline: none;
+}
+.handbook p {
+  margin: 12px 0;
+  color: var(--muted);
+  font: 12px/1.9 var(--ui-font);
+}
+.handbook-header p {
+  margin: 0 0 15px;
+  font-size: 11px;
+}
+.handbook-index {
+  display: flex;
+  gap: 8px;
+}
+.handbook-index button {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 10px/1.5 var(--ui-font);
+  cursor: pointer;
+}
+.handbook-index span {
+  margin-left: 5px;
+  color: var(--ink);
+  font-size: 12px;
+}
+.handbook-index button:hover {
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+  border-radius: 8px 8px 0 0;
+}
+.handbook-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #b794a480 transparent;
+  scroll-padding-top: 8px;
+}
+.handbook-section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--paper-edge);
+}
+.handbook-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.handbook-section h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 14px;
+  font:
+    400 17px/1.6 Georgia,
+    "Songti SC",
+    "SimSun",
+    serif;
+}
+.handbook-section h3 > span {
+  color: var(--accent);
+  font: 10px/1.5 var(--ui-font);
+  letter-spacing: 1px;
+}
+.destination-list {
+  display: flex;
+  flex-direction: column;
+}
+.destination-list button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--paper-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.destination-list button:hover {
+  background: color-mix(in srgb, var(--accent-soft) 35%, transparent);
+}
+.destination-number {
+  color: var(--accent);
+  font:
+    italic 18px/1 Georgia,
+    serif;
+}
+.destination-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.destination-copy b {
+  font: 500 14px/1.4 var(--ui-font);
+}
+.destination-copy small {
+  color: var(--muted);
+  font: 11px/1.5 var(--ui-font);
+}
+.destination-arrow {
+  margin-left: auto;
+  padding: 0 6px;
+  color: var(--accent);
+  font: 18px/1 var(--ui-font);
+  transition: transform 180ms var(--ease-out);
+}
+.destination-list button:hover .destination-arrow {
+  transform: translate(2px, -2px);
+}
+.handbook-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: 12px/1.5 var(--ui-font);
+  cursor: pointer;
+}
+.handbook-action:hover {
+  background: var(--accent-soft);
+}
+.handbook .hotspot-keys {
+  margin: 18px 0;
+}
+.handbook .hotspot-keys button {
+  min-height: 44px;
+  border-color: var(--paper-edge);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+}
+.handbook .hotspot-keys button:hover {
+  background: var(--accent-soft);
+}
+.handbook-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 70px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--paper-edge);
+  cursor: pointer;
+}
+.handbook-setting > span {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.handbook-setting b {
+  font: 500 13px/1.5 var(--ui-font);
+}
+.handbook-setting small {
+  color: var(--muted);
+  font: 11px/1.7 var(--ui-font);
+}
+.handbook-setting input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.handbook .quality-label {
+  margin: 20px 0 12px;
+  font-size: 13px;
+}
+.handbook .handbook-fine {
+  font-size: 11px;
+}
+.handbook-shortcuts {
+  margin-top: 18px;
+  border-top: 1px solid var(--paper-edge);
+  font: 12px/1.8 var(--ui-font);
+}
+.handbook-shortcuts summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+}
+.handbook-shortcuts dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  font-size: 11px;
+}
+.handbook-shortcuts dd {
+  margin: 0;
+  color: var(--muted);
+}
+.handbook-footer {
+  flex: none;
+  padding: 13px 24px;
+  border-top: 1px solid var(--paper-edge);
+  color: var(--muted);
+  text-align: center;
+  font: 11px/1.5 var(--ui-font);
+  letter-spacing: 1px;
+}
+.side-label {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--paper-edge);
+  background: transparent;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.side-label:hover {
+  color: var(--accent);
+}
+.tour-cue {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: 16px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 24px;
+  background: var(--paper-surface);
+  box-shadow: var(--paper-shadow);
+  color: var(--ink);
+  font: 12px/1.5 var(--ui-font);
+  pointer-events: auto;
+}
+.tour-cue > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.tour-cue i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tour-cue button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  border-left: 1px solid var(--paper-edge);
+  border-radius: 0 24px 24px 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.tour-cue button:hover {
+  background: var(--accent-soft);
+}
+/* The collapsed player's empty wrapper must not intercept nearby controls. */
+.cloud-radio {
+  pointer-events: none;
+}
+.cloud-radio > * {
+  pointer-events: auto;
+}
+@media (max-width: 600px) {
+  .help.handbook {
+    top: max(20px, env(safe-area-inset-top));
+    right: 16px;
+    width: calc(100vw - 32px);
+    max-width: none;
+    height: calc(
+      100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+  }
+  .handbook-header {
+    padding: 22px 20px 0;
+  }
+  .handbook-body {
+    padding: 0 20px 18px;
+  }
+  .tour-cue {
+    top: 200px;
+    bottom: auto;
+    left: auto;
+    right: 26px;
+    transform: none;
+    padding: 0;
+    font-size: 11px;
+  }
+  .tour-cue > span {
+    display: none;
+  }
+  .tour-cue button {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 24px;
+  }
+  body:has(.radio-toggle[aria-expanded="true"]) .tour-cue {
+    visibility: hidden;
+  }
+}
+@media (max-height: 540px) and (min-width: 601px) {
+  .help.handbook {
+    top: 16px;
+    right: 110px;
+    height: calc(100dvh - 32px);
+  }
+  .handbook-header {
+    padding-top: 18px;
+  }
+  .handbook-header p,
+  .handbook-footer {
+    display: none;
+  }
+  .help.handbook h2 {
+    font-size: 22px;
+    margin: 8px 0;
+  }
+  .tour-cue {
+    top: 136px;
+    left: 170px;
+    right: auto;
+    transform: none;
+    padding: 0;
+  }
+  .tour-cue > span {
+    display: none;
+  }
+  .tour-cue button {
+    border: 0;
+    border-radius: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-cue {
+    display: none;
+  }
+  .destination-arrow {
+    transition: none;
+  }
+}

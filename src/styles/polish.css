@@ -34,8 +34,8 @@
 }
 .overlay.night::after {
   background:
-    radial-gradient(ellipse at 0 0, #28263850, transparent 44%),
-    linear-gradient(0deg, #27243499, transparent 24%);
+    radial-gradient(ellipse at 0 0, #242032ba, transparent 54%),
+    linear-gradient(0deg, #232032c4, transparent 31%);
 }
 .overlay:has(.side-minimal)::before,
 .overlay:has(.side-minimal)::after {

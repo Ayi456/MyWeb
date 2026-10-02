@@ -79,6 +79,7 @@ export interface SceneController {
   setSeason(index: number): void;
   setWind(active: boolean): void;
   setCameraPreset(preset: CameraPreset): void;
+  setAutoTour(enabled: boolean): void;
   setQuality(mode: QualityMode): void;
   setInteractionBlocked(blocked: boolean): void;
   setSound(on: boolean): void;

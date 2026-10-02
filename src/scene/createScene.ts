@@ -731,6 +731,10 @@ export function createScene(
         camera.setWalking(on);
         emit();
       },
+      setAutoTour(enabled) {
+        camera.setAutoTour(enabled);
+        emit();
+      },
       walkInput(direction, on) {
         camera.walkInput(direction, on);
       },

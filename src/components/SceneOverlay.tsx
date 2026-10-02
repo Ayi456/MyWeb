@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useDismissablePanel } from "../hooks/useDismissablePanel";
+import { isNightInterface } from "../content/interfaceTheme";
 import type { SceneSnapshot } from "../scene/types";
 import { PhotoButton } from "./PhotoButton";
 import { SceneIcon } from "./SceneIcon";
@@ -67,7 +68,7 @@ export function SceneOverlay({
   };
   return (
     <main
-      className={`overlay ${(snapshot?.night ?? 0) > 0.63 ? "night" : ""} ${arriving ? "arriving" : ""}`}
+      className={`overlay ${isNightInterface(snapshot?.hour ?? 16.33) ? "night" : ""} ${arriving ? "arriving" : ""}`}
       data-season={season}
     >
       {!hidden && (
@@ -132,9 +133,14 @@ export function SceneOverlay({
               <SceneIcon name="compass" />
               <span>{toolsOpen ? "收起" : "漫游"}</span>
             </button>
-            <span className="side-label" aria-hidden="true">
-              云间漫游
-            </span>
+            <button
+              className="side-label"
+              onClick={runTool(onHelp)}
+              aria-expanded={helpOpen}
+              aria-controls="help-panel"
+            >
+              探索群岛 <span aria-hidden="true">↗</span>
+            </button>
             <button
               className="round"
               aria-label="复位视角"

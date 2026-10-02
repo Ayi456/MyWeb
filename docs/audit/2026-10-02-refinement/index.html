@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>云上的春日邮局 · 第二轮设计复核</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f6f0e8;color:#51424b;font:15px/1.8 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1160px;margin:auto;padding:64px 28px}h1,h2{font-family:Georgia,"SimSun",serif;font-weight:400}h1{font-size:clamp(28px,4vw,44px);line-height:1.4}h2{margin-top:52px;font-size:26px}p{max-width:850px}small,.meta{color:#77636e}a{color:#925d73}figure{margin:0;background:#fffcf6;border:1px solid #d7c4ca;border-radius:12px;overflow:hidden}img{display:block;width:100%;height:auto}figcaption{padding:14px 18px;font-size:13px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}.phones{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:850px}.phones img{max-width:320px;margin:auto}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{text-align:left;padding:13px 16px;border-bottom:1px solid #d7c4ca;vertical-align:top}th{font-size:13px;color:#77636e}code{font-size:12px}@media(max-width:700px){main{padding:32px 18px}.pair,.phones{grid-template-columns:1fr}.phones{max-width:340px}td,th{padding:10px 8px}}
+</style>
+<main>
+<p class="meta">DESIGN REFINEMENT · 02 / 2026.10.02</p>
+<h1>让探索更清楚，<br>也让停留由你决定。</h1>
+<p>本轮以真实页面截图和交互检查为依据，继续处理黄昏对比度、指南溢出、目的地入口和自动镜头的控制问题。获奖网站作为品质方向；本记录不代表获奖认证，也不声称已不存在任何改进空间。</p>
+<table>
+<tr><th>检查维度</th><th>处理与结论</th></tr>
+<tr><td>排版、留白、层级</td><td>指南改为三个章节，五个目的地提前，以编号、标题、短句建立阅读顺序。标题和导航固定，正文独立滚动。</td></tr>
+<tr><td>色彩、可读性</td><td>界面主题与灯光强度分离，黄昏保留深色文字。夜间加强边缘衬底，手册改为不透明纸面。</td></tr>
+<tr><td>动效</td><td>新增「停在这里」，停止闲置漫游并保存本机偏好；手册可以恢复。新手引导期间暂停巡游，减少动态效果时隐藏巡游提示。</td></tr>
+<tr><td>微交互</td><td>章节跳转同时转移键盘焦点，关闭后返回入口；开始散步保留画布焦点。修复电台透明区域拦截点击、通知覆盖手册的问题。</td></tr>
+<tr><td>响应式</td><td>检查 1440×900、664×452、320×568。手册与关闭按钮均在可视区域内，页面无横向溢出；手机暂停入口与电台、邮路文字分开。</td></tr>
+<tr><td>原创性</td><td>延续项目原有的群岛、邮局与季节世界，使用每座岛的专属短句组织探索入口，没有套用奖项网站的布局。</td></tr>
+</table>
+<h2>黄昏：天空仍明亮，文字应保持清楚</h2>
+<div class="pair">
+<figure><img src="01-dusk-before.jpg" alt="修改前，黄昏界面提前使用浅色文字"><figcaption>修改前 · 664×452，浅色字与亮天空对比不足。</figcaption></figure>
+<figure><img src="08-dusk-after.jpg" alt="修改后，黄昏界面使用深色文字"><figcaption>修改后 · 同尺寸，黄昏保留深色文字。</figcaption></figure>
+</div>
+<p class="meta">截图来自不同模拟时刻和镜头位置，用于比较界面问题，并非逐像素相同的场景帧。</p>
+<h2>从长说明，变成可以出发的手册</h2>
+<div class="pair">
+<figure><img src="02-guide-before.jpg" alt="修改前的指南，内容超过屏幕底部"><figcaption>修改前 · 功能混在长说明中，面板底部越界。</figcaption></figure>
+<figure><img src="03-guide-after.jpg" alt="修改后的手册，目的地清晰排列"><figcaption>修改后 · 目的地优先，导航、关闭和页脚固定。</figcaption></figure>
+</div>
+<h2>小屏依然读得清、关得掉</h2>
+<div class="phones">
+<figure><img src="05-mobile-guide.jpg" alt="320像素宽手机的目的地手册"><figcaption>320×568 · 目的地。</figcaption></figure>
+<figure><img src="04-mobile-settings.jpg" alt="320像素宽手机的偏好设置"><figcaption>章节跳转后的偏好设置。</figcaption></figure>
+<figure><img src="06-mobile-night.jpg" alt="手机夜景中的电台和暂停漫游按钮"><figcaption>夜景与独立的暂停入口。</figcaption></figure>
+</div>
+<h2>横屏：正文滚动，操作始终在手边</h2>
+<figure><img src="07-landscape-guide.jpg" alt="664像素宽横屏中的手册"><figcaption>664×452 · 面板顶部 16px、底部 436px，关闭按钮在可视范围内。</figcaption></figure>
+<h2>验证记录</h2>
+<p><code>typecheck</code>、<code>lint</code>、<code>build</code>、<code>git diff --check</code> 通过。29 个测试文件共 151 项测试通过。新增测试覆盖黄昏主题边界、停止后长时间保持视角、手动目的地继续可用、恢复巡游及暂停/面板/减少动态效果约束。</p>
+<p>浏览器实测：鼠标和 Enter 暂停、恢复入口、刷新后偏好保留、目的地跳转、章节滚动、关闭后的焦点返回、进入散步后的画布焦点。生产构建已在本地 4173 端口复核。本轮未运行整套 Playwright 视觉回归；设备尺寸使用浏览器视口模拟，未宣称覆盖全部真实设备或完整无障碍认证。</p>
+<p class="meta">现有 Three.js 分块仍触发约 587 KB 的构建体积提示；本轮没有针对网络加载性能做专项优化。</p>
+</main>
+</html>

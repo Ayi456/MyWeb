@@ -45,6 +45,7 @@ import {
 } from "./content/treasure";
 import { buildSceneLink, parseSceneLink } from "./content/sceneLink";
 import { moonPhase } from "./content/moon";
+import { isNightInterface } from "./content/interfaceTheme";
 import { letterPrompt } from "./scene/systems/script";
 import {
   FESTIVAL_GREETING,
@@ -69,6 +70,9 @@ export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const radioControl = useRef<RadioControl>(null);
   const [radioPlaying, setRadioPlaying] = useState(false);
+  const [autoTour, setAutoTour] = useState(
+    () => !readPreference("tour-paused"),
+  );
   const [attempt, setAttempt] = useState(0),
     [mailOpen, setMailOpen] = useState(false),
     [postcardsOpen, setPostcardsOpen] = useState(false),
@@ -242,6 +246,10 @@ export default function App() {
     };
   }, [ready]);
   const blocked = mailOpen || helpOpen || postcardsOpen || photoOpen;
+  useEffect(() => {
+    if (ready) controller.current?.setAutoTour(autoTour && !guideStep);
+    writePreference("tour-paused", !autoTour);
+  }, [autoTour, guideStep, ready, controller]);
   useEffect(() => {
     if (!ready || guideDone || guideStep || hidden || blocked || error) return;
     const timer = setTimeout(() => {
@@ -577,6 +585,8 @@ export default function App() {
       >
         {helpOpen && (
           <HelpPanel
+            autoTour={autoTour}
+            onAutoTour={setAutoTour}
             quality={snapshot?.quality ?? "auto"}
             onQuality={(mode) => controller.current?.setQuality(mode)}
             sound={snapshot?.sound ?? false}
@@ -624,6 +634,21 @@ export default function App() {
             onClose={() => setHelpOpen(false)}
           />
         )}
+        {autoTour &&
+          ready &&
+          !guideStep &&
+          !blocked &&
+          !snapshot?.riding &&
+          !snapshot?.walkView &&
+          snapshot?.speed !== 0 && (
+            <aside className="tour-cue" aria-label="自动漫游">
+              <span>
+                <i aria-hidden="true" />
+                {snapshot?.autoOrbit ? "跟着风，去远方" : "闲下来，随风漫游"}
+              </span>
+              <button onClick={() => setAutoTour(false)}>停在这里</button>
+            </aside>
+          )}
         <footer className="bottom">
           <div className="notes">
             <div className="tiny">
@@ -705,7 +730,7 @@ export default function App() {
         onPlaybackChange={setRadioPlaying}
         onEnergy={(energy) => controller.current?.setMusicEnergy(energy)}
         hidden={hidden || !snapshot?.ready || !!error || blocked || !!guideStep}
-        night={(snapshot?.night ?? 0) > 0.63}
+        night={isNightInterface(snapshot?.hour ?? 16.33)}
         onCaption={
           captions
             ? (text) => notify({ kind: "tap", tone: "sound", text })

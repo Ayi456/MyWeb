@@ -6,6 +6,7 @@ import { registerServiceWorker } from "./pwa/register";
 import "./styles/global.css";
 import "./styles/overlay.css";
 import "./styles/polish.css";
+import "./styles/handbook.css";
 registerServiceWorker();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

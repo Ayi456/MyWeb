@@ -36,7 +36,8 @@ export function createCamera<Id extends string>(
   let lastInput = performance.now(),
     pinchDist = 0,
     blocked = false,
-    autoOrbit = false;
+    autoOrbit = false,
+    tourEnabled = true;
   // Follow mode keeps the focus on the airship; drag adjusts an offset around it.
   let followTarget: T.Object3D | null = null,
     followOffset = 0.55,
@@ -421,6 +422,18 @@ export function createCamera<Id extends string>(
     get autoOrbit() {
       return autoOrbit;
     },
+    setAutoTour(enabled: boolean) {
+      if (tourEnabled === enabled) return;
+      tourEnabled = enabled;
+      if (!enabled) {
+        tourEntry = null;
+        targetAz = az;
+        targetEl = el;
+        targetDistance = distance;
+        targetFocus.copy(focus);
+      }
+      interact();
+    },
     get orbited() {
       return orbited;
     },
@@ -480,6 +493,7 @@ export function createCamera<Id extends string>(
       }
       const wasTouring = autoOrbit;
       autoOrbit =
+        tourEnabled &&
         !pointers.size &&
         !blocked &&
         !reducedMotion &&
