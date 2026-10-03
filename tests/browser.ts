@@ -116,6 +116,7 @@ if (params.get("mode") === "visual") {
       assert(pending.size === 1, "one pending animation frame");
       controller!.setSpeed(0);
       const paused = snapshot!.simTime;
+      const pausedClouds = JSON.parse(canvas.dataset.diagnostics!).cloudTime;
       controller!.setTimeOfDay(23);
       controller!.setWind(true);
       assert(
@@ -128,6 +129,10 @@ if (params.get("mode") === "visual") {
           snapshot!.wind === 0 &&
           snapshot!.lettersInFlight === 1,
         "all simulation is paused while slider and letter UI work",
+      );
+      assert(
+        JSON.parse(canvas.dataset.diagnostics!).cloudTime === pausedClouds,
+        "cloud belts freeze with the paused simulation",
       );
       controller!.setSpeed(12);
       await until(() => snapshot!.deliveredCount === 1);
@@ -163,6 +168,12 @@ if (params.get("mode") === "visual") {
         assert(
           lowSnow.snowTime === winterData.snowTime,
           "snowfall motion freezes with the paused simulation",
+        );
+        assert(
+          lowSnow.cloudInstances > 0 &&
+            lowSnow.cloudInstances < winterData.cloudInstances &&
+            lowSnow.cloudTime === winterData.cloudTime,
+          "low quality reduces cloud detail without advancing the paused cloud clock",
         );
         controller!.setQuality("high");
         controller!.setSeason(0);

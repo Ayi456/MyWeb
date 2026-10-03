@@ -1,25 +1,92 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
 
-/** Geometry and palette migrated from the original spring-post-office.html. */
+const CLOUD_LAYERS = [
+  {
+    stretch: 1,
+    depth: 1,
+    thickness: 0.94,
+    lift: 0,
+    speed: 0.065,
+    bob: 0.14,
+    haze: 0.04,
+    colors: ["#efe4ed", "#fff4ea"],
+  },
+  {
+    stretch: 1.18,
+    depth: 1.12,
+    thickness: 0.56,
+    lift: 0.35,
+    speed: 0.038,
+    bob: 0.09,
+    haze: 0.3,
+    colors: ["#e6e6ec", "#f4f0ea"],
+  },
+  {
+    stretch: 1.5,
+    depth: 1.3,
+    thickness: 0.28,
+    lift: 1.1,
+    speed: 0.019,
+    bob: 0.045,
+    haze: 0.62,
+    colors: ["#e3e5e9", "#eef0ed"],
+  },
+] as const;
+
+/** Three cloud belts share one instanced draw, with cohesive motion per cloud. */
 export function createClouds(ctx: SceneContext) {
   const { scene, U, rand, range, PuffBatch: Batch, rod } = ctx;
-  // Sea of clouds. One instanced draw call, gently drifting with depth-faded color.
+  // A separate accumulated clock lets reduced motion stop without a phase jump.
+  const cloudTime = { value: 0 },
+    cloudTravel = { value: 0 };
   const cloudMat = new T.MeshStandardMaterial({
     roughness: 1,
     flatShading: false,
   });
   cloudMat.onBeforeCompile = (s) => {
-    s.uniforms.uTime = U.uTime;
-    s.uniforms.uCloudTravel = U.uCloudTravel;
+    s.uniforms.uCloudTime = cloudTime;
+    s.uniforms.uCloudTravel = cloudTravel;
     s.uniforms.uTide = U.uTide;
     s.vertexShader =
-      "uniform float uTime;\nuniform float uCloudTravel;\nuniform float uTide;\n" +
-      s.vertexShader;
-    // uTide lifts the whole sea for the morning mist, in world units.
+      `uniform float uCloudTime;
+       uniform float uCloudTravel;
+       uniform float uTide;
+       attribute vec4 cloudFlow;
+       attribute vec3 cloudAir;
+       varying float vCloudHaze;
+       varying float vCloudEdge;
+      ` + s.vertexShader;
+    // All seven lobes wrap and bob as a group. Displacement is in world units;
+    // dividing by instance scale keeps flattened distant clouds from bouncing.
     s.vertexShader = s.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\ntransformed.y+=sin(instanceMatrix[3].x*.18+uTime*.08)*.11;\ntransformed.x+=(mod(instanceMatrix[3].x+uCloudTravel+34.,68.)-34.-instanceMatrix[3].x)/instanceMatrix[0].x;\ntransformed.y+=uTide*(1.7+.35*sin(instanceMatrix[3].z*.3+uTime*.2))/instanceMatrix[1].y;",
+      `#include <begin_vertex>
+       float drift = uCloudTime * cloudFlow.y + uCloudTravel * cloudFlow.y / .065;
+       float centerX = mod(cloudFlow.x + drift + 50., 100.) - 50.;
+       float bob = (sin(uCloudTime * .12 + cloudFlow.w) - sin(cloudFlow.w)) * cloudFlow.z;
+       float tide = uTide * cloudAir.y * (1.7 + .35 * sin(cloudFlow.w + uCloudTime * .08));
+       transformed.x += (centerX - cloudFlow.x) / instanceMatrix[0].x;
+       transformed.y += (bob + tide) / instanceMatrix[1].y;
+       vCloudHaze = cloudAir.x;
+       vCloudEdge = smoothstep(39., 49., abs(centerX));
+      `,
+    );
+    s.fragmentShader =
+      "varying float vCloudHaze;\nvarying float vCloudEdge;\n" +
+      s.fragmentShader;
+    s.fragmentShader = s.fragmentShader.replace(
+      "#include <fog_fragment>",
+      `#include <fog_fragment>
+       #ifdef USE_FOG
+         // Use the live scene fog colour so haze follows dusk, rain and winter.
+         float distanceHaze = smoothstep(10., 46., vFogDepth) * vCloudHaze;
+         float rim = pow(clamp(1. - abs(dot(normal, normalize(vViewPosition))), 0., 1.), 3.);
+         float softness = rim * (.035 + vCloudHaze * .22);
+         float cloudFog = 1. - (1. - distanceHaze) * (1. - softness) * (1. - vCloudEdge);
+         gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, cloudFog);
+       #endif
+      `,
     );
   };
   const cloudBatch = new Batch(scene, cloudMat);
@@ -38,23 +105,50 @@ export function createClouds(ctx: SceneContext) {
       range(1.8, 3.2),
     ]);
   }
-  for (const [x, y, z, s] of cloudCenters) {
+  // Keep the original random draws above: later wildlife uses this same seed.
+  // Optional far clusters go last, allowing low quality to retain every belt.
+  const clusters = cloudCenters.map(([x, y, z, size], index) => {
+    const radius = Math.hypot(x, z);
+    const layer = radius < 12 ? 0 : radius < 23 ? 1 : 2;
+    return { x, y, z, size, layer, detail: layer === 2 && index % 2 === 1 };
+  });
+  clusters.sort((a, b) => Number(a.detail) - Number(b.detail));
+  const flow: number[] = [],
+    air: number[] = [];
+  const lowCloudCount = clusters.filter((cloud) => !cloud.detail).length * 7;
+  for (const { x, y, z, size: s, layer } of clusters) {
+    const profile = CLOUD_LAYERS[layer];
+    const phase = x * 0.18 + z * 0.09;
     for (let j = 0; j < 7; j++) {
       const t = j / 6,
-        dx = (t - 0.5) * s * 1.8;
+        dx = (t - 0.5) * s * 1.8 * profile.stretch;
       const size = s * (0.62 + Math.sin(t * Math.PI) * 0.34);
       cloudBatch.add(
         x + dx,
-        y + Math.sin(t * Math.PI) * 0.35,
-        z + Math.sin(j * 2.3) * s * 0.13,
-        size * 1.65,
-        size * 0.85,
-        size * 1.1,
-        j % 3 ? "#fff4ea" : "#efe4ed",
+        y + profile.lift + Math.sin(t * Math.PI) * 0.35 * profile.thickness,
+        z + Math.sin(j * 2.3) * s * 0.13 * profile.depth,
+        size * 1.65 * profile.stretch,
+        size * 0.85 * profile.thickness,
+        size * 1.1 * profile.depth,
+        profile.colors[j % 3 ? 1 : 0],
       );
+      flow.push(x, profile.speed, profile.bob, phase);
+      air.push(profile.haze, 1 - layer * 0.18, layer);
     }
   }
-  cloudBatch.build(false);
+  const cloudSea = cloudBatch.build(false);
+  cloudSea.name = "layered-cloud-sea";
+  // PuffBatch shares its sphere geometry with trees and other scenery. Keep
+  // these per-instance attributes on a private geometry owned by the tracker.
+  cloudSea.geometry = cloudSea.geometry.clone();
+  cloudSea.geometry.setAttribute(
+    "cloudFlow",
+    new T.InstancedBufferAttribute(new Float32Array(flow), 4),
+  );
+  cloudSea.geometry.setAttribute(
+    "cloudAir",
+    new T.InstancedBufferAttribute(new Float32Array(air), 3),
+  );
   for (const [x, y, z, s] of [
     [-12, -1.2, -12, 0.58],
     [10, -0.7, -18, 0.44],
@@ -87,5 +181,16 @@ export function createClouds(ctx: SceneContext) {
       );
     b.build(false);
   }
-  return { cloudMat };
+  return {
+    cloudMat,
+    cloudSea,
+    cloudTime,
+    cloudTravel,
+    lowCloudCount,
+    updateClouds(dt: number, wind: number, reducedMotion: boolean) {
+      if (dt <= 0 || reducedMotion) return;
+      cloudTime.value += dt;
+      cloudTravel.value += dt * wind * 0.45;
+    },
+  };
 }

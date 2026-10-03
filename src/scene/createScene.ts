@@ -356,6 +356,9 @@ export function createScene(
           snowParticles: objects.snow.visible ? objects.snow.count : 0,
           petalParticles: objects.petals.visible ? objects.petals.count : 0,
           snowTime: objects.snowTime.value,
+          cloudTime: objects.cloudTime.value,
+          cloudTravel: objects.cloudTravel.value,
+          cloudInstances: objects.cloudSea.count,
           gramophonePlaying: radioPlaying,
           gramophoneRotation: objects.gramophoneRecord.rotation.y,
           foghornCount: foghorn.count,
@@ -382,6 +385,10 @@ export function createScene(
       objects.sunLight.shadow.map = null;
       // Far-island decoration is the first thing to go on slow devices.
       objects.farDetail.forEach((g) => (g.visible = profile.farDetail));
+      objects.cloudSea.count =
+        quality.level === "low"
+          ? objects.lowCloudCount
+          : objects.cloudSea.instanceMatrix.count;
       resize();
     }
     applyQuality();
@@ -458,6 +465,7 @@ export function createScene(
         ctx.U.uTime.value = clock.time;
         ctx.U.uWind.value = motionWind;
         ctx.U.uCloudTravel.value = windSystem.cloudTravel;
+        objects.updateClouds(dt, wind, reducedMotion);
         ctx.U.uPetalTime.value = petalTime;
         // Seasons drift with the simulation clock; colours only rewrite when the blend moves.
         if (realTime && dt > 0) seasons.setYear(realSeasonYear());
@@ -630,7 +638,9 @@ export function createScene(
             instances:
               baseInstances -
               CONFIG.petals -
-              QUALITY.high.snow +
+              QUALITY.high.snow -
+              objects.cloudSea.instanceMatrix.count +
+              objects.cloudSea.count +
               (objects.petals.visible ? objects.petals.count : 0) +
               (objects.snow.visible ? objects.snow.count : 0) +
               delivery.count * 4,
