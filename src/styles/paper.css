@@ -1,0 +1,102 @@
+/* Small ink-and-paper accents; no full-screen textures or extra scene layers. */
+.title-foil {
+  --foil-ink: #634c53;
+  --foil-mid: #826458;
+  --foil-light: #a98468;
+  width: fit-content;
+  max-width: 100%;
+}
+.night .title-foil {
+  --foil-ink: #ead6d2;
+  --foil-mid: #efdac2;
+  --foil-light: #fff0d6;
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .title-foil {
+    /* Only the first layer moves; the small grain tile stays fixed. */
+    background-image:
+      linear-gradient(
+        112deg,
+        transparent 41%,
+        #ffe2bb08 45%,
+        #ffe2bb45 49%,
+        #fff0d461 50%,
+        #ffe2bb20 53%,
+        transparent 57%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 .25 0 0 0 0 .16 0 0 0 0 .13 0 0 0 .14 0'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23g)' d='M0 0h96v96H0z'/%3E%3C/svg%3E"),
+      linear-gradient(
+        165deg,
+        var(--foil-ink) 10%,
+        var(--foil-mid) 40%,
+        var(--foil-light) 51%,
+        var(--foil-mid) 60%,
+        var(--foil-ink) 90%
+      );
+    background-size:
+      300% 100%,
+      96px 96px,
+      100% 100%;
+    background-position:
+      100% 0,
+      0 0,
+      0 0;
+    background-repeat: no-repeat, repeat, no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ink-sheen 16s ease-in-out infinite;
+    animation-play-state: paused;
+  }
+}
+[data-paper-motion="running"] .title-foil {
+  animation-play-state: running;
+}
+/* A modal covers the heading; do not keep repainting it behind the backdrop. */
+.post-office:has(dialog[open]) .title-foil {
+  animation-play-state: paused;
+}
+[data-paper-motion="still"] .title-foil {
+  animation: none;
+}
+@keyframes ink-sheen {
+  0%,
+  58% {
+    background-position:
+      100% 0,
+      0 0,
+      0 0;
+  }
+  88%,
+  100% {
+    background-position:
+      0% 0,
+      0 0,
+      0 0;
+  }
+}
+.letter-card.paper-glow {
+  background:
+    radial-gradient(
+      ellipse 260px 190px at var(--paper-light-x, 28%) var(--paper-light-y, 16%),
+      #edcb9245,
+      #f4dbb924 48%,
+      transparent 78%
+    ),
+    radial-gradient(ellipse at 95% 100%, #edd5dc35, transparent 60%), #fffaf2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-foil {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .title-foil {
+    background: none;
+    color: CanvasText;
+    animation: none;
+  }
+  .letter-card.paper-glow {
+    background: Canvas;
+  }
+}

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { usePaperLight } from "../hooks/usePaperLight";
 
 export function PhotoDialog({
+  animateLight,
   hasLetter,
   onClose,
   onExport,
 }: {
+  animateLight: boolean;
   hasLetter: boolean;
   onClose: () => void;
   onExport: (includeLetter: boolean) => Promise<void>;
 }) {
+  const paperLight = usePaperLight(animateLight);
   const dialog = useRef<HTMLDialogElement>(null);
   const [includeLetter, setIncludeLetter] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,7 +42,7 @@ export function PhotoDialog({
         if (event.target === event.currentTarget && !busy) onClose();
       }}
     >
-      <section className="letter-card photo-card">
+      <section className="letter-card photo-card paper-glow" {...paperLight}>
         <button
           className="close"
           aria-label="关闭拍照窗口"

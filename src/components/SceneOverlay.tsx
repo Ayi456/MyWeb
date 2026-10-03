@@ -80,7 +80,7 @@ export function SceneOverlay({
             </div>
             <h1 className="title">
               <span className="title-prefix">云上的</span>
-              <span>春日邮局</span>
+              <span className="title-foil">春日邮局</span>
             </h1>
             <div className="subtitle">写给远方，也写给你。</div>
             <div

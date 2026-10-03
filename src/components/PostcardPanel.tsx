@@ -3,6 +3,7 @@ import { STAMPS } from "../scene/systems/postcards";
 import type { StampId } from "../scene/systems/postcards";
 import type { SeasonName } from "../scene/systems/season";
 import { SEASON_LABELS } from "../scene/systems/season";
+import { usePaperLight } from "../hooks/usePaperLight";
 
 export interface Reply {
   text: string;
@@ -10,6 +11,7 @@ export interface Reply {
   at: number;
 }
 export function PostcardPanel({
+  animateLight,
   replies,
   oldReplies,
   stamps,
@@ -17,6 +19,7 @@ export function PostcardPanel({
   onClear,
   onClose,
 }: {
+  animateLight: boolean;
   replies: Reply[];
   oldReplies: Reply[];
   stamps: StampId[];
@@ -24,6 +27,7 @@ export function PostcardPanel({
   onClear: () => void;
   onClose: () => void;
 }) {
+  const paperLight = usePaperLight(animateLight);
   const dialog = useRef<HTMLDialogElement>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   useEffect(() => {
@@ -51,7 +55,7 @@ export function PostcardPanel({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <section className="letter-card postcard-card">
+      <section className="letter-card postcard-card paper-glow" {...paperLight}>
         <button className="close" aria-label="关闭信箱" onClick={onClose}>
           ×
         </button>

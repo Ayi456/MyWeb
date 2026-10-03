@@ -59,6 +59,7 @@ import {
 } from "./components/noticeQueue";
 import { useSceneController } from "./hooks/useSceneController";
 import { isControl, useWindInput } from "./hooks/useWindInput";
+import { usePaperMotion } from "./hooks/usePaperMotion";
 
 const SOUND_KEY = "spring-post-office:sound";
 const SOUND_ASKED_KEY = "spring-post-office:sound-asked";
@@ -231,6 +232,11 @@ export default function App() {
   // Keep the loader mounted through its 0.7 s fade while the camera glides in,
   // and stagger the chrome in only during that window so H toggles stay instant.
   const ready = !!snapshot?.ready;
+  const paperMotion = usePaperMotion(
+    ready && !error,
+    snapshot?.speed === 0,
+    snapshot?.actualQuality === "low",
+  );
   const [settled, setSettled] = useState(false);
   useEffect(() => {
     if (!ready) {
@@ -557,7 +563,7 @@ export default function App() {
     }
   };
   return (
-    <>
+    <div className="post-office" data-paper-motion={paperMotion}>
       <SceneCanvas key={attempt} canvasRef={canvas} />
       {snapshot?.walkView && !blocked && !error && (
         <WalkControls
@@ -784,6 +790,7 @@ export default function App() {
       )}
       {postcardsOpen && (
         <PostcardPanel
+          animateLight={paperMotion === "running"}
           replies={replies}
           oldReplies={oldReplies}
           stamps={snapshot?.stamps ?? []}
@@ -802,6 +809,7 @@ export default function App() {
       )}
       {photoOpen && (
         <PhotoDialog
+          animateLight={paperMotion === "running"}
           hasLetter={!!lastLetter}
           onClose={() => setPhotoOpen(false)}
           onExport={async (includeLetter) => {
@@ -835,6 +843,6 @@ export default function App() {
       ) : (
         !loaderGone && <LoadingScreen done={!!snapshot?.ready} />
       )}
-    </>
+    </div>
   );
 }
