@@ -4,6 +4,7 @@ import { createContext } from "../src/scene/core/context";
 import { createSakura } from "../src/scene/objects/sakura";
 import { createCloudWhale } from "../src/scene/objects/cloudWhale";
 import { ResourceTracker } from "../src/scene/core/resourceTracker";
+import type { SeasonWeights } from "../src/scene/systems/season";
 
 describe("sculpted island scenery", () => {
   it("keeps the entire whale smile visible in front of its curved face", () => {
@@ -26,12 +27,13 @@ describe("sculpted island scenery", () => {
     expect(path.getPoint(0.5).y).toBeLessThan(path.getPoint(1).y);
   });
 
-  it("preserves seasonal crown blending while using a compact tree", () => {
+  it("keeps a dense instanced crown within seasonal culling bounds", () => {
     const ctx = createContext();
     const { tree, blossomCount } = createSakura(ctx);
-    expect(blossomCount).toBeLessThan(100);
-    const crown = tree.children.find(
-      (node) => node instanceof T.InstancedMesh && node.count === blossomCount,
+    expect(blossomCount).toBeGreaterThan(100);
+    expect(blossomCount).toBeLessThanOrEqual(180);
+    const crown = tree.getObjectByName(
+      "sakura-blossom-sprays",
     ) as T.InstancedMesh;
     const spring = new T.Color(),
       winter = new T.Color();
@@ -45,6 +47,38 @@ describe("sculpted island scenery", () => {
     expect(new T.Vector3().setFromMatrixScale(matrix).length()).toBeGreaterThan(
       0,
     );
+    const seasonalCrowns = [
+      crown,
+      tree.getObjectByName("sakura-leaf-sprays") as T.InstancedMesh,
+      tree.getObjectByName("sakura-branch-snow") as T.InstancedMesh,
+    ];
+    const seasons: SeasonWeights[] = [
+      [1, 0, 0, 0],
+      [0, 1, 0, 0],
+      [0, 0, 1, 0],
+      [0, 0, 0, 1],
+      [0, 0.5, 0.5, 0],
+    ];
+    const instanceBounds = new T.Sphere();
+    for (const weights of seasons) {
+      ctx.seasonal.apply(weights, true);
+      for (const mesh of seasonalCrowns) {
+        expect(mesh.frustumCulled).toBe(true);
+        expect(mesh.boundingSphere).not.toBeNull();
+        mesh.geometry.computeBoundingSphere();
+        const bounds = mesh.boundingSphere!;
+        for (let i = 0; i < mesh.count; i++) {
+          mesh.getMatrixAt(i, matrix);
+          instanceBounds
+            .copy(mesh.geometry.boundingSphere!)
+            .applyMatrix4(matrix);
+          expect(
+            bounds.center.distanceTo(instanceBounds.center) +
+              instanceBounds.radius,
+          ).toBeLessThanOrEqual(bounds.radius + 0.00001);
+        }
+      }
+    }
   });
   it("disposes shared rounded and organic geometry exactly once", () => {
     const ctx = createContext(),

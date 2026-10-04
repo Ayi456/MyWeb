@@ -49,9 +49,12 @@ export function createFallingPetals(ctx: SceneContext) {
     const index = inactive >= 0 ? inactive : particles.length;
     if (index >= maxPetals) return;
 
-    const x = SACRED_TREE.center[0] + (Math.random() - 0.5) * 5.8;
-    const y = 7.6 + Math.random() * 1.4;
-    const z = SACRED_TREE.center[1] + (Math.random() - 0.5) * 4.4;
+    const [treeX, treeZ] = SACRED_TREE.center;
+    const [sx, sy, sz] = SACRED_TREE.scale;
+    const x = treeX + (Math.random() - 0.5) * 3.6 * sx;
+    const y =
+      ctx.ground(treeX, treeZ) + 0.1 + (3.65 + Math.random() * 0.8) * sy;
+    const z = treeZ + (Math.random() - 0.5) * 2.8 * sz;
 
     const particle: Particle = {
       position: new T.Vector3(x, y, z),

@@ -105,7 +105,7 @@ export function createIslandDetails(
   // Low hydrangea borders sit outside the postal and walking routes. Larger
   // foliage masses make the existing fine meadow flowers read as planted beds.
   for (const [cx, cz, size, color] of [
-    [-4.45, 0.5, 0.74, "#ceb4da"],
+    [-4.45, 0.85, 0.74, "#ceb4da"],
     [-3.25, -1.9, 0.65, "#e4b6c7"],
     [-0.35, 2.8, 0.8, "#d9bfdc"],
     [1.55, 2.6, 0.7, "#efcfad"],

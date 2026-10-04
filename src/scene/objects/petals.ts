@@ -9,6 +9,11 @@ import { SACRED_TREE } from "../worldLayout";
  */
 export function createPetals(ctx: SceneContext) {
   const { world, U, cube, rand } = ctx;
+  const [treeX, treeZ] = SACRED_TREE.center;
+  const [scaleX, scaleY, scaleZ] = SACRED_TREE.scale;
+  const crownY = ctx.ground(treeX, treeZ) + 0.1 + 3.85 * scaleY;
+  const halfWidth = 2.4 * scaleX,
+    halfDepth = 1.45 * scaleZ;
   // Falling particles are GPU-instanced. Gust strength changes flow, not scene geometry count.
   const petalCount = CONFIG.petals,
     petalGeo = cube.clone(),
@@ -34,7 +39,7 @@ void main(){
   float speed=.045+aSeed.y*.016;
   float life=fract(aSeed.w+uPetalTime*speed);
   float a=life*6.283185+aSeed.z*25.;
-  vec3 p=vec3(${SACRED_TREE.center[0] - 3.8}+aSeed.x*7.6,8.+aSeed.y*2.-life*11.,${SACRED_TREE.center[1] - 2.2}+aSeed.z*4.4);
+  vec3 p=vec3(${treeX - halfWidth}+aSeed.x*${2 * halfWidth},${crownY}+aSeed.y*${scaleY.toFixed(2)}-life*${crownY + scaleY + 1},${treeZ - halfDepth}+aSeed.z*${2 * halfDepth});
   p.x+=life*(2.+uWind*4.);
   p.x+=sin(a+uTime*.3)*(.22+uWind*.45);
   p.z+=sin(a*1.5)*(.34+uWind*.6);

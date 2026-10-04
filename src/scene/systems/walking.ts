@@ -67,10 +67,10 @@ export function walkingObstacles(o: WorldObjects): WalkObstacle[] {
   result.push(...o.residentColliders);
   // The natural trunk is a merged mesh, so give it an explicit solid footprint.
   result.push({
-    minX: SACRED_TREE.center[0] - 0.5,
-    maxX: SACRED_TREE.center[0] + 0.5,
-    minZ: SACRED_TREE.center[1] - 0.45,
-    maxZ: SACRED_TREE.center[1] + 0.45,
+    minX: SACRED_TREE.center[0] - 0.34 * SACRED_TREE.scale[0],
+    maxX: SACRED_TREE.center[0] + 0.34 * SACRED_TREE.scale[0],
+    minZ: SACRED_TREE.center[1] - 0.3 * SACRED_TREE.scale[2],
+    maxZ: SACRED_TREE.center[1] + 0.3 * SACRED_TREE.scale[2],
     minY: 0,
     maxY: 6,
   });

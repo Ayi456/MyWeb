@@ -20,8 +20,8 @@ describe("island views and camera tour", () => {
     expect(CAMERA_VIEWS.tree).toEqual({
       azimuth: 0.31,
       elevation: 0.3,
-      distance: 23,
-      focus: [-0.9, 3.65, -0.85],
+      distance: 24,
+      focus: [-0.9, 5.5, -0.85],
     });
     for (const preset of CAMERA_PRESETS)
       expect(parseSceneLink(`?preset=${preset}`).cameraPreset).toBe(preset);

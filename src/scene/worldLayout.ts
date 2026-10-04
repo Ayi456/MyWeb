@@ -7,7 +7,7 @@ export const MAIN_ISLAND = {
 /** The sanctuary is the visual centre of the archipelago. */
 export const SACRED_TREE = {
   center: [-0.9, -0.85] as const,
-  scale: [1.6, 1.75, 1.6] as const,
+  scale: [1.9, 2.0, 1.9] as const,
 };
 export const MAIN_DOCK = {
   offset: [2.2, 0.16, 0] as const,

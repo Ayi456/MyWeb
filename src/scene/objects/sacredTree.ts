@@ -1,6 +1,8 @@
 import * as T from "three";
 import { type Point3, type SceneContext, TAU } from "../core/context";
 import { VoxelBatch } from "../utils/voxelBatch";
+import { createSacredAureole } from "./sacredAureole";
+import { createAureoleGlow } from "./aureoleGlow";
 
 /** Permanent votive ornaments remain legible beneath every seasonal crown. */
 export function createSacredTree(ctx: SceneContext, tree: T.Group) {
@@ -115,56 +117,8 @@ export function createSacredTree(ctx: SceneContext, tree: T.Group) {
       );
   }
 
-  // A fine gilded aureole frames the crown from behind, without a light beam.
-  const haloPoint = (angle: number, radius = 1): Point3 => [
-    -0.2 + Math.cos(angle) * 2.62 * radius,
-    3.18 + Math.sin(angle) * 1.64 * radius,
-    -0.91 + Math.sin(angle) * 0.12,
-  ];
-  for (let i = 0; i < 96; i++) {
-    const angle = (i * TAU) / 96;
-    ctx.rod(
-      gilding,
-      haloPoint(angle),
-      haloPoint(((i + 1) * TAU) / 96),
-      0.018,
-      paleGold,
-    );
-    if (i % 8 === 0) {
-      const [x, y, z] = haloPoint(angle);
-      pearls.add(x, y, z, 0.063, 0.063, 0.063, pearl);
-      if (i % 24 === 0)
-        crystals.add(
-          x,
-          y,
-          z,
-          0.105,
-          0.2,
-          0.065,
-          "#f5e4be",
-          0,
-          0,
-          angle - Math.PI / 2,
-        );
-    }
-  }
-  // A small crest at the crown's highest point catches the warm ambient light.
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * TAU) / 6;
-    pearls.add(
-      -0.2 + Math.sin(angle) * 0.1,
-      4.87 + Math.cos(angle) * 0.1,
-      -0.77,
-      0.055,
-      0.17,
-      0.043,
-      paleGold,
-      0,
-      0,
-      -angle,
-    );
-  }
-  crystals.add(-0.2, 4.87, -0.73, 0.105, 0.15, 0.08, "#fff0ca");
+  createSacredAureole(ctx, ornaments);
+  createAureoleGlow(ctx, ornaments);
 
   // Pendants hang from actual branches; long silk tails sit below the flowers.
   const anchors: Point3[] = [

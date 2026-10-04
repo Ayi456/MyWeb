@@ -27,8 +27,8 @@ export const CAMERA_VIEWS: Record<Exclude<CameraPreset, "ride">, CameraView> = {
   tree: {
     azimuth: 0.31,
     elevation: 0.3,
-    distance: 23,
-    focus: [SACRED_TREE.center[0], 3.65, SACRED_TREE.center[1]],
+    distance: 24,
+    focus: [SACRED_TREE.center[0], 5.5, SACRED_TREE.center[1]],
   },
   garden: {
     azimuth: 0.55,

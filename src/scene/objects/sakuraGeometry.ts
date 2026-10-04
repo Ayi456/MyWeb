@@ -120,7 +120,7 @@ function finish(data: GeometryData) {
 export function createBlossomSpray() {
   const random = seededRandom(39258);
   const data: GeometryData = { positions: [], colors: [] };
-  const flowerCount = 44;
+  const flowerCount = 52;
   for (let flower = 0; flower < flowerCount; flower++) {
     const azimuth = flower * 2.399963,
       h = 1 - (2 * (flower + 0.5)) / flowerCount;
@@ -184,7 +184,7 @@ export function createBlossomSpray() {
 export function createLeafSpray() {
   const random = seededRandom(67312);
   const data: GeometryData = { positions: [], colors: [] };
-  const leafCount = 52;
+  const leafCount = 64;
   for (let i = 0; i < leafCount; i++) {
     const angle = i * 2.399963,
       height = 1 - (2 * (i + 0.5)) / leafCount;

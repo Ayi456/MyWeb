@@ -128,6 +128,24 @@ export function createSakura(ctx: SceneContext) {
       ],
       radius: 0.09,
     },
+    {
+      points: [
+        [-0.07, 1.93, -0.03],
+        [-0.18, 2.39, 0.14],
+        [-0.02, 2.75, 0.25],
+        [-0.04, 3.42, 0.31],
+      ],
+      radius: 0.095,
+    },
+    {
+      points: [
+        [-0.08, 2.26, -0.1],
+        [0.24, 2.64, -0.57],
+        [0.63, 2.98, -1.05],
+        [0.89, 3.44, -1.43],
+      ],
+      radius: 0.087,
+    },
   ];
   for (const { points, radius } of limbs) branch(points, radius, 0.015);
   // Keep the long, low limb over the hanging seat.
@@ -164,11 +182,14 @@ export function createSakura(ctx: SceneContext) {
     [0.49, 3.13, 1.04, 0.86, 0.46, 0.69],
     [-0.87, 3.25, -1.18, 0.9, 0.46, 0.67],
     [-0.18, 4.05, 0.33, 0.77, 0.47, 0.67],
+    [-0.05, 3.4, 0.2, 0.75, 0.43, 0.65],
+    [0.67, 3.28, -1.28, 0.77, 0.45, 0.62],
   ];
+  const spraysPerLobe = 16;
   lobes.forEach(([x, y, z, rx, ry, rz], index) => {
     const origin = new T.Vector3(x * 0.7, y - 0.58, z * 0.66);
     const parent = new T.Vector3(
-      ...limbs[[0, 2, 5, 1, 4, 3, 6, 7][index]].points[2],
+      ...limbs[[0, 2, 5, 1, 4, 3, 6, 7, 8, 9][index]].points[2],
     );
     branch(
       [
@@ -179,14 +200,14 @@ export function createSakura(ctx: SceneContext) {
       0.038,
       0.018,
     );
-    for (let j = 0; j < 12; j++) {
+    for (let j = 0; j < spraysPerLobe; j++) {
       const angle = j * 2.399963 + index * 0.61;
-      const elevation = 1 - (2 * (j + 0.5)) / 12;
+      const elevation = 1 - (2 * (j + 0.5)) / spraysPerLobe;
       const radial = Math.sqrt(1 - elevation * elevation);
       const px = x + Math.cos(angle) * radial * rx * range(0.78, 1.08);
       const py = y + elevation * ry + range(-0.07, 0.09);
       const pz = z + Math.sin(angle) * radial * rz * range(0.8, 1.08);
-      const size = range(0.97, 1.29);
+      const size = range(1.05, 1.39);
       const yaw = range(0, TAU),
         tilt = range(-0.3, 0.3);
       blossoms.addSeasonal(
