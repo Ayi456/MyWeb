@@ -73,7 +73,7 @@ export function createCamera<Id extends string>(
   raycaster.layers.set(HIT_LAYER);
   const limits = CONFIG.cameraLimits;
   // Hover position projected onto a plane through the blossom canopy.
-  const hoverPlane = new T.Plane(new T.Vector3(0, 1, 0), -2.6),
+  const hoverPlane = new T.Plane(new T.Vector3(0, 1, 0), -4.8),
     pointerWorld = new T.Vector3(),
     hoverPoint = new T.Vector3();
   let pointerActive = false;

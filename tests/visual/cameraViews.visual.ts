@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { CAMERA_VIEWS } from "../../src/scene/core/cameraViews";
 import { clickSceneTool, clickTimeControl } from "./helpers";
 
 test("island views are keyboard reachable and their copied links replay", async ({
@@ -69,7 +70,7 @@ test("double clicking a hotspot glides towards its landmark", async ({
     .toBe("tree");
   await expect
     .poll(async () => (await diagnostics()).cameraView.distance)
-    .toBe(17);
+    .toBe(CAMERA_VIEWS.tree.distance);
   await expect
     .poll(async () => {
       const d = await diagnostics();
@@ -77,7 +78,7 @@ test("double clicking a hotspot glides towards its landmark", async ({
         ...d.camera.map((v: number, i: number) => v - d.cameraView.focus[i]),
       );
     })
-    .toBeCloseTo(17, 0);
+    .toBeCloseTo(CAMERA_VIEWS.tree.distance, 0);
 });
 
 test("idle touring stops for pause, panels and reduced motion", async ({

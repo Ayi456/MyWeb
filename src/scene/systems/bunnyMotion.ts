@@ -1,4 +1,5 @@
 import type { Bunny } from "../objects/bunny";
+import { MAIN_DOCK } from "../worldLayout";
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
@@ -17,7 +18,7 @@ export function courierPose(time: number, reduced = false) {
   const speed =
     turning || reduced ? 0 : (6 * (legTime / 5) * (1 - legTime / 5)) / 5;
   return {
-    x: 4.55 + (returning ? 1 - progress : progress) * 0.7,
+    x: 4.55 + MAIN_DOCK.offset[0] + (returning ? 1 - progress : progress) * 0.7,
     yaw,
     wheel: distance / 0.08,
     stride: Math.sin(distance * 32) * Math.min(1, speed * 5) * 0.24,

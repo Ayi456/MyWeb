@@ -30,9 +30,9 @@ export const CONFIG = {
   autoOrbitDelay: 8500,
   camera: {
     azimuth: 0.46,
-    elevation: 0.36,
-    distance: 25,
-    focus: [0.55, 1.55, 0] as const,
+    elevation: 0.39,
+    distance: 32,
+    focus: [0, 2.65, -0.6] as const,
   },
   cameraLimits: {
     minDistance: 12,

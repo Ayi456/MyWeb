@@ -1,4 +1,5 @@
 import { type SceneContext } from "../core/context";
+import { SACRED_TREE } from "../worldLayout";
 import {
   FLOWER_CENTER,
   FLOWER_LEAF,
@@ -14,7 +15,7 @@ export function createFlowers(ctx: SceneContext) {
   const beds = [
     [-3.5, 0.4],
     [-2.8, -1.6],
-    [-0.25, -1.1],
+    [-3.7, -2.7],
     [0.25, 2.1],
     [2.5, 1.9],
     [3.6, -1.05],
@@ -31,7 +32,7 @@ export function createFlowers(ctx: SceneContext) {
       (x / 4.9) ** 2 + (z / 3.5) ** 2 > 0.94 ||
       Math.abs(z - (0.85 + 0.31 * Math.sin(x * 1.15))) < 0.42 ||
       (x > 0.7 && x < 2.9 && z > -0.75 && z < 1.08) ||
-      Math.hypot(x + 1.8, z + 0.7) < 0.54 ||
+      Math.hypot(x - SACRED_TREE.center[0], z - SACRED_TREE.center[1]) < 1.88 ||
       ((x + 2.72) / 0.86) ** 2 + ((z - 1.38) / 0.7) ** 2 < 1 ||
       (x > -3.8 && x < -2.9 && z > 1.35 && z < 2.02) ||
       (x > -2.0 && x < -0.65 && z > 1.4 && z < 2.3) ||

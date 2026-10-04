@@ -8,6 +8,7 @@ import {
   TEA_ISLAND,
   VILLAGE_ISLAND,
   DEPOT_ISLAND,
+  SACRED_TREE,
 } from "../worldLayout";
 
 export const CAMERA_VIEWS: Record<Exclude<CameraPreset, "ride">, CameraView> = {
@@ -25,9 +26,9 @@ export const CAMERA_VIEWS: Record<Exclude<CameraPreset, "ride">, CameraView> = {
   },
   tree: {
     azimuth: 0.31,
-    elevation: 0.26,
-    distance: 17,
-    focus: [-0.4, 2.25, 0.2],
+    elevation: 0.3,
+    distance: 23,
+    focus: [SACRED_TREE.center[0], 3.65, SACRED_TREE.center[1]],
   },
   garden: {
     azimuth: 0.55,

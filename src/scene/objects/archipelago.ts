@@ -1,5 +1,5 @@
 import * as T from "three";
-import { type SceneContext, type Point3, TAU } from "../core/context";
+import { type SceneContext, TAU } from "../core/context";
 import { createSoftTerrain } from "./softTerrain";
 import { seededRandom } from "../utils/seededRandom";
 import { GARDEN_ISLAND, LIGHTHOUSE_ISLAND } from "../worldLayout";
@@ -352,55 +352,8 @@ export function createArchipelago(ctx: SceneContext) {
   }
   sails.build(false);
 
-  const bridge = new Batch();
-  const start = new T.Vector3(-4.6, 1.12, -1.12);
-  const end = new T.Vector3(
-    GARDEN_ISLAND.center[0] + GARDEN_ISLAND.radius[0] * 0.9,
-    GARDEN_ISLAND.center[1] + 0.17,
-    GARDEN_ISLAND.center[2] + 0.24,
-  );
-  const delta = end.clone().sub(start);
-  const side = new T.Vector3(-delta.z, 0, delta.x)
-    .normalize()
-    .multiplyScalar(0.31);
-  const angle = Math.atan2(-delta.z, delta.x);
-  const rails: [Point3[], Point3[]] = [[], []];
-  for (let i = 0; i <= 16; i++) {
-    const t = i / 16;
-    const p = start.clone().lerp(end, t);
-    p.y -= Math.sin(Math.PI * t) * 0.28;
-    bridge.add(
-      p.x,
-      p.y,
-      p.z,
-      0.125,
-      0.07,
-      0.67,
-      i % 3 ? "#d4b591" : "#e6cbab",
-      0,
-      angle,
-    );
-    for (let s = 0; s < 2; s++) {
-      const edge = p.clone().addScaledVector(side, s ? 1 : -1);
-      rails[s].push([edge.x, edge.y + 0.52, edge.z]);
-      if (i % 4 === 0) {
-        bridge.add(
-          edge.x,
-          edge.y + 0.26,
-          edge.z,
-          0.045,
-          0.58,
-          0.045,
-          "#aa9078",
-        );
-      }
-    }
-  }
-  for (const rail of rails) {
-    for (let i = 1; i < rail.length; i++)
-      rod(bridge, rail[i - 1], rail[i], 0.028, "#bba58d");
-  }
-  bridge.build(false);
+  // All island crossings, including the garden ramp, share the bridge network
+  // batches created by createIslandConnections.
 
   const lighthouseIsland = island(
     "lighthouse-island",

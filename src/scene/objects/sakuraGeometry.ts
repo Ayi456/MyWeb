@@ -120,9 +120,10 @@ function finish(data: GeometryData) {
 export function createBlossomSpray() {
   const random = seededRandom(39258);
   const data: GeometryData = { positions: [], colors: [] };
-  for (let flower = 0; flower < 32; flower++) {
+  const flowerCount = 44;
+  for (let flower = 0; flower < flowerCount; flower++) {
     const azimuth = flower * 2.399963,
-      h = 1 - (2 * (flower + 0.5)) / 32;
+      h = 1 - (2 * (flower + 0.5)) / flowerCount;
     const radius = Math.sqrt(1 - h * h) * (0.32 + random() * 0.17);
     const center = new T.Vector3(
       Math.cos(azimuth) * radius,
@@ -137,7 +138,7 @@ export function createBlossomSpray() {
         Math.sin(azimuth) * 0.62,
       ).normalize(),
     );
-    const size = 0.051 + random() * 0.025;
+    const size = 0.057 + random() * 0.027;
     for (let petal = 0; petal < 5; petal++) {
       const angle = (petal * TAU) / 5 + azimuth;
       const point = (radial: number, sideways: number, cup: number) =>
@@ -183,9 +184,10 @@ export function createBlossomSpray() {
 export function createLeafSpray() {
   const random = seededRandom(67312);
   const data: GeometryData = { positions: [], colors: [] };
-  for (let i = 0; i < 40; i++) {
+  const leafCount = 52;
+  for (let i = 0; i < leafCount; i++) {
     const angle = i * 2.399963,
-      height = 1 - (2 * (i + 0.5)) / 40;
+      height = 1 - (2 * (i + 0.5)) / leafCount;
     const radial = Math.sqrt(1 - height * height) * (0.3 + random() * 0.15);
     const center = new T.Vector3(
       Math.cos(angle) * radial,

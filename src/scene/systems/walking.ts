@@ -1,7 +1,7 @@
 import * as T from "three";
 import type { WalkView, WalkDirection } from "../types";
 import type { WorldObjects } from "../objects/createWorld";
-import { MAIN_ISLAND } from "../worldLayout";
+import { MAIN_ISLAND, MAIN_STREAM, SACRED_TREE } from "../worldLayout";
 
 export interface WalkTile {
   x: number;
@@ -31,6 +31,7 @@ export function walkingObstacles(o: WorldObjects): WalkObstacle[] {
     o.swing,
     o.mailbox,
     o.fenceMesh,
+    o.sanctuary,
   ]) {
     root.updateWorldMatrix(true, true);
     root.traverse((node) => {
@@ -63,6 +64,28 @@ export function walkingObstacles(o: WorldObjects): WalkObstacle[] {
     minY: 0,
     maxY: 3,
   });
+  result.push(...o.residentColliders);
+  // The natural trunk is a merged mesh, so give it an explicit solid footprint.
+  result.push({
+    minX: SACRED_TREE.center[0] - 0.5,
+    maxX: SACRED_TREE.center[0] + 0.5,
+    minZ: SACRED_TREE.center[1] - 0.45,
+    maxZ: SACRED_TREE.center[1] + 0.45,
+    minY: 0,
+    maxY: 6,
+  });
+  for (let i = 1; i < MAIN_STREAM.length; i++) {
+    const a = MAIN_STREAM[i - 1],
+      b = MAIN_STREAM[i];
+    result.push({
+      minX: Math.min(a[0], b[0]) - 0.15,
+      maxX: Math.max(a[0], b[0]) + 0.15,
+      minZ: Math.min(a[1], b[1]) - 0.17,
+      maxZ: Math.max(a[1], b[1]) + 0.17,
+      minY: 0,
+      maxY: 3,
+    });
+  }
   return result;
 }
 

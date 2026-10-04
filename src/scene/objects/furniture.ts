@@ -32,17 +32,23 @@ export function createFurniture(ctx: SceneContext, tree: T.Group) {
   bn.build();
   const swing = new T.Group();
   swing.position.set(-1.61, 2.7, 0.5);
+  // Keep the seat human-sized while the branch and suspension follow the sacred tree.
+  swing.scale.set(1 / tree.scale.x, 1 / tree.scale.y, 1 / tree.scale.z);
   tree.add(swing);
+  const anchorY = tree.position.y + swing.position.y * tree.scale.y;
+  const seatX = tree.position.x + swing.position.x * tree.scale.x;
+  const seatZ = tree.position.z + swing.position.z * tree.scale.z;
+  const drop = anchorY - ground(seatX, seatZ) - 0.42;
   const sb = new Batch(swing);
-  sb.add(0, -1.98, 0, 0.54, 0.08, 0.3, "#d9b68f");
-  sb.add(0, -1.92, 0, 0.38, 0.07, 0.22, "#f4d3d2");
+  sb.add(0, -drop, 0, 0.54, 0.08, 0.3, "#d9b68f");
+  sb.add(0, -drop + 0.06, 0, 0.38, 0.07, 0.22, "#f4d3d2");
   sb.build();
   for (const x of [-0.23, 0.23])
     line(
       swing,
       [
         [x, 0, 0],
-        [x, -1.94, 0],
+        [x, -drop + 0.04, 0],
       ],
       "#c9ae8a",
     );

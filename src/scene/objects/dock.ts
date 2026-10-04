@@ -1,12 +1,16 @@
 import * as T from "three";
 import { type SceneContext } from "../core/context";
-import { MAIN_ISLAND, MAIN_MAILBOX } from "../worldLayout";
+import { MAIN_DOCK, MAIN_ISLAND, MAIN_MAILBOX } from "../worldLayout";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createDock(ctx: SceneContext) {
   const { world, SoftBatch: Batch, mesh, rod, ground } = ctx;
   // Floating wooden landing and garden fences.
-  const dock = new Batch();
+  const dockGroup = new T.Group();
+  dockGroup.name = "main-island-airmail-landing";
+  dockGroup.position.set(...MAIN_DOCK.offset);
+  world.add(dockGroup);
+  const dock = new Batch(dockGroup);
   for (let i = 0; i < 32; i++)
     dock.add(
       3.83 + i * 0.133,
@@ -67,14 +71,14 @@ export function createDock(ctx: SceneContext) {
     dock.add(x, 1.43, -0.48, 0.04, 0.25, 0.04, "#a68b70");
   dock.build();
   const fence = new Batch();
-  for (let i = 0; i < 22; i++) {
-    const x = -4.0 + i * 0.38,
-      z = -2.65 * Math.sqrt(1 - (x / MAIN_ISLAND.radius[0]) ** 2);
+  for (let i = 0; i < 28; i++) {
+    const x = -5.6 + i * 0.41,
+      z = -4.05 * Math.sqrt(1 - (x / MAIN_ISLAND.radius[0]) ** 2);
     const y = ground(x, z);
     fence.add(x, y + 0.27, z, 0.065, 0.5, 0.065, "#e6d6b8");
-    if (i < 21) {
-      const nx = x + 0.38,
-        nz = -2.65 * Math.sqrt(1 - (nx / MAIN_ISLAND.radius[0]) ** 2),
+    if (i < 27 && !(x > 3.2 && x < 4.45)) {
+      const nx = x + 0.41,
+        nz = -4.05 * Math.sqrt(1 - (nx / MAIN_ISLAND.radius[0]) ** 2),
         ny = ground(nx, nz);
       rod(fence, [x, y + 0.39, z], [nx, ny + 0.39, nz], 0.047, "#ddc9ab");
       rod(fence, [x, y + 0.18, z], [nx, ny + 0.18, nz], 0.04, "#ddc9ab");

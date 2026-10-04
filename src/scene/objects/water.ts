@@ -1,5 +1,6 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
+import { MAIN_STREAM } from "../worldLayout";
 
 /** A calm spring pool that turns into a continuous ribbon before leaving the island. */
 export function createWater(ctx: SceneContext) {
@@ -42,17 +43,18 @@ export function createWater(ctx: SceneContext) {
   world.add(poolMesh);
 
   // The outflow is a curved ribbon with a foamy mouth, rather than separate blocks.
-  const streamPoints: [number, number, number][] = [
-    [-3.39, ground(-3.39, 1.57) + 0.115, 1.57],
-    [-3.58, ground(-3.58, 1.65) + 0.112, 1.65],
-    [-3.82, ground(-3.82, 1.74) + 0.108, 1.74],
-    [-4.05, ground(-4.05, 1.82) + 0.104, 1.82],
-    [-4.16, ground(-4.16, 1.87) + 0.102, 1.87],
-  ];
+  const streamPoints: [number, number, number][] = MAIN_STREAM.map(([x, z]) => [
+    x,
+    ground(x, z) + 0.12,
+    z,
+  ]);
   const streamCurve = new T.CatmullRomCurve3(
     streamPoints.map((p) => new T.Vector3(...p)),
   );
-  const streamMesh = new T.Mesh(ribbonGeometry(streamCurve, 0.3, 24), poolMat);
+  const streamMesh = new T.Mesh(
+    ribbonGeometry(streamCurve, 0.34, 40, ground),
+    poolMat,
+  );
   streamMesh.renderOrder = 8;
   streamMesh.castShadow = false;
   streamMesh.receiveShadow = false;
@@ -65,7 +67,8 @@ export function createWater(ctx: SceneContext) {
     depthWrite: false,
   });
   const foam = new T.Group();
-  foam.position.set(-4.13, streamPoints.at(-1)![1] + 0.006, 1.86);
+  const mouth = streamPoints.at(-1)!;
+  foam.position.set(mouth[0], mouth[1] + 0.006, mouth[2]);
   world.add(foam);
   for (let i = 0; i < 5; i++) {
     const bead = new T.Mesh(
@@ -144,17 +147,17 @@ export function createWater(ctx: SceneContext) {
     depthWrite: false,
     side: T.DoubleSide,
     vertexShader: `uniform float uTime;varying vec3 vP;void main(){vP=position;vec3 p=position;p.x+=sin(position.y*3.+uTime*1.3)*.025;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,
-    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.*(1.-uSeason.w*.9));float side=1.-smoothstep(.05,.29,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c=mix(c,vec3(.86,.92,.98),uSeason.w*.8);c*=1.-uNight*.40;float fade=smoothstep(-3.35,-2.7,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);
+    fragmentShader: `uniform float uTime;uniform float uNight;uniform vec4 uSeason;varying vec3 vP;void main(){float f=.5+.5*sin(vP.y*26.+uTime*7.*(1.-uSeason.w*.9));float side=1.-smoothstep(.05,.29,abs(vP.x));vec3 c=mix(vec3(.49,.74,.74),vec3(.91,.97,.88),pow(f,6.));c=mix(c,vec3(.86,.92,.98),uSeason.w*.8);c*=1.-uNight*.40;float fade=smoothstep(-2.65,-2.1,vP.y);gl_FragColor=vec4(c,(.45+.2*f)*side*fade);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>}`,
   });
   const waterfall = mesh(
-    new T.PlaneGeometry(0.58, 4.25, 2, 48),
+    new T.PlaneGeometry(0.58, 5.3, 2, 48),
     fallMat,
     world,
-    -4.22,
-    -0.98,
-    1.89,
+    mouth[0] - 0.06,
+    mouth[1] - 2.65,
+    mouth[2],
   );
   waterfall.rotation.y = -0.18;
   waterfall.renderOrder = 9;
@@ -166,6 +169,7 @@ function ribbonGeometry(
   curve: T.CatmullRomCurve3,
   width: number,
   segments: number,
+  height: (x: number, z: number) => number,
 ) {
   const positions: number[] = [],
     uvs: number[] = [],
@@ -177,6 +181,7 @@ function ribbonGeometry(
       side = new T.Vector3(-tangent.z, 0, tangent.x).multiplyScalar(width / 2);
     for (const sign of [-1, 1]) {
       const p = point.clone().addScaledVector(side, sign);
+      p.y = height(p.x, p.z) + 0.12;
       positions.push(p.x, p.y, p.z);
       uvs.push(sign < 0 ? 0 : 1, t);
     }

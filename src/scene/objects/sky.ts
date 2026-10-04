@@ -1,5 +1,6 @@
 import * as T from "three";
 import { type SceneContext } from "../core/context";
+import { SACRED_TREE } from "../worldLayout";
 
 /** Geometry and palette migrated from the original spring-post-office.html. */
 export function createSky(ctx: SceneContext) {
@@ -35,10 +36,10 @@ export function createSky(ctx: SceneContext) {
   sunLight.castShadow = true;
   sunLight.shadow.mapSize.set(1024, 1024);
   Object.assign(sunLight.shadow.camera, {
-    left: -9,
-    right: 9,
-    top: 9,
-    bottom: -9,
+    left: -12,
+    right: 12,
+    top: 12,
+    bottom: -12,
     near: 0.1,
     far: 38,
   });
@@ -48,8 +49,12 @@ export function createSky(ctx: SceneContext) {
   const fill = new T.DirectionalLight("#b9dbe4", 1.4);
   fill.position.set(5, 4, -8);
   scene.add(fill);
-  const treeLight = new T.PointLight("#ffc3d4", 0, 10, 2);
-  treeLight.position.set(-1, 3, 1);
+  const treeLight = new T.PointLight("#ffe0b3", 0, 15, 2);
+  treeLight.position.set(
+    SACRED_TREE.center[0],
+    4.2,
+    SACRED_TREE.center[1] + 1.2,
+  );
   scene.add(treeLight);
   const officeLight = new T.PointLight("#ffd79e", 1.8, 6, 2);
   officeLight.position.set(1.1, 2.1, 1.2);

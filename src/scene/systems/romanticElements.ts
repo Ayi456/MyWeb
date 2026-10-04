@@ -1,5 +1,6 @@
 import * as T from "three";
 import { type SceneContext } from "../core/context";
+import { SACRED_TREE } from "../worldLayout";
 
 interface Particle {
   position: T.Vector3;
@@ -48,10 +49,9 @@ export function createFallingPetals(ctx: SceneContext) {
     const index = inactive >= 0 ? inactive : particles.length;
     if (index >= maxPetals) return;
 
-    // 从樱花树位置生成 (-1.8, y, -0.7)
-    const x = -1.8 + (Math.random() - 0.5) * 2.2;
-    const y = 2.8 + Math.random() * 0.8;
-    const z = -0.7 + (Math.random() - 0.5) * 2.0;
+    const x = SACRED_TREE.center[0] + (Math.random() - 0.5) * 5.8;
+    const y = 7.6 + Math.random() * 1.4;
+    const z = SACRED_TREE.center[1] + (Math.random() - 0.5) * 4.4;
 
     const particle: Particle = {
       position: new T.Vector3(x, y, z),
@@ -167,7 +167,7 @@ export function createFireflies(ctx: SceneContext) {
 
   // 萤火虫出现区域（花丛和树周围）
   const zones = [
-    { x: -1.8, z: -0.7, radius: 1.5 }, // 樱花树
+    { x: SACRED_TREE.center[0], z: SACRED_TREE.center[1], radius: 2.2 },
     { x: -3.5, z: 0.4, radius: 0.8 }, // 花床
     { x: -2.8, z: -1.6, radius: 0.8 },
     { x: 0.25, z: 2.1, radius: 0.8 },

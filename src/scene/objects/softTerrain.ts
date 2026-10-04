@@ -266,10 +266,11 @@ export function createSoftTerrain(
   );
   soil.castShadow = castShadow;
   soil.name = "sculpted-island-soil";
-  const rings: [number, number][] = Array.from({ length: 19 }, (_, i) => [
-    i / 18,
-    0.09,
-  ]);
+  const radialSegments = Math.max(18, Math.ceil(Math.max(...radius) * 3.6));
+  const rings: [number, number][] = Array.from(
+    { length: radialSegments + 1 },
+    (_, i) => [i / radialSegments, 0.09],
+  );
   rings.push([1.006, 0.045], [1.004, -0.05], [0.98, -0.18]);
   const grass = ctx.mesh(makeGeometry(rings, true), grassMaterial, parent);
   grass.castShadow = castShadow;

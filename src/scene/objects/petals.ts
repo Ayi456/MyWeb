@@ -1,6 +1,7 @@
 import * as T from "three";
 import { type SceneContext } from "../core/context";
 import { CONFIG } from "../config";
+import { SACRED_TREE } from "../worldLayout";
 
 /**
  * Island-local cherry petals and falling leaves. Winter uses a separate,
@@ -33,7 +34,7 @@ void main(){
   float speed=.045+aSeed.y*.016;
   float life=fract(aSeed.w+uPetalTime*speed);
   float a=life*6.283185+aSeed.z*25.;
-  vec3 p=vec3(-3.9+aSeed.x*4.8,5.+aSeed.y*1.35-life*8.,-1.5+aSeed.z*3.0);
+  vec3 p=vec3(${SACRED_TREE.center[0] - 3.8}+aSeed.x*7.6,8.+aSeed.y*2.-life*11.,${SACRED_TREE.center[1] - 2.2}+aSeed.z*4.4);
   p.x+=life*(2.+uWind*4.);
   p.x+=sin(a+uTime*.3)*(.22+uWind*.45);
   p.z+=sin(a*1.5)*(.34+uWind*.6);

@@ -104,7 +104,7 @@ export function createDayNight(ctx: SceneContext, o: WorldObjects) {
     o.fill.intensity = 0.8;
     ctx.lampMat.emissiveIntensity = 0.2 + night * 2.2;
     o.officeLight.intensity = 0.5 + night * 4.8;
-    o.treeLight.intensity = night * 8 * (1 - winter * 0.6);
+    o.treeLight.intensity = night * 15 * (1 - winter * 0.35);
     o.beaconLight.intensity = 0.15 + night * 5;
     o.beaconGlow.material.opacity = 0.06 + night * 0.72;
     o.teaLight.intensity = night * 3.2;

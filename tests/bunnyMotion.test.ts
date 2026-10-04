@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createContext } from "../src/scene/core/context";
 import { createBunny } from "../src/scene/objects/bunny";
+import { MAIN_DOCK } from "../src/scene/worldLayout";
 import {
   courierPose,
   updateBunnyMotion,
@@ -47,13 +48,13 @@ describe("courier dock motion", () => {
         Math.abs(Math.cos(yaw)) * 0.24 + Math.abs(Math.sin(yaw)) * 0.22;
       const halfZ =
         Math.abs(Math.sin(yaw)) * 0.24 + Math.abs(Math.cos(yaw)) * 0.22;
-      expect(x - dx - halfX).toBeGreaterThan(3.768);
-      expect(x - dx + halfX).toBeLessThan(6.02);
+      expect(x - dx - halfX).toBeGreaterThan(3.768 + MAIN_DOCK.offset[0]);
+      expect(x - dx + halfX).toBeLessThan(6.02 + MAIN_DOCK.offset[0]);
       expect(0.17 - dz - halfZ).toBeGreaterThan(-0.43);
       expect(0.17 - dz + halfZ).toBeLessThan(0.77);
       expect(Math.abs(dz) + 0.18).toBeLessThan(0.5);
-      expect(x + dx - 0.18).toBeGreaterThan(3.768);
-      expect(x + dx + 0.18).toBeLessThan(6.02);
+      expect(x + dx - 0.18).toBeGreaterThan(3.768 + MAIN_DOCK.offset[0]);
+      expect(x + dx + 0.18).toBeLessThan(6.02 + MAIN_DOCK.offset[0]);
     }
   });
 

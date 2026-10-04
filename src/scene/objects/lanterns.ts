@@ -35,12 +35,19 @@ export function createLanterns(ctx: SceneContext) {
     l.add(0, 0, 0, 0.18, 0.22, 0.18, "#ffdbb7");
     l.add(0, 0.13, 0, 0.12, 0.07, 0.12, "#ffe6c6");
     l.add(0, -0.13, 0, 0.12, 0.05, 0.12, "#efc290");
-    l.build(false);
+    const light = l.build(false);
     const b = new Batch(g);
     b.add(0, 0.18, 0, 0.15, 0.03, 0.15, "#b38e71");
     b.add(0, -0.17, 0, 0.15, 0.025, 0.15, "#b38e71");
     b.add(0, -0.22, 0, 0.02, 0.075, 0.02, "#b98c7a");
-    b.build(false);
+    const frame = b.build(false);
+    // The sacred grove has many small ornaments; offscreen lanterns need no draws.
+    // Only their parent group sways, so local geometry bounds stay valid.
+    for (const mesh of [light, frame]) {
+      mesh.computeBoundingSphere();
+      mesh.boundingSphere!.radius *= 1.06;
+      mesh.frustumCulled = true;
+    }
     const sm = new T.SpriteMaterial({
       map: glowTex,
       transparent: true,

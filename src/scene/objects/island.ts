@@ -7,7 +7,7 @@ import { createIslandDetails } from "./islandDetails";
 export function createIsland(ctx: SceneContext) {
   const { world, rockMat, rand, range, PuffBatch, SoftBatch, ground } = ctx;
   const { step, radius, gridOrigin } = MAIN_ISLAND;
-  const { soil } = createSoftTerrain(ctx, world, radius, 3.9, ground, true);
+  const { soil } = createSoftTerrain(ctx, world, radius, 4.8, ground, true);
   const walkTiles: { x: number; z: number; y: number }[] = [];
   for (let x = gridOrigin[0]; x <= -gridOrigin[0]; x += step)
     for (let z = gridOrigin[1]; z <= -gridOrigin[1]; z += step) {
@@ -52,7 +52,7 @@ export function createIsland(ctx: SceneContext) {
   for (let i = 0; i < 15; i++) {
     const a = rand() * TAU,
       r = range(0.6, 1.7),
-      y = range(-3.7, -2.95),
+      y = range(-4.6, -3.85),
       s = range(0.14, 0.34);
     rocks.add(
       Math.cos(a) * r,

@@ -4,6 +4,8 @@ import { type SceneContext, type Point3, TAU } from "../core/context";
 import { fallenPetal } from "./seasonalColors";
 import { seededRandom } from "../utils/seededRandom";
 import { VoxelBatch } from "../utils/voxelBatch";
+import { SACRED_TREE } from "../worldLayout";
+import { createSacredTree } from "./sacredTree";
 import {
   createBarkTexture,
   createBlossomSpray,
@@ -17,7 +19,9 @@ export function createSakura(ctx: SceneContext) {
   const range = (a: number, b: number) => a + (b - a) * random();
   const tree = new T.Group();
   tree.name = "sakura-tree";
-  tree.position.set(-1.8, ground(-1.8, -0.7) + 0.1, -0.7);
+  const [treeX, treeZ] = SACRED_TREE.center;
+  tree.position.set(treeX, ground(treeX, treeZ) + 0.1, treeZ);
+  tree.scale.set(...SACRED_TREE.scale);
   world.add(tree);
 
   const wood: T.BufferGeometry[] = [];
@@ -32,8 +36,8 @@ export function createSakura(ctx: SceneContext) {
       [-0.02, 2.18, -0.05],
       [-0.17, 2.86, -0.3],
     ],
-    0.255,
-    0.072,
+    0.285,
+    0.08,
   );
   // Root buttresses blend into the soil rather than ending in round beads.
   for (let i = 0; i < 7; i++) {
@@ -115,6 +119,15 @@ export function createSakura(ctx: SceneContext) {
       ],
       radius: 0.083,
     },
+    {
+      points: [
+        [-0.13, 2.55, -0.22],
+        [-0.06, 3.03, 0.09],
+        [-0.21, 3.64, 0.28],
+        [-0.18, 4.12, 0.34],
+      ],
+      radius: 0.09,
+    },
   ];
   for (const { points, radius } of limbs) branch(points, radius, 0.015);
   // Keep the long, low limb over the hanging seat.
@@ -141,7 +154,7 @@ export function createSakura(ctx: SceneContext) {
   const spring = ["#f8dce2", "#efc4d2", "#f6d3dc", "#e9b7ca", "#f9e4e7"];
   const summer = ["#65935e", "#7aa267", "#91ad72", "#577f54"];
   const autumn = ["#d79345", "#c16937", "#e1a554", "#a75236"];
-  // Each open spray follows a real branchlet. Gaps reveal the branching silhouette.
+  // Layered crowns surround an elevated heart, with branch silhouettes below.
   const lobes = [
     [-1.6, 3.08, 0.16, 0.95, 0.47, 0.73],
     [-0.85, 3.77, -0.26, 0.96, 0.55, 0.78],
@@ -150,11 +163,12 @@ export function createSakura(ctx: SceneContext) {
     [-1.02, 3.08, 1.02, 0.77, 0.45, 0.64],
     [0.49, 3.13, 1.04, 0.86, 0.46, 0.69],
     [-0.87, 3.25, -1.18, 0.9, 0.46, 0.67],
+    [-0.18, 4.05, 0.33, 0.77, 0.47, 0.67],
   ];
   lobes.forEach(([x, y, z, rx, ry, rz], index) => {
     const origin = new T.Vector3(x * 0.7, y - 0.58, z * 0.66);
     const parent = new T.Vector3(
-      ...limbs[[0, 2, 5, 1, 4, 3, 6][index]].points[2],
+      ...limbs[[0, 2, 5, 1, 4, 3, 6, 7][index]].points[2],
     );
     branch(
       [
@@ -172,7 +186,7 @@ export function createSakura(ctx: SceneContext) {
       const px = x + Math.cos(angle) * radial * rx * range(0.78, 1.08);
       const py = y + elevation * ry + range(-0.07, 0.09);
       const pz = z + Math.sin(angle) * radial * rz * range(0.8, 1.08);
-      const size = range(0.86, 1.21);
+      const size = range(0.97, 1.29);
       const yaw = range(0, TAU),
         tilt = range(-0.3, 0.3);
       blossoms.addSeasonal(
@@ -259,9 +273,18 @@ export function createSakura(ctx: SceneContext) {
         );
     }
   });
-  blossoms.build().name = "sakura-blossom-sprays";
-  leaves.build().name = "sakura-leaf-sprays";
-  snow.build().name = "sakura-branch-snow";
+  const buildCrown = (batch: VoxelBatch, name: string) => {
+    const mesh = batch.build();
+    mesh.name = name;
+    // Bound the full baseline before seasonal scales can hide any instances.
+    // The 15% padding covers summer's 1.08 growth; parent sway is in matrixWorld.
+    mesh.computeBoundingSphere();
+    if (mesh.boundingSphere) mesh.boundingSphere.radius *= 1.15;
+    mesh.frustumCulled = true;
+  };
+  buildCrown(blossoms, "sakura-blossom-sprays");
+  buildCrown(leaves, "sakura-leaf-sprays");
+  buildCrown(snow, "sakura-branch-snow");
   const barkMap = createBarkTexture();
   const bark = new T.MeshStandardMaterial({
     color: "#b6a49a",
@@ -274,11 +297,14 @@ export function createSakura(ctx: SceneContext) {
   const woodGeometry = mergeGeometries(wood)!;
   wood.forEach((geometry) => geometry.dispose());
   ctx.mesh(woodGeometry, bark, tree).name = "sakura-tapered-wood";
+  createSacredTree(ctx, tree);
   const fallen = new PuffBatch();
-  for (let i = 0; i < 140; i++) {
-    const x = range(-4.2, 0.4),
-      z = range(-2.3, 2);
-    if ((x / 3.9) ** 2 + (z / 2.9) ** 2 < 0.88)
+  for (let i = 0; i < 190; i++) {
+    const dx = range(-3.65, 3.65),
+      dz = range(-2.8, 2.8);
+    const x = treeX + dx,
+      z = treeZ + dz;
+    if ((dx / 3.65) ** 2 + (dz / 2.8) ** 2 < 0.95)
       fallen.addSeasonal(
         x,
         ground(x, z) + 0.102,

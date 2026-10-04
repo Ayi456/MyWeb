@@ -1,9 +1,25 @@
 /** Shared landmarks keep geometry and the postal route in the same coordinates. */
 export const MAIN_ISLAND = {
-  radius: [5.1, 3.75] as const,
-  gridOrigin: [-5.26, -3.91] as const,
+  radius: [7.2, 5.25] as const,
+  gridOrigin: [-7.435, -5.405] as const,
   step: 0.29,
 };
+/** The sanctuary is the visual centre of the archipelago. */
+export const SACRED_TREE = {
+  center: [-0.9, -0.85] as const,
+  scale: [1.6, 1.75, 1.6] as const,
+};
+export const MAIN_DOCK = {
+  offset: [2.2, 0.16, 0] as const,
+  berth: [10.2, 1.51, 0.17] as const,
+};
+export const MAIN_STREAM = [
+  [-3.39, 1.57],
+  [-4.05, 1.75],
+  [-4.85, 2.05],
+  [-5.6, 2.33],
+  [-6.48, 2.45],
+] as const;
 export const MAIN_MAILBOX = { x: 3.15, z: 1.4 } as const;
 
 export const GARDEN_ISLAND = {

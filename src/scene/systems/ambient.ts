@@ -3,6 +3,7 @@ import type { WorldObjects } from "../objects/createWorld";
 import { CONFIG } from "../config";
 import type { WindSystem } from "./wind";
 import { courierPose, updateBunnyMotion } from "./bunnyMotion";
+import { MAIN_DOCK } from "../worldLayout";
 
 export function updateAmbient(
   objects: WorldObjects,
@@ -56,7 +57,7 @@ export function updateAmbient(
   const pose = courierPose(simTime, reducedMotion);
   const dx = Math.cos(pose.yaw) * 0.27;
   const dz = -Math.sin(pose.yaw) * 0.27;
-  courier.g.position.set(pose.x + dx, 1.21, 0.17 + dz);
+  courier.g.position.set(pose.x + dx, 1.21 + MAIN_DOCK.offset[1], 0.17 + dz);
   courier.g.rotation.y = pose.yaw - PI / 2;
   courier.legs.forEach((leg, i) => {
     leg.rotation.x = pose.stride * (i ? -1 : 1);
@@ -64,7 +65,7 @@ export function updateAmbient(
   courier.arms.forEach((arm) => arm.rotation.set(-0.95, 0, 0));
   courier.head.rotation.y =
     !busy && !reducedMotion ? Math.sin(simTime * 0.4) * 0.06 : 0;
-  cart.position.set(pose.x - dx, 1.194, 0.17 - dz);
+  cart.position.set(pose.x - dx, 1.194 + MAIN_DOCK.offset[1], 0.17 - dz);
   cart.rotation.y = pose.yaw;
   wheels.forEach((wheel) => (wheel.rotation.y = pose.wheel));
   butterflies.forEach(({ g, wings }, i) => {

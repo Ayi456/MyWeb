@@ -1,12 +1,12 @@
 import * as T from "three";
 import { CONFIG } from "../config";
 import type { WorldObjects } from "../objects/createWorld";
-import { FLIGHT_STOPS, LIGHTHOUSE_ISLAND } from "../worldLayout";
+import { FLIGHT_STOPS, LIGHTHOUSE_ISLAND, MAIN_DOCK } from "../worldLayout";
 
 // The envelope is more than four world units long.  Keep the mooring just
 // beyond the main island's east rim so the balloon never sinks into the grass
 // when it is waiting for a letter.
-export const dockPoint = new T.Vector3(8.0, 1.35, 0.17);
+export const dockPoint = new T.Vector3(...MAIN_DOCK.berth);
 export const lighthouseDockPoint = new T.Vector3(...LIGHTHOUSE_ISLAND.berth);
 const westPoint = new T.Vector3(-14, 3, -4.1);
 const southPoint = new T.Vector3(-1.2, 1.9, 8.8);

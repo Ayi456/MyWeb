@@ -21,7 +21,9 @@ for (const shot of [
     expect(info.startClear).toBe(true);
     expect(info.pathClear).toEqual([true, true, true]);
     expect(Math.max(...info.gripErrors)).toBeLessThan(0.04);
-    expect(info.calls).toBeLessThan(350);
+    // The larger sanctuary, five residents and bridge network add a dozen
+    // shared batches. Keep their bounded cost in the close-up render budget.
+    expect(info.calls).toBeLessThan(365);
     await expect(page).toHaveScreenshot(`${shot}.png`);
     expect(errors).toEqual([]);
   });

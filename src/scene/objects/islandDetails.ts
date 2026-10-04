@@ -105,7 +105,7 @@ export function createIslandDetails(
   // Low hydrangea borders sit outside the postal and walking routes. Larger
   // foliage masses make the existing fine meadow flowers read as planted beds.
   for (const [cx, cz, size, color] of [
-    [-3.85, -0.35, 0.74, "#ceb4da"],
+    [-4.45, 0.5, 0.74, "#ceb4da"],
     [-3.25, -1.9, 0.65, "#e4b6c7"],
     [-0.35, 2.8, 0.8, "#d9bfdc"],
     [1.55, 2.6, 0.7, "#efcfad"],
@@ -164,9 +164,9 @@ export function createIslandDetails(
   // Ferns and little mushrooms give the shaded pond/tree corner a different
   // texture from the sunnier flower beds; none encroach on the pond or path.
   for (const [x, z] of [
-    [-3.75, 0.35],
-    [-2.65, -1.75],
-    [-0.5, -1.6],
+    [-4.3, 0.35],
+    [-2.95, -1.7],
+    [-0.2, -3.1],
   ]) {
     const y = ctx.ground(x, z) + 0.1;
     for (let frond = 0; frond < 5; frond++) {
