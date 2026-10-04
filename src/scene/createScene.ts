@@ -403,6 +403,8 @@ export function createScene(
       lastSeason = seasons.index,
       wasMoored = true,
       rodeStamp = false;
+    let prepared = false,
+      preparing = false;
     let previousSound: SoundState = {
       rain: 0,
       night: 0,
@@ -670,7 +672,8 @@ export function createScene(
         if (!document.hidden && !disposed && !failed) {
           last = statsAt = uiAt = performance.now();
           frames = 0;
-          frameID = requestAnimationFrame(animate);
+          if (prepared) frameID = requestAnimationFrame(animate);
+          else if (!preparing) frameID = requestAnimationFrame(prepare);
         }
       },
       { signal: events.signal },
@@ -685,7 +688,33 @@ export function createScene(
       },
       { signal: events.signal },
     );
-    frameID = requestAnimationFrame(animate);
+    // Yield a paint before shader preparation. Parallel compilation keeps the
+    // loading animation and page controls responsive instead of blocking the
+    // first frame for several seconds. Disposed/hidden scenes cannot restart.
+    function prepare() {
+      frameID = 0;
+      if (disposed || failed || document.hidden || preparing) return;
+      preparing = true;
+      // Match the initial lighting before compiling the first-frame shaders.
+      snapshot.night = dayNight(
+        clock.hour,
+        seasons.weights,
+        director.rain,
+        director.flash,
+      );
+      romanticElements.update(0);
+      updateFestival(objects, festival, snapshot.night, director.lanterns);
+      void pipeline
+        .prepare(ctx.scene, camera.camera)
+        .then(() => {
+          if (disposed || failed) return;
+          prepared = true;
+          last = statsAt = uiAt = performance.now();
+          if (!document.hidden) frameID = requestAnimationFrame(animate);
+        })
+        .catch(fail);
+    }
+    frameID = requestAnimationFrame(prepare);
     function applyRealTime(on: boolean) {
       realTime = on;
       clock.hourSource = on ? realLocalHour : null;

@@ -173,9 +173,20 @@ export function createFireflies(ctx: SceneContext) {
     { x: 0.25, z: 2.1, radius: 0.8 },
     { x: 2.5, z: 1.9, radius: 0.8 },
   ];
+  const zoneCounts = new Uint8Array(zones.length);
+  // One gentle neighborhood light per zone keeps the shader's light count
+  // fixed through dusk and dawn. All 35 individual emissive insects remain.
+  for (const zone of zones) {
+    const light = new T.PointLight("#ffb347", 0, zone.radius + 0.7);
+    light.position.set(zone.x, 0.9, zone.z);
+    group.add(light);
+    pointLights.push(light);
+  }
 
   for (let i = 0; i < maxFireflies; i++) {
-    const zone = zones[i % zones.length];
+    const zoneIndex = i % zones.length;
+    const zone = zones[zoneIndex];
+    zoneCounts[zoneIndex]++;
     const angle = Math.random() * Math.PI * 2;
     const radius = Math.random() * zone.radius;
     const baseX = zone.x + Math.cos(angle) * radius;
@@ -199,21 +210,21 @@ export function createFireflies(ctx: SceneContext) {
 
     const mesh = new T.Mesh(fireflyGeometry, fireflyMaterial.clone());
     mesh.position.copy(firefly.position);
+    mesh.visible = U.uNight.value > 0.1;
     group.add(mesh);
     meshes.push(mesh);
-
-    // 为每个萤火虫添加点光源
-    const light = new T.PointLight("#ffb347", 0.3, 0.5);
-    light.position.copy(firefly.position);
-    group.add(light);
-    pointLights.push(light);
   }
 
   function update(_delta: number) {
     const time = U.uTime.value;
     const nightBlend = U.uNight.value; // 夜间才显示
+    for (const light of pointLights) {
+      light.position.set(0, 0, 0);
+      light.intensity = 0;
+    }
 
-    fireflies.forEach((firefly, i) => {
+    for (let i = 0; i < fireflies.length; i++) {
+      const firefly = fireflies[i];
       // 漫游运动
       const wanderX = Math.sin(time * 0.3 + firefly.phase) * 0.15;
       const wanderY = Math.sin(time * 0.5 + firefly.phase * 1.3) * 0.2;
@@ -238,11 +249,15 @@ export function createFireflies(ctx: SceneContext) {
       (meshes[i].material as T.MeshStandardMaterial).opacity =
         0.6 + brightness * 0.4;
 
-      // 更新光源
-      pointLights[i].position.copy(firefly.position);
-      pointLights[i].intensity = brightness * 0.4;
-      pointLights[i].visible = nightBlend > 0.1;
-    });
+      const light = pointLights[i % zones.length];
+      light.position.add(firefly.position);
+      light.intensity += brightness;
+    }
+    for (let i = 0; i < pointLights.length; i++) {
+      const light = pointLights[i];
+      light.position.multiplyScalar(1 / zoneCounts[i]);
+      light.intensity *= 0.18 / zoneCounts[i];
+    }
   }
 
   return { group, update };

@@ -14,23 +14,28 @@ export function createBarkTexture() {
     length: 4 + random() * 24,
     thickness: 0.5 + random() * 1.2,
   }));
-  for (let y = 0; y < height; y++)
+  for (let y = 0; y < height; y++) {
+    const grainBend = Math.sin(y * 0.048) * 1.2;
+    const seamBend = Math.sin(y * 0.023) * 0.9;
+    // A scar touches only a few rows. Preserve scar order and shading while
+    // avoiding a full 64-scar scan for every pixel.
+    const rowScars = scars
+      .filter((scar) => Math.abs(y - scar.y) < scar.thickness + 1)
+      .map((scar) => ({
+        ...scar,
+        inside: Math.abs(y - scar.y) < scar.thickness,
+      }));
     for (let x = 0; x < width; x++) {
       const grain =
-        Math.sin(x * 0.63 + Math.sin(y * 0.048) * 1.2) * 5 +
-        Math.sin(x * 1.8 + y * 0.04) * 2;
+        Math.sin(x * 0.63 + grainBend) * 5 + Math.sin(x * 1.8 + y * 0.04) * 2;
       const seam =
-        Math.pow(
-          Math.max(0, Math.cos(x * 0.26 + Math.sin(y * 0.023) * 0.9)),
-          22,
-        ) * 17;
+        Math.pow(Math.max(0, Math.cos(x * 0.26 + seamBend)), 22) * 17;
       let shade = grain - seam + (random() - 0.5) * 13;
-      for (const scar of scars) {
-        const dx = Math.abs(x - scar.x),
-          dy = Math.abs(y - scar.y);
-        if (dx < scar.length && dy < scar.thickness)
-          shade += 31 * (1 - dx / scar.length);
-        else if (dx < scar.length && dy < scar.thickness + 1) shade -= 13;
+      for (const scar of rowScars) {
+        const dx = Math.abs(x - scar.x);
+        if (dx >= scar.length) continue;
+        if (scar.inside) shade += 31 * (1 - dx / scar.length);
+        else shade -= 13;
       }
       const offset = (y * width + x) * 4;
       pixels[offset] = 111 + shade;
@@ -38,6 +43,7 @@ export function createBarkTexture() {
       pixels[offset + 2] = 80 + shade;
       pixels[offset + 3] = 255;
     }
+  }
   const texture = new T.DataTexture(pixels, width, height);
   texture.colorSpace = T.SRGBColorSpace;
   texture.wrapS = texture.wrapT = T.RepeatWrapping;
@@ -52,28 +58,34 @@ export function taperedBranch(points: Point3[], start: number, end: number) {
   const curve = new T.CatmullRomCurve3(
     points.map((point) => new T.Vector3(...point)),
   );
-  const segments = Math.max(3, Math.ceil(curve.getLength() * 8));
+  const length = curve.getLength();
+  const segments = Math.max(3, Math.ceil(length * 8));
   const sides = start > 0.075 ? 9 : 5;
   const geometry = new T.TubeGeometry(curve, segments, 1, sides, false);
   const position = geometry.getAttribute("position"),
     uv = geometry.getAttribute("uv");
   const colors = new Float32Array(position.count * 3);
-  const vertex = new T.Vector3();
-  for (let i = 0; i < position.count; i++) {
-    const t = uv.getX(i),
-      around = uv.getY(i);
-    const center = curve.getPointAt(t);
+  const vertex = new T.Vector3(),
+    center = new T.Vector3();
+  // TubeGeometry stores each cross-section consecutively. All its vertices
+  // share the same curve sample and taper.
+  for (let ring = 0; ring < position.count; ring += sides + 1) {
+    const t = uv.getX(ring);
+    curve.getPointAt(t, center);
     const taper = T.MathUtils.lerp(start, end, Math.pow(t, 0.8));
-    const radius = taper * (1 + Math.sin(around * TAU * 3 + t * 4) * 0.055);
-    vertex
-      .fromBufferAttribute(position, i)
-      .sub(center)
-      .multiplyScalar(radius)
-      .add(center);
-    position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    uv.setXY(i, around, t * curve.getLength() * 1.9);
-    const shade = 0.86 + Math.sin(around * TAU + 0.7) * 0.1;
-    colors.set([shade, shade, shade], i * 3);
+    for (let i = ring; i <= ring + sides; i++) {
+      const around = uv.getY(i);
+      const radius = taper * (1 + Math.sin(around * TAU * 3 + t * 4) * 0.055);
+      vertex
+        .fromBufferAttribute(position, i)
+        .sub(center)
+        .multiplyScalar(radius)
+        .add(center);
+      position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+      uv.setXY(i, around, t * length * 1.9);
+      const shade = 0.86 + Math.sin(around * TAU + 0.7) * 0.1;
+      colors.set([shade, shade, shade], i * 3);
+    }
   }
   geometry.setAttribute("color", new T.BufferAttribute(colors, 3));
   geometry.computeVertexNormals();

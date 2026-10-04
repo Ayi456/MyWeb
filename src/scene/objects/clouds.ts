@@ -205,35 +205,80 @@ export function createClouds(ctx: SceneContext) {
     index,
     depth: 0,
   }));
+  const active = order.slice();
+  const uploadedOrder = Int32Array.from(order, ({ index }) => index);
+  const wrappedCenters = new Float64Array(clusters.length);
+  const bobs = new Float64Array(clusters.length);
+  const tides = new Float64Array(clusters.length);
+  const phaseSines = clusters.map((_, index) =>
+    Math.sin(flow[index * 7 * 4 + 3]),
+  );
   const center = new T.Vector3();
+  const previousView = new T.Matrix4();
+  let previousCount = -1;
+  let previousTime = NaN;
+  let previousTravel = NaN;
+  let previousTide = NaN;
   cloudSea.instanceMatrix.setUsage(T.DynamicDrawUsage);
   cloudSea.instanceColor!.setUsage(T.DynamicDrawUsage);
+  (flowAttribute as T.InstancedBufferAttribute).setUsage(T.DynamicDrawUsage);
+  (airAttribute as T.InstancedBufferAttribute).setUsage(T.DynamicDrawUsage);
   const sortClouds = (camera: T.Camera) => {
-    const active = order.slice(0, cloudSea.count);
-    for (const entry of active) {
-      const i = entry.index;
+    const count = cloudSea.count;
+    if (
+      previousCount === count &&
+      previousTime === cloudTime.value &&
+      previousTravel === cloudTravel.value &&
+      previousTide === U.uTide.value &&
+      previousView.equals(camera.matrixWorldInverse)
+    )
+      return;
+    // Reuse the sort storage, selecting essential banks again when quality
+    // changes. Sorting never changes the immutable source order.
+    if (previousCount !== count) {
+      active.length = count;
+      for (let i = 0; i < count; i++) active[i] = order[i];
+    }
+    previousCount = count;
+    previousTime = cloudTime.value;
+    previousTravel = cloudTravel.value;
+    previousTide = U.uTide.value;
+    previousView.copy(camera.matrixWorldInverse);
+    // All seven lobes share the same displacement. Evaluate it once per bank
+    // instead of repeating the trigonometry for each lobe on every frame.
+    for (let group = 0; group * 7 < count; group++) {
+      const i = group * 7;
       const x = flow[i * 4],
         speed = flow[i * 4 + 1],
         phase = flow[i * 4 + 3];
       const drift =
         cloudTime.value * speed + (cloudTravel.value * speed) / 0.065;
-      const wrapped = T.MathUtils.euclideanModulo(x + drift + 132, 264) - 132;
-      const bob =
-        (Math.sin(cloudTime.value * 0.12 + phase) - Math.sin(phase)) *
+      wrappedCenters[group] =
+        T.MathUtils.euclideanModulo(x + drift + 132, 264) - 132;
+      bobs[group] =
+        (Math.sin(cloudTime.value * 0.12 + phase) - phaseSines[group]) *
         flow[i * 4 + 2];
-      const tide =
+      tides[group] =
         U.uTide.value *
         air[i * 3 + 1] *
         (1.7 + 0.35 * Math.sin(phase + cloudTime.value * 0.08));
+    }
+    for (const entry of active) {
+      const i = entry.index;
+      const group = Math.floor(i / 7);
       center.set(
-        matrices[i * 16 + 12] + wrapped - x,
-        matrices[i * 16 + 13] + bob + tide,
+        matrices[i * 16 + 12] + wrappedCenters[group] - flow[i * 4],
+        matrices[i * 16 + 13] + bobs[group] + tides[group],
         matrices[i * 16 + 14],
       );
       entry.depth = center.applyMatrix4(camera.matrixWorldInverse).z;
     }
-    active.sort((a, b) => a.depth - b.depth);
+    active.sort((a, b) => a.depth - b.depth || a.index - b.index);
+    let changed = false;
     active.forEach(({ index }, target) => {
+      if (uploadedOrder[target] === index) return;
+      uploadedOrder[target] = index;
+      changed = true;
       for (let component = 0; component < 16; component++)
         cloudSea.instanceMatrix.array[target * 16 + component] =
           matrices[index * 16 + component];
@@ -254,6 +299,9 @@ export function createClouds(ctx: SceneContext) {
         air[index * 3 + 2],
       );
     });
+    // Shader uniforms handle movement; instance payloads only need uploading
+    // when that movement actually changes the transparent drawing order.
+    if (!changed) return;
     cloudSea.instanceMatrix.needsUpdate = true;
     cloudSea.instanceColor!.needsUpdate = true;
     flowAttribute.needsUpdate = true;

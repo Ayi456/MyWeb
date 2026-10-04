@@ -86,10 +86,75 @@ describe("layered cloud sea", () => {
         null!,
       );
       expect(records(count)).toEqual(count === full.length ? full : low);
-      camera.position.negate();
-      camera.lookAt(0, 0, 0);
-      camera.updateMatrixWorld();
     }
+  });
+
+  it("skips buffer uploads while paused or when movement preserves the draw order", () => {
+    const { context, clouds } = setup();
+    const { cloudSea } = clouds;
+    // Looking along Z makes cloud movement in X/Y irrelevant to depth order.
+    const camera = new T.PerspectiveCamera();
+    camera.updateMatrixWorld();
+    const render = () =>
+      context.scene.onBeforeRender(
+        {} as T.WebGLRenderer,
+        context.scene,
+        camera,
+        cloudSea.geometry,
+        clouds.cloudMat,
+        null!,
+      );
+    const versions = () =>
+      [
+        cloudSea.instanceMatrix,
+        cloudSea.instanceColor!,
+        cloudSea.geometry.getAttribute("cloudFlow"),
+        cloudSea.geometry.getAttribute("cloudAir"),
+      ].map((attribute) => (attribute as T.BufferAttribute).version);
+    render();
+    const initial = versions();
+    render();
+    expect(versions()).toEqual(initial);
+    clouds.updateClouds(2, 3, false);
+    context.U.uTide.value = 2;
+    render();
+    expect(versions()).toEqual(initial);
+
+    camera.position.set(30, 20, 1);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    render();
+    expect(versions()).toEqual(initial.map((version) => version + 1));
+    const moved = versions();
+    render();
+    expect(versions()).toEqual(moved);
+  });
+
+  it("refreshes the order after tide changes and wind wrapping with a frozen clock", () => {
+    const { context, clouds } = setup();
+    const { cloudSea } = clouds;
+    const camera = new T.PerspectiveCamera();
+    camera.position.set(30, 20, 1);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const render = () =>
+      context.scene.onBeforeRender(
+        {} as T.WebGLRenderer,
+        context.scene,
+        camera,
+        cloudSea.geometry,
+        clouds.cloudMat,
+        null!,
+      );
+    render();
+    const initialVersion = cloudSea.instanceMatrix.version;
+    context.U.uTide.value = 2;
+    render();
+    expect(cloudSea.instanceMatrix.version).toBe(initialVersion + 1);
+    clouds.cloudTravel.value = 300;
+    render();
+    expect(cloudSea.instanceMatrix.version).toBe(initialVersion + 2);
+    expect(clouds.cloudTime.value).toBe(0);
   });
 
   it("extends the cloud deck to the horizon and follows the live weather tint", () => {

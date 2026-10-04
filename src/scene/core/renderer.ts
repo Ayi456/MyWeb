@@ -45,8 +45,25 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   });
   postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), postMat));
   const size = new T.Vector2();
+  let disposed = false;
   return {
     renderer,
+    async prepare(scene: T.Scene, camera: T.Camera) {
+      if (disposed) return;
+      // Compile against the same HDR target used by render(): warming the
+      // default framebuffer would compile different tone-mapping variants.
+      const target = renderer.getRenderTarget();
+      let worldReady: Promise<unknown>, postReady: Promise<unknown>;
+      try {
+        renderer.setRenderTarget(rt);
+        worldReady = renderer.compileAsync(scene, camera);
+        renderer.setRenderTarget(null);
+        postReady = renderer.compileAsync(postScene, postCamera);
+      } finally {
+        renderer.setRenderTarget(target);
+      }
+      await Promise.all([worldReady, postReady]);
+    },
     get resolution() {
       return `${size.x} × ${size.y}`;
     },
@@ -79,6 +96,8 @@ export function createRenderer(canvas: HTMLCanvasElement) {
         );
     },
     dispose() {
+      if (disposed) return;
+      disposed = true;
       rt.dispose();
       postMat.dispose();
       postScene.traverse((o) => {

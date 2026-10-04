@@ -5,29 +5,34 @@ import { type SceneContext, TAU } from "../core/context";
 function createTerrainGrain(grass: boolean) {
   const size = 128;
   const pixels = new Uint8Array(size * size * 4);
-  const lattice = (x: number, y: number, period: number) => {
-    const value =
-      Math.sin((x % period) * 127.1 + (y % period) * 311.7) * 43758.5453;
-    return value - Math.floor(value);
-  };
+  // Every pixel samples the same small periodic lattices. Hash each lattice
+  // point once instead of repeating the sine calculation for every sample.
+  const lattices = new Map(
+    [5, 17, 53].map((period) => {
+      const values = new Float64Array(period * period);
+      for (let y = 0; y < period; y++)
+        for (let x = 0; x < period; x++) {
+          const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+          values[y * period + x] = value - Math.floor(value);
+        }
+      return [period, values] as const;
+    }),
+  );
   const noise = (x: number, y: number, period: number) => {
+    const values = lattices.get(period)!;
     const px = x * period,
       py = y * period,
       ix = Math.floor(px),
       iy = Math.floor(py);
+    const left = ix % period,
+      right = (ix + 1) % period,
+      top = (iy % period) * period,
+      bottom = ((iy + 1) % period) * period;
     const sx = T.MathUtils.smoothstep(px - ix, 0, 1),
       sy = T.MathUtils.smoothstep(py - iy, 0, 1);
     return T.MathUtils.lerp(
-      T.MathUtils.lerp(
-        lattice(ix, iy, period),
-        lattice(ix + 1, iy, period),
-        sx,
-      ),
-      T.MathUtils.lerp(
-        lattice(ix, iy + 1, period),
-        lattice(ix + 1, iy + 1, period),
-        sx,
-      ),
+      T.MathUtils.lerp(values[top + left], values[top + right], sx),
+      T.MathUtils.lerp(values[bottom + left], values[bottom + right], sx),
       sy,
     );
   };
@@ -54,6 +59,51 @@ function createTerrainGrain(grass: boolean) {
   texture.needsUpdate = true;
   texture.name = grass ? "fine-meadow-grain" : "weathered-mineral-grain";
   return texture;
+}
+
+const terrainMaterials = new WeakMap<
+  SceneContext,
+  {
+    soilMaterial: T.MeshStandardMaterial;
+    grassMaterial: T.MeshStandardMaterial;
+  }
+>();
+
+function getTerrainMaterials(ctx: SceneContext) {
+  const cached = terrainMaterials.get(ctx);
+  if (cached) return cached;
+  const soilGrain = createTerrainGrain(false);
+  const soilMaterial = new T.MeshStandardMaterial({
+    roughness: 0.98,
+    vertexColors: true,
+    map: soilGrain,
+    bumpMap: soilGrain,
+    bumpScale: 0.085,
+  });
+  const grassGrain = createTerrainGrain(true);
+  const grassMaterial = new T.MeshStandardMaterial({
+    roughness: 0.92,
+    vertexColors: true,
+    map: grassGrain,
+    bumpMap: grassGrain,
+    bumpScale: 0.035,
+  });
+  grassMaterial.onBeforeCompile = (shader) => {
+    shader.uniforms.uSeason = ctx.U.uSeason;
+    shader.vertexShader =
+      "uniform vec4 uSeason;\nattribute vec3 colorSummer;\nattribute vec3 colorAutumn;\nattribute vec3 colorWinter;\n" +
+      shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <color_vertex>",
+      "#include <color_vertex>\nvColor.xyz = color * uSeason.x + colorSummer * uSeason.y + colorAutumn * uSeason.z + colorWinter * uSeason.w;",
+    );
+  };
+  grassMaterial.customProgramCacheKey = () => "seasonal-sculpted-grass";
+  // ResourceTracker owns these resources and deduplicates their disposal.
+  // A new scene gets its own materials, textures and seasonal uniform binding.
+  const materials = { soilMaterial, grassMaterial };
+  terrainMaterials.set(ctx, materials);
+  return materials;
 }
 
 /** A gentle, shared outline used by the visible rim and the walking grid. */
@@ -186,14 +236,7 @@ export function createSoftTerrain(
     }
     return geometry;
   };
-  const soilGrain = createTerrainGrain(false);
-  const soilMaterial = new T.MeshStandardMaterial({
-    roughness: 0.98,
-    vertexColors: true,
-    map: soilGrain,
-    bumpMap: soilGrain,
-    bumpScale: 0.085,
-  });
+  const { soilMaterial, grassMaterial } = getTerrainMaterials(ctx);
   const soil = ctx.mesh(
     makeGeometry(
       [
@@ -221,25 +264,6 @@ export function createSoftTerrain(
   );
   soil.castShadow = castShadow;
   soil.name = "sculpted-island-soil";
-  const grassGrain = createTerrainGrain(true);
-  const grassMaterial = new T.MeshStandardMaterial({
-    roughness: 0.92,
-    vertexColors: true,
-    map: grassGrain,
-    bumpMap: grassGrain,
-    bumpScale: 0.035,
-  });
-  grassMaterial.onBeforeCompile = (shader) => {
-    shader.uniforms.uSeason = ctx.U.uSeason;
-    shader.vertexShader =
-      "uniform vec4 uSeason;\nattribute vec3 colorSummer;\nattribute vec3 colorAutumn;\nattribute vec3 colorWinter;\n" +
-      shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      "#include <color_vertex>",
-      "#include <color_vertex>\nvColor.xyz = color * uSeason.x + colorSummer * uSeason.y + colorAutumn * uSeason.z + colorWinter * uSeason.w;",
-    );
-  };
-  grassMaterial.customProgramCacheKey = () => "seasonal-sculpted-grass";
   const rings: [number, number][] = Array.from({ length: 19 }, (_, i) => [
     i / 18,
     0.09,
