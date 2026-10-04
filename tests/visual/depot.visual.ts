@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { clickTimeControl } from "./helpers";
 const data = (page: Page) =>
   page
     .locator("#world")
@@ -26,7 +27,7 @@ test("depot is keyboard reachable and shareable; cablecar freezes for pause and 
   const moving = (await data(page)).cablecar;
   await page.waitForTimeout(500);
   expect((await data(page)).cablecar).not.toEqual(moving);
-  await page.getByRole("button", { name: "暂停", exact: true }).click();
+  await clickTimeControl(page, "暂停");
   await expect.poll(async () => (await data(page)).speed).toBe(0);
   const paused = (await data(page)).cablecar;
   await page.waitForTimeout(700);

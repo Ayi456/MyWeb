@@ -17,6 +17,18 @@ export function createFurniture(ctx: SceneContext, tree: T.Group) {
     bn.add(x, 0.55, -0.24, 0.055, 0.65, 0.055, "#a4886f");
   }
   for (const y of [0.5, 0.67]) bn.add(0, y, -0.24, 1.08, 0.12, 0.05, "#e4c69e");
+  // A folded throw over the back and a satchel tucked below the occupied seat.
+  bn.add(0.26, 0.665, -0.21, 0.26, 0.035, 0.18, "#a4bdb1");
+  bn.add(0.26, 0.55, -0.298, 0.26, 0.24, 0.025, "#a4bdb1");
+  for (const x of [0.17, 0.25, 0.33])
+    bn.add(x, 0.55, -0.315, 0.018, 0.24, 0.008, "#dfddc3");
+  bn.add(0.12, 0.1, 0.02, 0.3, 0.17, 0.19, "#b38c72");
+  bn.add(0.12, 0.145, 0.12, 0.31, 0.085, 0.025, "#cda483");
+  bn.add(0.12, 0.115, 0.138, 0.035, 0.045, 0.012, "#d8be88");
+  for (const x of [-0.55, 0.55]) {
+    bn.add(x, 0.48, 0, 0.07, 0.05, 0.4, "#dfc09c");
+    bn.add(x, 0.39, 0.13, 0.045, 0.18, 0.045, "#ac8d72");
+  }
   bn.build();
   const swing = new T.Group();
   swing.position.set(-1.61, 2.7, 0.5);

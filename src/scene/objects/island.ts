@@ -2,6 +2,7 @@ import { type SceneContext, TAU } from "../core/context";
 import { LEAF } from "./seasonalColors";
 import { MAIN_ISLAND } from "../worldLayout";
 import { createSoftTerrain, islandOutline } from "./softTerrain";
+import { createIslandDetails } from "./islandDetails";
 
 export function createIsland(ctx: SceneContext) {
   const { world, rockMat, rand, range, PuffBatch, SoftBatch, ground } = ctx;
@@ -108,7 +109,6 @@ export function createIsland(ctx: SceneContext) {
         );
     }
   }
-  vines.build();
 
   // Add grass tufts scattered across the island for natural detail
   const grass = new PuffBatch();
@@ -196,7 +196,9 @@ export function createIsland(ctx: SceneContext) {
       );
     }
   }
-  pebbles.build(false);
+  createIslandDetails(ctx, soil, pebbles, vines);
+  pebbles.build(false).name = "island-stone-ledges-and-borders";
+  vines.build(false).name = "island-seasonal-gardens-and-ivy";
 
   return {
     terrainCount: soil.geometry.getAttribute("position").count,

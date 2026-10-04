@@ -1,6 +1,8 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
 
+export const TERRAIN_SEGMENTS = 64;
+
 /** Seamless mineral/leaf grain, generated without a network image or canvas. */
 function createTerrainGrain(grass: boolean) {
   const size = 128;
@@ -120,7 +122,7 @@ export function createSoftTerrain(
   height: (x: number, z: number, d: number) => number,
   castShadow = false,
 ) {
-  const segments = 64;
+  const segments = TERRAIN_SEGMENTS;
   const makeGeometry = (
     rings: readonly (readonly [number, number])[],
     grass: boolean,

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clickSceneTool } from "./helpers";
+import { clickSceneTool, clickTimeControl } from "./helpers";
 
 test("island views are keyboard reachable and their copied links replay", async ({
   page,
@@ -100,7 +100,7 @@ test("idle touring stops for pause, panels and reduced motion", async ({
   expect((await diagnostics()).cameraView.focus).not.toEqual(first);
   await page.getByRole("button", { name: "打开环境音效", exact: true }).click();
   await expect.poll(async () => (await diagnostics()).autoOrbit).toBe(false);
-  await page.getByRole("button", { name: "暂停", exact: true }).click();
+  await clickTimeControl(page, "暂停");
   await expect.poll(async () => (await diagnostics()).autoOrbit).toBe(false);
   const paused = (await diagnostics()).cameraView;
   await page.waitForTimeout(700);

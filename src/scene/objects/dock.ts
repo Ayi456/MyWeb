@@ -28,6 +28,43 @@ export function createDock(ctx: SceneContext) {
   }
   rod(dock, [3.9, 0.0, -0.3], [7.75, 1.12, -0.3], 0.13, "#a88973");
   rod(dock, [3.9, 0.0, 0.6], [7.75, 1.12, 0.6], 0.13, "#a88973");
+  // Mooring hardware sits on the outer rail, clear of the courier's centre lane.
+  for (const x of [6.8, 7.95]) {
+    for (const z of [-0.46, 0.8]) {
+      dock.add(x, 1.38, z, 0.115, 0.055, 0.12, "#c8bda0");
+      dock.add(x, 1.45, z, 0.2, 0.045, 0.09, "#89968e");
+    }
+  }
+  for (const x of [5.95, 7.35]) {
+    // Short batched rope segments retain a soft, round miniature silhouette.
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2,
+        b = ((i + 1) / 18) * Math.PI * 2;
+      rod(
+        dock,
+        [x + Math.cos(a) * 0.15, 1.32 + Math.sin(a) * 0.19, 0.855],
+        [x + Math.cos(b) * 0.15, 1.32 + Math.sin(b) * 0.19, 0.855],
+        0.035,
+        "#eee0bc",
+      );
+    }
+    dock.add(x, 1.52, 0.855, 0.055, 0.08, 0.055, "#bca58a");
+    dock.add(x - 0.24, 0.93, 0.865, 0.13, 0.37, 0.13, "#9db2ad");
+    dock.add(x - 0.24, 0.93, 0.865, 0.145, 0.055, 0.145, "#eee0bc");
+    rod(dock, [x - 0.24, 1.12, 0.865], [x - 0.24, 1.5, 0.8], 0.023, "#c6ac8b");
+  }
+  // A small loading parcel and an envelope badge identify the air-mail berth.
+  dock.add(7.64, 1.26, -0.26, 0.5, 0.08, 0.34, "#b4987b");
+  dock.add(7.64, 1.44, -0.26, 0.37, 0.28, 0.28, "#cda884");
+  dock.add(7.64, 1.44, -0.112, 0.055, 0.28, 0.018, "#f4e1ba");
+  dock.add(7.64, 1.587, -0.26, 0.055, 0.018, 0.28, "#f4e1ba");
+  dock.add(7.72, 1.47, -0.098, 0.11, 0.075, 0.014, "#fff0d1");
+  dock.add(7.0, 1.66, -0.48, 0.62, 0.32, 0.075, "#88a39e");
+  dock.add(7.0, 1.67, -0.436, 0.4, 0.21, 0.025, "#ffedce");
+  rod(dock, [6.82, 1.76, -0.418], [7.0, 1.64, -0.418], 0.021, "#b57e8a");
+  rod(dock, [7.0, 1.64, -0.418], [7.18, 1.76, -0.418], 0.021, "#b57e8a");
+  for (const x of [6.8, 7.2])
+    dock.add(x, 1.43, -0.48, 0.04, 0.25, 0.04, "#a68b70");
   dock.build();
   const fence = new Batch();
   for (let i = 0; i < 22; i++) {

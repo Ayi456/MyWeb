@@ -4,7 +4,7 @@ import { createClayRoof } from "./clayRoof";
 import { createSoftTerrain } from "./softTerrain";
 import { seededRandom } from "../utils/seededRandom";
 import { TEA_ISLAND, VILLAGE_ISLAND } from "../worldLayout";
-import { TEA, maple } from "./seasonalColors";
+import { FLOWER_LEAF, TEA, flowerHead, maple } from "./seasonalColors";
 
 /**
  * Two sculpted background islands. Their terrain uses continuous surfaces,
@@ -97,6 +97,8 @@ export function createFarIslands(ctx: SceneContext) {
         (x / TEA_ISLAND.radius[0]) ** 2 + (z / TEA_ISLAND.radius[1]) ** 2;
       if (d > 0.78) continue;
       if (Math.abs(x - 0.3 - Math.sin(z * 1.4) * 0.5) < 0.42) continue; // path
+      // A proper clearing lets the drying shelter read as part of the tea farm.
+      if (((x + 2.05) / 1.22) ** 2 + ((z - 1.75) / 0.95) ** 2 < 1) continue;
       const y = terrace(x, z) + 0.15;
       rows.addSeasonal(
         x + Math.sin(z * 3) * 0.05,
@@ -160,6 +162,27 @@ export function createFarIslands(ctx: SceneContext) {
   pavilion.add(0.2, py + 1.9, pz, 0.12, 0.25, 0.12, "#e3bd76");
   pavilion.add(0.2, py + 0.32, pz + 0.2, 0.7, 0.07, 0.3, "#d8c1a1");
   pavilion.add(0.2, py + 0.2, pz + 0.2, 0.08, 0.2, 0.08, "#a48b73");
+  for (const dx of [-0.56, 0.56]) {
+    pavilion.add(0.2 + dx, py + 0.26, pz - 0.06, 0.22, 0.08, 0.7, "#bb8c77");
+    for (const dz of [-0.29, 0.17])
+      pavilion.add(0.2 + dx, py + 0.14, pz + dz, 0.06, 0.2, 0.07, "#aa7e69");
+    pavilion.add(0.2 + dx, py + 0.31, pz, 0.23, 0.035, 0.24, "#9eb5a3");
+  }
+  // A little tea service makes the open pavilion feel occupied.
+  const teaLife = new ctx.PuffBatch(teaDetail);
+  teaLife.add(0.12, py + 0.41, pz + 0.2, 0.18, 0.12, 0.15, "#b87761");
+  teaLife.add(0.12, py + 0.48, pz + 0.2, 0.11, 0.035, 0.1, "#d3a184");
+  rod(
+    pavilion,
+    [0.17, py + 0.42, pz + 0.2],
+    [0.28, py + 0.47, pz + 0.2],
+    0.055,
+    "#b87761",
+  );
+  for (const x of [-0.04, 0.39]) {
+    teaLife.add(x, py + 0.37, pz + 0.24, 0.11, 0.018, 0.11, "#f4e7cb");
+    teaLife.add(x, py + 0.41, pz + 0.24, 0.065, 0.06, 0.065, "#e5d1a9");
+  }
   pavilion.build(false);
   const teaLamp = new Batch(teaDetail, lampMat);
   teaLamp.add(0.2 + 0.62, py + 0.95, pz + 0.52, 0.16, 0.2, 0.16, "#ffe1b3");
@@ -178,6 +201,94 @@ export function createFarIslands(ctx: SceneContext) {
   stoneLantern.add(lx, ly + 0.8, lz, 0.22, 0.2, 0.22, "#fff1d2");
   stoneLantern.add(lx, ly + 0.98, lz, 0.4, 0.1, 0.4, "#b8b0b6");
   stoneLantern.build(false);
+  // A low canvas shelter, open drying trays and full wicker baskets tell the
+  // harvesting story in a few broad silhouettes, even from the wide camera.
+  const harvest = new Batch(teaDetail);
+  harvest.add(-2.05, 0.13, 1.75, 2.0, 0.06, 1.28, "#d6c4a1");
+  for (const x of [-2.82, -1.28]) {
+    harvest.add(x, 0.77, 1.48, 0.07, 1.3, 0.07, "#9b9365");
+    harvest.add(x, 0.68, 2.13, 0.07, 1.12, 0.07, "#9b9365");
+  }
+  harvest.add(-2.05, 1.39, 1.76, 1.95, 0.07, 1.1, "#eee0b9", 0.18);
+  harvest.add(-2.05, 1.32, 2.29, 1.94, 0.18, 0.05, "#b8c3a0");
+  for (const x of [-2.55, -1.55]) {
+    harvest.add(x, 0.48, 1.76, 0.69, 0.085, 0.74, "#ba9671");
+    for (const dx of [-0.26, 0.26])
+      harvest.add(x + dx, 0.31, 1.76, 0.07, 0.3, 0.54, "#a88568");
+    harvest.add(x, 0.54, 1.76, 0.6, 0.03, 0.64, "#d8bc83");
+    for (const dz of [-0.3, 0, 0.3])
+      teaLife.addSeasonal(x, 0.57, 1.76 + dz, 0.5, 0.065, 0.17, TEA[1]);
+  }
+  function teaBasket(x: number, z: number, scale = 1) {
+    const y = terrace(x, z) + 0.12;
+    teaLife.add(
+      x,
+      y + 0.18 * scale,
+      z,
+      0.43 * scale,
+      0.4 * scale,
+      0.42 * scale,
+      "#b68b62",
+    );
+    teaLife.add(
+      x,
+      y + 0.37 * scale,
+      z,
+      0.4 * scale,
+      0.06 * scale,
+      0.39 * scale,
+      "#e2c28e",
+    );
+    teaLife.addSeasonal(
+      x,
+      y + 0.4 * scale,
+      z,
+      0.31 * scale,
+      0.11 * scale,
+      0.3 * scale,
+      TEA[0],
+    );
+    for (const band of [0.13, 0.25])
+      teaLife.add(
+        x,
+        y + band * scale,
+        z,
+        0.44 * scale,
+        0.025 * scale,
+        0.43 * scale,
+        "#d4ae7b",
+      );
+    for (let i = 1; i <= 6; i++) {
+      const a = ((i - 1) * PI) / 6,
+        b = (i * PI) / 6;
+      rod(
+        harvest,
+        [
+          x + Math.cos(a) * 0.17 * scale,
+          y + (0.36 + Math.sin(a) * 0.22) * scale,
+          z,
+        ],
+        [
+          x + Math.cos(b) * 0.17 * scale,
+          y + (0.36 + Math.sin(b) * 0.22) * scale,
+          z,
+        ],
+        0.035 * scale,
+        "#d7b786",
+      );
+    }
+  }
+  teaBasket(-0.96, 1.83, 1.1);
+  teaBasket(-2.9, 1.96, 0.85);
+  teaBasket(0.92, -0.38, 0.9);
+  // A straw hat rests on a stool at the edge of the work area.
+  harvest.add(-1.26, 0.36, 2.47, 0.36, 0.07, 0.28, "#c39873");
+  for (const dx of [-0.12, 0.12])
+    harvest.add(-1.26 + dx, 0.23, 2.47, 0.05, 0.26, 0.22, "#aa8567");
+  teaLife.add(-1.26, 0.42, 2.47, 0.47, 0.045, 0.4, "#e4c792");
+  teaLife.add(-1.26, 0.48, 2.47, 0.25, 0.14, 0.23, "#e8cea2");
+  harvest.build(false);
+  teaLife.build(false);
   const teaMaples = [
     mapleTree(teaDetail, -3.1, terrace(-3.1, -1.6) + 0.12, -1.6, 1.05),
     mapleTree(teaDetail, 3.2, terrace(3.2, -1.2) + 0.12, -1.2, 0.95),
@@ -189,12 +300,24 @@ export function createFarIslands(ctx: SceneContext) {
   village.name = "village-island";
   village.position.set(...VILLAGE_ISLAND.center);
   world.add(village);
-  terrain(
-    village,
-    VILLAGE_ISLAND.radius,
-    2.9,
-    (x, z) => 0.12 * Math.round((Math.sin(x * 0.9) + Math.cos(z * 1.1)) * 0.8),
-  );
+  const poolCenter: Point3 = [0.9, 0.16, 1.3];
+  const poolRadius = [1.1, 0.8] as const;
+  const villageGround = (x: number, z: number) => {
+    const hill =
+      0.12 * Math.round((Math.sin(x * 0.9) + Math.cos(z * 1.1)) * 0.8);
+    const distance = Math.hypot(
+      (x - poolCenter[0]) / poolRadius[0],
+      (z - poolCenter[2]) / poolRadius[1],
+    );
+    // A shallow, level basin keeps even the triangulated grass below the water.
+    // The flat margin also grounds the stone rim before blending into the hill.
+    return T.MathUtils.lerp(
+      0.025,
+      hill,
+      T.MathUtils.smoothstep(distance, 1.18, 1.7),
+    );
+  };
+  terrain(village, VILLAGE_ISLAND.radius, 2.9, villageGround);
   const villageDetail = new T.Group();
   village.add(villageDetail);
   detail.push(villageDetail);
@@ -207,7 +330,7 @@ export function createFarIslands(ctx: SceneContext) {
     s = 1,
   ) {
     const g = new T.Group();
-    g.position.set(x, 0.15, z);
+    g.position.set(x, villageGround(x, z) + 0.15, z);
     g.rotation.y = rotation;
     g.scale.setScalar(s);
     villageDetail.add(g);
@@ -217,6 +340,30 @@ export function createFarIslands(ctx: SceneContext) {
     createClayRoof(ctx, g, [0, 0.9, 0], 1.5, 1.2, 0.53, roof, wall);
     b.add(0.4, 0.95, -0.25, 0.18, 0.5, 0.18, "#b78d87");
     b.add(-0.25, 0.4, 0.51, 0.34, 0.6, 0.04, "#8a6a5e");
+    // Deep eaves, a split doorway curtain and a porch give each cottage a face.
+    b.add(0, 0.84, 0.54, 1.4, 0.07, 0.1, "#b68f79");
+    b.add(0, 0.065, 0.8, 1.2, 0.12, 0.46, "#c5a788");
+    b.add(-0.24, 0.0, 1.12, 0.55, 0.075, 0.22, "#d8c3a0");
+    for (const dx of [-0.095, 0.095])
+      b.add(-0.25 + dx, 0.64, 0.56, 0.17, 0.26, 0.035, roof);
+    b.add(-0.25, 0.79, 0.56, 0.48, 0.035, 0.055, "#99755f");
+    b.add(0.3, 0.5, 0.535, 0.025, 0.34, 0.03, "#b58c70");
+    b.add(0.3, 0.5, 0.535, 0.34, 0.025, 0.03, "#b58c70");
+    b.add(0.3, 0.29, 0.59, 0.44, 0.13, 0.2, "#c09277");
+    const garden = new ctx.PuffBatch(g);
+    for (const dx of [-0.13, 0, 0.13]) {
+      garden.addSeasonal(0.3 + dx, 0.37, 0.59, 0.19, 0.13, 0.18, FLOWER_LEAF);
+      garden.addSeasonal(
+        0.3 + dx,
+        0.44,
+        0.59,
+        0.09,
+        0.09,
+        0.09,
+        flowerHead("#f0bfba"),
+      );
+    }
+    garden.build(false);
     b.build(false);
     const win = new Batch(g, lampMat);
     win.add(0.3, 0.5, 0.505, 0.3, 0.3, 0.02, "#ffe4ac");
@@ -241,14 +388,13 @@ export function createFarIslands(ctx: SceneContext) {
     transparent: true,
     opacity: 0.9,
   });
-  const poolCenter: Point3 = [0.9, 0.16, 1.3];
   const pool = ctx.mesh(
     new T.CircleGeometry(1, 48).rotateX(-Math.PI / 2),
     springMat,
     villageDetail,
     ...poolCenter,
   );
-  pool.scale.set(1.1, 1, 0.8);
+  pool.scale.set(poolRadius[0], 1, poolRadius[1]);
   pool.castShadow = false;
   const rim = new Batch(villageDetail);
   const stones = new ctx.PuffBatch(villageDetail);
@@ -256,10 +402,10 @@ export function createFarIslands(ctx: SceneContext) {
     const a = (i * TAU) / 22;
     stones.add(
       poolCenter[0] + Math.cos(a) * 1.2,
-      poolCenter[1] + 0.05,
+      poolCenter[1] + 0.035,
       poolCenter[2] + Math.sin(a) * 0.9,
       0.2,
-      0.14,
+      0.18,
       0.17,
       i % 3 ? "#cfc3b4" : "#e6d8c0",
       0,
@@ -267,8 +413,99 @@ export function createFarIslands(ctx: SceneContext) {
       0,
     );
   }
+  // Worn stepping stones connect the three front doors to the shared spring.
+  for (const [x, z] of [
+    [-1.65, 1.1],
+    [-1.36, 1.39],
+    [-1.48, 1.75],
+    [-0.65, -0.52],
+    [-0.32, -0.27],
+    [0.06, -0.15],
+    [0.48, -0.08],
+    [1.32, -0.17],
+    [1.72, -0.3],
+    [2.12, -0.19],
+  ])
+    stones.add(
+      x,
+      villageGround(x, z) + 0.14,
+      z,
+      0.38,
+      0.075,
+      0.29,
+      "#ded2bb",
+      0,
+      x * 0.3,
+    );
+
+  // A raised bathing deck with a towel rail, stools and wooden wash buckets.
+  for (let i = 0; i < 8; i++)
+    rim.add(
+      -0.87,
+      0.2,
+      1.65 + i * 0.14,
+      1.12,
+      0.09,
+      0.125,
+      i % 2 ? "#d8b18b" : "#cda37d",
+    );
+  for (const x of [-1.32, -0.42])
+    for (const z of [1.7, 2.56])
+      rim.add(x, 0.01, z, 0.075, 0.36, 0.075, "#a98468");
+  for (const x of [-1.3, -0.54])
+    rim.add(x, 0.63, 1.68, 0.05, 0.8, 0.05, "#9da17a");
+  rim.add(-0.92, 1.02, 1.68, 0.84, 0.045, 0.055, "#b8b18a");
+  rim.add(-1.06, 0.84, 1.68, 0.27, 0.36, 0.04, "#c0d6cb");
+  rim.add(-1.06, 0.7, 1.71, 0.27, 0.025, 0.025, "#8eafa6");
+  rim.add(-0.69, 0.89, 1.68, 0.24, 0.27, 0.04, "#f2e2c5");
+  for (const [x, z] of [
+    [-1.15, 2.21],
+    [-0.62, 2.4],
+  ]) {
+    rim.add(x, 0.41, z, 0.3, 0.065, 0.26, "#e2bd91");
+    for (const dx of [-0.1, 0.1])
+      rim.add(x + dx, 0.32, z, 0.055, 0.17, 0.19, "#bd936e");
+  }
+  stones.add(-0.67, 0.39, 2.02, 0.31, 0.3, 0.3, "#c5a174");
+  stones.add(-0.67, 0.535, 2.02, 0.32, 0.045, 0.31, "#e5c69a");
+  stones.add(-0.67, 0.55, 2.02, 0.24, 0.025, 0.23, "#99b7b1");
+  rim.add(-0.67, 0.59, 2.02, 0.32, 0.035, 0.045, "#dfbd8d");
+
+  // Bamboo feeds the pool beside a compact fern and stone garden.
+  rim.add(2.35, 0.63, 1.13, 0.1, 0.92, 0.1, "#96a477");
+  rod(rim, [2.4, 0.97, 1.13], [1.86, 0.84, 1.13], 0.105, "#b9bf8f");
+  for (const y of [0.3, 0.53, 0.76])
+    rim.add(2.35, y, 1.13, 0.12, 0.035, 0.12, "#d6ce9c");
+  rod(rim, [1.86, 0.81, 1.13], [1.86, 0.21, 1.13], 0.026, "#cce8df");
+  stones.add(1.86, 0.18, 1.13, 0.24, 0.025, 0.2, "#dbede4");
+  for (const [x, z, s] of [
+    [2.42, 0.81, 0.48],
+    [2.69, 1.08, 0.32],
+    [2.42, 1.37, 0.34],
+  ]) {
+    stones.add(
+      x,
+      villageGround(x, z) + s * 0.22,
+      z,
+      s,
+      s * 0.52,
+      s * 0.8,
+      "#c0b9a9",
+    );
+    stones.addSeasonal(
+      x + 0.08,
+      villageGround(x, z) + s * 0.53,
+      z,
+      s * 0.8,
+      s * 0.4,
+      s * 0.7,
+      TEA[0],
+    );
+  }
   stones.build(false);
   // Bridge arch across the pool's short axis.
+  for (const z of [poolCenter[2] - 1.15, poolCenter[2] + 1.15])
+    rim.add(poolCenter[0], 0.2, z, 0.66, 0.16, 0.27, "#b8464f");
   const rails: [Point3[], Point3[]] = [[], []];
   for (let i = 0; i <= 12; i++) {
     const t = i / 12,
@@ -334,6 +571,18 @@ export function createFarIslands(ctx: SceneContext) {
   steam.frustumCulled = false;
   steam.renderOrder = 11;
   villageDetail.add(steam);
+
+  // These batches have no shader displacement. Cull the distant islands during
+  // close-ups, retaining room for the flower heads' 1.05 summer growth. Cottage
+  // reactions transform their parent groups, which culling already accounts for.
+  // The animated steam is a Points object and keeps its explicit no-cull policy.
+  for (const island of [tea, village])
+    island.traverse((object) => {
+      if (!(object instanceof T.InstancedMesh)) return;
+      object.computeBoundingSphere();
+      if (object.boundingSphere) object.boundingSphere.radius *= 1.06;
+      object.frustumCulled = true;
+    });
 
   return {
     teaIsland: tea,
