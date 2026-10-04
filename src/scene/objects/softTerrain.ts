@@ -1,6 +1,61 @@
 import * as T from "three";
 import { type SceneContext, TAU } from "../core/context";
 
+/** Seamless mineral/leaf grain, generated without a network image or canvas. */
+function createTerrainGrain(grass: boolean) {
+  const size = 128;
+  const pixels = new Uint8Array(size * size * 4);
+  const lattice = (x: number, y: number, period: number) => {
+    const value =
+      Math.sin((x % period) * 127.1 + (y % period) * 311.7) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const noise = (x: number, y: number, period: number) => {
+    const px = x * period,
+      py = y * period,
+      ix = Math.floor(px),
+      iy = Math.floor(py);
+    const sx = T.MathUtils.smoothstep(px - ix, 0, 1),
+      sy = T.MathUtils.smoothstep(py - iy, 0, 1);
+    return T.MathUtils.lerp(
+      T.MathUtils.lerp(
+        lattice(ix, iy, period),
+        lattice(ix + 1, iy, period),
+        sx,
+      ),
+      T.MathUtils.lerp(
+        lattice(ix, iy + 1, period),
+        lattice(ix + 1, iy + 1, period),
+        sx,
+      ),
+      sy,
+    );
+  };
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size,
+        v = y / size;
+      const grain =
+        noise(u, v, 5) * 0.46 + noise(u, v, 17) * 0.3 + noise(u, v, 53) * 0.24;
+      const value = Math.round((grass ? 224 : 209) + grain * (grass ? 31 : 46));
+      const offset = (y * size + x) * 4;
+      pixels[offset] = value;
+      pixels[offset + 1] = value;
+      pixels[offset + 2] = value;
+      pixels[offset + 3] = 255;
+    }
+  }
+  const texture = new T.DataTexture(pixels, size, size);
+  texture.wrapS = texture.wrapT = T.RepeatWrapping;
+  texture.magFilter = T.LinearFilter;
+  texture.minFilter = T.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.colorSpace = T.SRGBColorSpace;
+  texture.needsUpdate = true;
+  texture.name = grass ? "fine-meadow-grain" : "weathered-mineral-grain";
+  return texture;
+}
+
 /** A gentle, shared outline used by the visible rim and the walking grid. */
 export function islandOutline(angle: number) {
   return 1 + 0.018 * Math.sin(angle * 5 + 0.7) + 0.012 * Math.cos(angle * 3);
@@ -21,6 +76,7 @@ export function createSoftTerrain(
     grass: boolean,
   ) => {
     const positions: number[] = [],
+      uvs: number[] = [],
       colors: number[] = [],
       summer: number[] = [],
       autumn: number[] = [],
@@ -33,30 +89,49 @@ export function createSoftTerrain(
           ["#b0a16b", "#c4b180"],
           ["#e3e9ed", "#f5f3f3"],
         ]
-      : [["#958b9f", "#cbb2a6"]];
+      : [["#827d87", "#c3ad95"]];
     const palette = palettes.map((set) => set.map((c) => new T.Color(c)));
     const color = new T.Color();
     rings.forEach(([r, drop], ring) => {
       for (let i = 0; i <= segments; i++) {
         const angle = (i / segments) * TAU;
+        const weathering = grass
+          ? 0
+          : T.MathUtils.smoothstep(-drop / depth, 0.06, 0.35);
         const outline =
           islandOutline(angle) +
-          (!grass && drop < -0.3
-            ? Math.sin(angle * 7 + drop * 1.4) * 0.025
-            : 0);
+          weathering *
+            (Math.sin(angle * 7 + drop * 1.4) * 0.034 +
+              Math.sin(angle * 13 + drop * 0.6) * 0.018);
         const x = Math.cos(angle) * radius[0] * r * outline,
           z = Math.sin(angle) * radius[1] * r * outline;
-        positions.push(x, height(x, z, Math.min(1, r * r)) + drop, z);
+        const y =
+          height(x, z, Math.min(1, r * r)) +
+          drop +
+          weathering * Math.sin(angle * 5 + drop * 0.8) * depth * 0.014 * r;
+        positions.push(x, y, z);
+        uvs.push(
+          grass ? x * 0.65 : (angle / TAU) * 6,
+          grass ? z * 0.65 : y * 0.55,
+        );
         const shade = grass
-          ? 0.5 + Math.sin(x * 0.8 + z * 0.4) * 0.18 + Math.cos(z * 1.1) * 0.12
+          ? T.MathUtils.clamp(
+              0.5 +
+                Math.sin(x * 0.8 + z * 0.4) * 0.2 +
+                Math.cos(z * 1.1) * 0.14 +
+                Math.sin(x * 2.7 - z * 1.8) * Math.cos(z * 2.2) * 0.1,
+              0,
+              1,
+            )
           : T.MathUtils.clamp(1 + drop / depth, 0, 1);
         for (let season = 0; season < palette.length; season++) {
           color.copy(palette[season][0]).lerp(palette[season][1], shade);
           if (!grass)
             color.multiplyScalar(
-              0.95 +
-                Math.sin(angle * 7) * 0.025 +
-                Math.sin(drop * 5.5 + angle * 0.3) * 0.035,
+              0.91 +
+                Math.sin(angle * 7) * 0.045 +
+                Math.sin(drop * 12 + Math.sin(angle * 3) * 0.7) * 0.075 +
+                Math.cos(drop * 21 + Math.sin(angle * 5)) * 0.028,
             );
           [colors, summer, autumn, winter][season].push(
             color.r,
@@ -80,6 +155,7 @@ export function createSoftTerrain(
       new T.Float32BufferAttribute(positions, 3),
     );
     geometry.setAttribute("color", new T.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
     if (grass) {
       geometry.setAttribute(
         "colorSummer",
@@ -110,9 +186,13 @@ export function createSoftTerrain(
     }
     return geometry;
   };
+  const soilGrain = createTerrainGrain(false);
   const soilMaterial = new T.MeshStandardMaterial({
     roughness: 0.98,
     vertexColors: true,
+    map: soilGrain,
+    bumpMap: soilGrain,
+    bumpScale: 0.085,
   });
   const soil = ctx.mesh(
     makeGeometry(
@@ -121,9 +201,15 @@ export function createSoftTerrain(
         [0.5, -0.18],
         [0.97, -0.18],
         [1, -0.28],
+        [0.99, -depth * 0.16],
         [0.98, -depth * 0.25],
+        [0.955, -depth * 0.28],
+        [0.94, -depth * 0.4],
         [0.86, -depth * 0.53],
+        [0.835, -depth * 0.57],
+        [0.78, -depth * 0.67],
         [0.64, -depth * 0.79],
+        [0.59, -depth * 0.82],
         [0.34, -depth * 0.98],
         [0.08, -depth * 1.05],
         [0, -depth * 1.06],
@@ -135,9 +221,13 @@ export function createSoftTerrain(
   );
   soil.castShadow = castShadow;
   soil.name = "sculpted-island-soil";
+  const grassGrain = createTerrainGrain(true);
   const grassMaterial = new T.MeshStandardMaterial({
     roughness: 0.92,
     vertexColors: true,
+    map: grassGrain,
+    bumpMap: grassGrain,
+    bumpScale: 0.035,
   });
   grassMaterial.onBeforeCompile = (shader) => {
     shader.uniforms.uSeason = ctx.U.uSeason;

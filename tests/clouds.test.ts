@@ -4,6 +4,7 @@ import { ResourceTracker } from "../src/scene/core/resourceTracker";
 import { createClouds } from "../src/scene/objects/clouds";
 import { seededRandom } from "../src/scene/utils/seededRandom";
 import { CONFIG } from "../src/scene/config";
+import * as T from "three";
 
 const cleanups: (() => void)[] = [];
 function setup() {
@@ -23,12 +24,15 @@ function setup() {
 afterEach(() => cleanups.splice(0).forEach((dispose) => dispose()));
 
 describe("layered cloud sea", () => {
-  it("keeps a single opaque batch and all three belts in the lower detail budget", () => {
+  it("keeps one soft-edged batch and all three belts in the lower detail budget", () => {
     const { clouds } = setup();
     const { cloudSea, lowCloudCount } = clouds;
-    expect(cloudSea.count).toBeLessThanOrEqual(280);
+    expect((cloudSea.count * cloudSea.geometry.index!.count) / 3).toBeLessThan(
+      350000,
+    );
     expect(Array.isArray(cloudSea.material)).toBe(false);
-    expect(clouds.cloudMat.transparent).toBe(false);
+    expect(clouds.cloudMat.transparent).toBe(true);
+    expect(clouds.cloudMat.depthWrite).toBe(false);
     expect(lowCloudCount).toBeLessThan(cloudSea.count);
     const air = cloudSea.geometry.getAttribute("cloudAir");
     const visibleLayers = new Set<number>();
@@ -37,6 +41,70 @@ describe("layered cloud sea", () => {
     // Reducing detail removes only distant clusters, keeping the island framing.
     for (let i = lowCloudCount; i < cloudSea.count; i++)
       expect(air.getZ(i)).toBe(2);
+  });
+
+  it("restores every lobe after camera sorting and repeated quality changes", () => {
+    const { context, clouds } = setup();
+    const { cloudSea } = clouds;
+    const camera = new T.PerspectiveCamera();
+    camera.position.set(11, 10, 21);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const records = (count: number) => {
+      const flow = cloudSea.geometry.getAttribute("cloudFlow");
+      const air = cloudSea.geometry.getAttribute("cloudAir");
+      return Array.from({ length: count }, (_, i) =>
+        JSON.stringify([
+          ...cloudSea.instanceMatrix.array.slice(i * 16, i * 16 + 16),
+          ...cloudSea.instanceColor!.array.slice(i * 3, i * 3 + 3),
+          flow.getX(i),
+          flow.getY(i),
+          flow.getZ(i),
+          flow.getW(i),
+          air.getX(i),
+          air.getY(i),
+          air.getZ(i),
+        ]),
+      ).sort();
+    };
+    const full = records(cloudSea.count);
+    const low = records(clouds.lowCloudCount);
+    for (const count of [
+      full.length,
+      low.length,
+      full.length,
+      low.length,
+      full.length,
+    ]) {
+      cloudSea.count = count;
+      context.scene.onBeforeRender(
+        {} as T.WebGLRenderer,
+        context.scene,
+        camera,
+        cloudSea.geometry,
+        clouds.cloudMat,
+        null!,
+      );
+      expect(records(count)).toEqual(count === full.length ? full : low);
+      camera.position.negate();
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+    }
+  });
+
+  it("extends the cloud deck to the horizon and follows the live weather tint", () => {
+    const { clouds, tracker } = setup();
+    const deck = clouds.cloudHorizon;
+    deck.geometry.computeBoundingBox();
+    const bounds = deck.geometry.boundingBox!;
+    expect(bounds.max.x - bounds.min.x).toBeGreaterThanOrEqual(300);
+    expect(bounds.max.z - bounds.min.z).toBeGreaterThanOrEqual(300);
+    expect(bounds.max.y).toBeLessThan(-3);
+    expect(deck.material.color).toBe(clouds.cloudMat.color);
+    let disposed = 0;
+    deck.geometry.addEventListener("dispose", () => disposed++);
+    tracker.dispose();
+    expect(disposed).toBe(1);
   });
 
   it("moves every lobe in a cloud together, including when the group wraps", () => {
